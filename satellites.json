@@ -1,0 +1,16 @@
+{
+   "satellites":[
+        {"name":"Eutelsat 36B/36","position":123,"lnb":"none","22k":"off","diseqc":"B","direction":"east","transponders":[
+                 {"id":1,"frequency":12322000,"symbolrate":27500,"polarity":"horizontal"},
+                 {"id":2,"frequency":12399000,"symbolrate":27500,"polarity":"horizontal"},
+                 {"id":3,"frequency":12015000,"symbolrate":27500,"polarity":"horizontal"},
+                 {"id":4,"frequency":3840000,"symbolrate":27500,"polarity":"vertical"},
+                 {"id":5,"frequency":3760000,"symbolrate":26000,"polarity":"horizontal"}
+             ]},
+        {"name":"Express AT1","position":123,"lnb":"vertical","22k":"off","diseqc":"A","transponders":[
+                 {"id":6,"frequency":12322000,"symbolrate":27500,"polarity":"horizontal"},
+                 {"id":7,"frequency":12399000,"symbolrate":27500,"polarity":"horizontal"}
+             ]}
+   ]
+}
+
