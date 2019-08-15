@@ -1,0 +1,185 @@
+#include <windows.h>
+#include <appmenus.h>
+#include <dvbepg.h>
+#include <ngl_types.h>
+#include <ngl_log.h>
+#include <ngl_ir.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
+#define CHANNEL_LIST_ITEM_HEIGHT 40
+#define IDC_CHANNELS 100
+
+NGL_MODULE(TVRECORD)
+#define W_ID      100
+#define W_PROGRAM 500
+#define W_CHANNEL 300
+#define W_DATE    250
+
+#define W_EVENT   320
+#define W_ACTION  160
+#define W_CYCLE   150
+namespace ntvplus{
+
+class PVRItem:public ListView::ListItem{
+public:
+    int id;
+    std::string channel;
+    std::string datetime;
+public:
+    PVRItem(int id_,const std::string&prg,std::string ch):ListView::ListItem(prg){
+        id=id_;
+        char buf[64];
+        channel=ch;
+        //struct tm *ftm=localtime(&st.st_mtime);
+        //sprintf(buf,"%2d/%2d/%d %2d:%2d",ftm->tm_mon+1,ftm->tm_mday,ftm->tm_year+1900,ftm->tm_hour,ftm->tm_min);
+        //datetime=buf;
+    }
+    virtual void onGetSize(AbsListView&lv,int* w,int* h)override{
+        if(h)*h=CHANNEL_LIST_ITEM_HEIGHT;
+    }
+};
+
+static void PVRPainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphContext&canvas){
+    PVRItem& md=(PVRItem&)itm;
+    char buf[32];
+    canvas.set_color(state?0xFF00FF00:lv.getBgColor());
+    canvas.draw_rect(itm.rect);
+     
+    RECT r=itm.rect;
+    canvas.set_color(lv.getFgColor());
+    sprintf(buf,"%3d",md.id);
+    canvas.draw_text(r,buf,DT_LEFT|DT_VCENTER);//id
+    r.offset(W_ID,0);//id width;
+    canvas.draw_text(r,md.getText(),DT_LEFT|DT_VCENTER);//;program
+    
+    r.offset(W_PROGRAM,0);//program width
+    canvas.draw_text(r,md.channel,DT_LEFT|DT_VCENTER);//channel
+    r.offset(W_CHANNEL,0);
+    canvas.draw_text(r,md.datetime,DT_LEFT|DT_VCENTER);//datetime
+}
+
+class RecordItem:public ListView::ListItem{
+public:
+};
+
+static void SchedulePainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphContext&canvas){
+}
+class PVRWindow:public NTVWindow{
+protected:
+   ToolBar*mdtype;
+   ToolBar*header;
+   ListView*mdlist;
+   std::string filters;
+   std::string pvr_path;
+   std::string schedule_path;
+public:
+   PVRWindow(int x,int y,int w,int h);
+   int loadPVR(const std::string&path);
+   int loadSchedules(const std::string path);
+   void setMode(int md);
+   virtual bool onKeyRelease(KeyEvent&k)override{
+       switch(k.getKeyCode()){
+       case NGL_KEY_LEFT: 
+       case NGL_KEY_RIGHT:{
+               bool rc=mdtype->onKeyRelease(k);
+               if(mdtype->getIndex()==0)
+                   loadPVR(pvr_path);
+               else
+                   loadSchedules(schedule_path);
+               return rc;
+            }
+       default:return NTVWindow::onKeyRelease(k);
+       }
+   }
+};
+PVRWindow::PVRWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
+    initContent(NWS_TITLE|NWS_TOOLTIPS);
+    mdtype=new NTVToolBar(1200,30);
+    mdtype->setPos(40,70);
+    mdtype->addButton("PVR",-1,120);
+    mdtype->addButton("Record Schedule",-1,320);
+    mdtype->setIndex(0);
+    addChildView(mdtype);
+
+    header=new NTVToolBar(1200,30);
+    header->setBgColor(0xFF000000);
+    header->setPos(40,100);
+    addChildView(header);
+       
+    mdlist=new ListView(1200,520);
+    mdlist->setPos(40,130);
+    mdlist->setFlag(Attr::ATTR_SCROLL_VERT);
+    mdlist->setBgColor(getBgColor());
+    mdlist->setFgColor(getFgColor());
+    mdlist->setItemPainter(PVRPainter);
+    addChildView(mdlist);
+    mdlist->setClickListener([&](View&lv){
+         int index=mdlist->getIndex();
+         PVRItem*itm=(PVRItem*)mdlist->getItem(index);
+    });
+}
+
+void PVRWindow::setMode(int md){
+    header->clearButtons();
+    mdlist->clearAllItems();
+    if(md==0){
+        header->addButton("NO.",-1,W_ID);
+        header->addButton("Program",-1,W_PROGRAM);
+        header->addButton("Channel",-1,W_CHANNEL);
+        header->addButton("Date/Time",-1,W_DATE);
+        mdlist->setItemPainter(PVRPainter);
+        addTipInfo("help_icon_4arrow.png","Navigation",50,160);
+        addTipInfo("help_icon_ok.png","Select",-1,160);
+        addTipInfo("help_icon_exit.png","Exit",-1,260);
+        addTipInfo("help_icon_red.png","Rename",-1,160);
+        addTipInfo("help_icon_green.png","Delete",-1,160);
+        addTipInfo("help_icon_yellow.png","DeleteAll",-1,160);
+    }else{
+        header->addButton("Event",-1,W_EVENT);
+        header->addButton("Channel",-1,W_CHANNEL); 
+        header->addButton("Action",-1,W_ACTION);
+        header->addButton("Cycle",-1,W_CYCLE);
+        header->addButton("Date/Time",-1,W_DATE);
+        mdlist->setItemPainter(SchedulePainter);
+        addTipInfo("help_icon_ok.png","Navigation",50,160);
+        addTipInfo("help_icon_red.png","Delete",-1,160);
+        addTipInfo("help_icon_green.png","Add",-1,160);
+        addTipInfo("help_icon_yellow.png","Sort",-1,160);
+        addTipInfo("help_icon_save.png","Save",-1,260);
+    }
+}
+
+int PVRWindow::loadPVR(const std::string&path){
+    int count=0;
+    DIR *dir=opendir(path.c_str());
+    struct dirent *ent;
+    mdlist->clearAllItems();
+    NGLOG_DEBUG("%s",path.c_str());
+    pvr_path=path;
+    if(dir==nullptr)return 0;
+    while(ent=readdir(dir)){
+        std::string fname=path+"/"+ent->d_name;
+        mdlist->addItem(new PVRItem(count++,fname,std::string()));
+    }
+    closedir(dir);
+    setMode(0);
+    return count;
+}
+
+int PVRWindow::loadSchedules(const std::string path){
+    schedule_path=path;
+    setMode(1);
+    return 0;
+}
+
+Window*CreatePVRWindow(){
+    PVRWindow*w=new PVRWindow(0,0,1280,720);
+    w->setText("TV Records");
+    w->loadPVR("/mnt/usb/sda1");
+    w->show();
+    return w;
+}
+}//namespace

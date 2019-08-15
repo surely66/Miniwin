@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC   -shared -Wl,-soname,libcharset.so -o libcharset.so CMakeFiles/charset.dir/libcharset/lib/localcharset.c.o CMakeFiles/charset.dir/libcharset/lib/relocatable.c.o -Wl,-rpath,:::::::::::::: 

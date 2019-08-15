@@ -1,0 +1,223 @@
+#include<ngl_ir.h>
+#include<aui_input.h>
+#include<map>
+#include<iostream>
+#include<fstream>
+#include<ngl_log.h>
+#include<ngl_msgq.h>
+NGL_MODULE(IRINPUT)
+
+static aui_hdl hdl_key=NULL;
+
+typedef struct{
+   aui_hdl hdl;
+   std::map<int,int>keymap;
+}IRDEV;
+
+#define NB_DEV 8
+
+static IRDEV irdevices[NB_DEV];
+static std::map<std::string,int>name2key;
+static std::map<int,std::string>key2name;
+static DWORD msgQ=0;
+#define REGIST_KEY(x) {name2key[#x]=NGL_##x ;key2name[NGL_##x]=#x;}
+
+DWORD nglIrInit(){
+    if(msgQ)return 0;
+    msgQ=nglMsgQCreate(16,sizeof(aui_key_info));
+    aui_key_init(NULL,NULL);
+    memset(&irdevices,0,sizeof(IRDEV)*NB_DEV);
+    aui_log_priority_set(AUI_MODULE_INPUT,AUI_LOG_PRIO_DEBUG);    
+    aui_log_priority_set(AUI_MODULE_PANEL,AUI_LOG_PRIO_DEBUG);    
+    //REGIST_KEY(KEY_LEFT);it the same as keynames["KEY_LEFT"]=NGL_KEY_LEFT;
+    REGIST_KEY(KEY_BACKSPACE);
+    REGIST_KEY(KEY_ESCAPE);
+    REGIST_KEY(KEY_ENTER);
+    REGIST_KEY(KEY_DEL);
+    REGIST_KEY(KEY_MENU);
+    REGIST_KEY(KEY_EPG);
+    REGIST_KEY(KEY_SUBT);
+    REGIST_KEY(KEY_HELP);
+    REGIST_KEY(KEY_VOL_INC);
+    REGIST_KEY(KEY_VOL_DEC);
+    REGIST_KEY(KEY_CH_UP);
+    REGIST_KEY(KEY_CH_DOWN);
+
+    REGIST_KEY(KEY_LEFT);
+    REGIST_KEY(KEY_RIGHT);
+    REGIST_KEY(KEY_UP); 
+    REGIST_KEY(KEY_DOWN);
+    REGIST_KEY(KEY_PGUP);
+    REGIST_KEY(KEY_PGDOWN);
+     
+    REGIST_KEY(KEY_0);    REGIST_KEY(KEY_1);
+    REGIST_KEY(KEY_2);    REGIST_KEY(KEY_3);    REGIST_KEY(KEY_4);    REGIST_KEY(KEY_5);
+    REGIST_KEY(KEY_6);    REGIST_KEY(KEY_7);    REGIST_KEY(KEY_8);    REGIST_KEY(KEY_9);
+
+    REGIST_KEY(KEY_F0);   REGIST_KEY(KEY_F1);
+    REGIST_KEY(KEY_F2);   REGIST_KEY(KEY_F3);    REGIST_KEY(KEY_F4);   REGIST_KEY(KEY_F5);
+    REGIST_KEY(KEY_F6);   REGIST_KEY(KEY_F7);    REGIST_KEY(KEY_F8);   REGIST_KEY(KEY_F9);
+    
+    REGIST_KEY(KEY_A);    REGIST_KEY(KEY_B);    REGIST_KEY(KEY_C);    REGIST_KEY(KEY_D);
+    REGIST_KEY(KEY_E);    REGIST_KEY(KEY_F);    REGIST_KEY(KEY_G);    REGIST_KEY(KEY_H);
+    REGIST_KEY(KEY_I);    REGIST_KEY(KEY_J);    REGIST_KEY(KEY_K);    REGIST_KEY(KEY_L);
+    REGIST_KEY(KEY_N);    REGIST_KEY(KEY_O);    REGIST_KEY(KEY_P);    REGIST_KEY(KEY_Q);
+    REGIST_KEY(KEY_R);    REGIST_KEY(KEY_S);    REGIST_KEY(KEY_T);    REGIST_KEY(KEY_U);
+    REGIST_KEY(KEY_V);    REGIST_KEY(KEY_W);    REGIST_KEY(KEY_X);    REGIST_KEY(KEY_Y);
+    REGIST_KEY(KEY_Z);
+
+}
+#if 0
+const struct aui_key_map ali_key_map[] =
+{
+        {0x60df2ad5,            KEY_MENU},
+
+        {(0x60df12ed),          KEY_RIGHT},
+        {(0x60dfb847),          KEY_DOWN},
+        {(0x60df3ac5),          KEY_ENTER},
+        {(0x60df38c7),          KEY_LEFT},
+        {(0x60df22dd),          KEY_UP},
+
+        {(0x60df926d),          KEY_0},
+        {(0x60dfc837),          KEY_1},
+        {(0x60df08f7),          KEY_2},
+        {(0x60df8877),          KEY_3},
+        {(0x60dff00f),          KEY_4},
+        {(0x60df30cf),          KEY_5},
+        {(0x60dfb04f),          KEY_6},
+        {(0x60dfd02f),          KEY_7},
+        {(0x60df10ef),          KEY_8},
+        {(0x60df906f),          KEY_9},
+
+        {(0x60df50af),          KEY_MEDIA},
+        {(0x60dfd22d),          KEY_PAGEDOWN},
+        {(0x60dfe01f),          KEY_PAGEUP},
+        {(0x60df827d),          KEY_TEXT},
+        {(0x60df708f),          KEY_POWER},
+        {(0x60df20df),          KEY_PREVIOUS},
+        {(0x60df0af5),          KEY_NEXT},
+
+        {(0x60df629d),          KEY_AUDIO},
+        {(0x60df807f),          KEY_SUBTITLE},
+
+        {(0x60df9867),          KEY_SLEEP},
+        {(0x60dfe21d),          KEY_FIND},
+        {(0x60dfa05f),          KEY_MUTE},
+        {(0x60df7a85),          KEY_PAUSE},
+#if 1
+        {(0x60dfa25d),          KEY_FORMAT},
+#else
+        {(0x60dfa25d),                  KEY_HELP},
+#endif
+        {(0x60df6897),          KEY_INFO},
+        {(0x60df42bd),          KEY_ESC},
+        {(0x60df52ad),          KEY_STB},
+        {(0x60df02fd),          KEY_RADIO},
+        {(0x60dfc23d),          KEY_FAVORITES},
+#if 1
+        {(0x60dfa857),          KEY_RECORD},
+        {(0x60df18e7),          KEY_PLAY},
+        {(0x60df58a7),          KEY_FRAMEBACK},
+        {(0x60dfd827),          KEY_FRAMEFORWARD},
+        {(0x60df4ab5),          KEY_REVSLOW},
+        {(0x60dfaa55),          KEY_SLOW},
+        {(0x60dfe817),          KEY_STOP},
+#endif
+        {(0x60df40bf),          KEY_ZOOM},
+        {(0x60df00ff),          KEY_EPG},
+        {(0x60dfc03f),          KEY_LAST},
+        {(0x60df609f),          KEY_RED},
+        {(0x60df7887),          KEY_GREEN},
+        {(0x60dff807),          KEY_YELLOW},
+        {(0x60dfba45),          KEY_BLUE},
+
+        {(0x60dfca35),          KEY_DVR_INFO},
+        {(0x60dfb24d),          KEY_FILE},
+        {(0x60df8a75),          KEY_DVRLIST},
+        {(0x60df1ae5),          KEY_USBREMOVE},
+        {(0x60df6a95),          KEY_PIP},
+        {(0x60df9a65),          KEY_PIP_LIST},
+        {(0x60df5aa5),          KEY_SWAP},
+        {(0x60dfda25),          KEY_MOVE},
+        {(0x60dfea15),          KEY_AB},
+        {(0x60df28d7),          KEY_FAVUP},
+        {(0x60df48b7),          KEY_FAVDOWN},
+
+};
+#endif
+static void key_callback(aui_key_info*key,void*d){
+    int rc=nglMsgQSend(msgQ,key,sizeof(aui_key_info),100);
+    NGLOG_DEBUG("=====key=0x%x sendq=%d",key->n_key_code,rc);
+}
+DWORD nglIrOpen(int id,const char*keymap){
+    IRDEV*ir=&irdevices[id];
+    std::ifstream fin;
+    fin.open(keymap);
+    char line[256];
+    
+    /*struct aui_key_map_cfg ir_cfg;
+    ir_cfg.map_entry = (struct aui_key_map *)ali_key_map;
+    ir_cfg.unit_num = sizeof(ali_key_map) / sizeof(struct aui_key_map);
+
+    NGLOG_DEBUG("aui_key_set_ir_map\n");
+    aui_key_set_ir_map(ir->hdl, &ir_cfg);*/
+
+    int rc=aui_key_open(0,NULL,&ir->hdl);
+    NGLOG_DEBUG("aui.hdl=%p rc=%d",ir->hdl,rc);
+    rc= aui_key_set_ir_rep_interval(ir->hdl, 1000, 1000);
+    NGLOG_DEBUG("aui_key_set_ir_rep_interval=%d",rc);
+    rc=aui_key_callback_register(ir->hdl,key_callback);
+#define SEP " \t,;:"
+    while(fin.is_open()&&fin.getline(line,256)){
+        int idx=0;
+        char *p,*ps[32];
+        NGLOG_DEBUG(line);
+        p=strtok(line,SEP);
+        while(p&&idx<32){
+            ps[idx++]=p;
+            p=strtok(NULL,SEP);
+        }
+       if(idx<2||NULL==strstr(ps[0],"KEY"))continue;
+       int base=strcasecmp(ps[1],"0x")==0?16:10;
+       int key=strtol(ps[1],NULL,base);
+       //keynames[p[0]]=key;
+       NGLOG_DEBUG("%s=%x",ps[0],name2key[ps[0]]);
+       ir->keymap[key]=name2key[ps[0]];
+    }
+    if(rc==0)return (DWORD)ir;
+    return 0;
+}
+
+DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key){
+    IRDEV*ir=(IRDEV*)handle;
+    aui_key_info info;
+
+    if(ir<irdevices||ir>=&irdevices[NB_DEV]){
+        NGLOG_DEBUG("invalid para");
+        return NGL_INVALID_PARA;
+    }
+    memset(key,0,sizeof(NGLKEYINFO));
+    memset(&info,9,sizeof(aui_key_info));
+#if 0
+    int rc=aui_key_key_get(ir->hdl,&info);
+#else
+    int rc= nglMsgQReceive(msgQ,&info,sizeof(aui_key_info),100);
+#endif
+    auto fnd=ir->keymap.find(info.n_key_code);
+    key->key_code=(fnd!=ir->keymap.end())?fnd->second:info.n_key_code;
+    key->repeat=info.n_count;
+    NGLOG_DEBUG("aui_key_key_get(%p)=%d key_code=0x%x  keyname=%s",ir->hdl,rc,key->key_code,key2name[key->key_code]);
+    key->state=(NGLKEYSTATE)info.e_status;
+    return rc==0?NGL_OK:NGL_ERROR;
+}
+
+DWORD nglIrClose(DWORD handle){
+    IRDEV*ir=(IRDEV*)handle;
+    if(ir<irdevices||ir>=&irdevices[NB_DEV])
+        return NGL_INVALID_PARA;
+    aui_key_close(ir->hdl);
+    ir->hdl=NULL;
+    ir->keymap.clear();
+    return NGL_OK;
+}
+

@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC   -shared -Wl,-soname,libiconv.so -o libiconv.so CMakeFiles/iconv.dir/lib/iconv.c.o libcharset.so -Wl,-rpath,/home/houzh/alitest/src/3rdparty/libiconv/out: 

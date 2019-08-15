@@ -1,0 +1,1 @@
+/usr/bin/cc     CMakeFiles/iconvcli.dir/src/iconv_no_i18n.c.o  -o iconv -rdynamic libiconv.so libicrt.a libcharset.so -Wl,-rpath,/home/houzh/alitest/src/3rdparty/libiconv/out: 

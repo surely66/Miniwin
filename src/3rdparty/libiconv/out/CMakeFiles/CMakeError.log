@@ -1,0 +1,349 @@
+Determining if files mach-o/dyld.h exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3214466972/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3214466972.dir/build.make CMakeFiles/cmTryCompileExec3214466972.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3214466972.dir/CheckIncludeFiles.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec3214466972.dir/CheckIncludeFiles.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c:2:25: fatal error: mach-o/dyld.h: No such file or directory
+ #include <mach-o/dyld.h>
+                         ^
+compilation terminated.
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec3214466972.dir/CheckIncludeFiles.c.o] Error 1
+make: *** [cmTryCompileExec3214466972/fast] Error 2
+
+Source:
+/* */
+#include <mach-o/dyld.h>
+
+
+int main(void){return 0;}
+
+Determining if files sys/inttypes.h exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec2290423231/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2290423231.dir/build.make CMakeFiles/cmTryCompileExec2290423231.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2290423231.dir/CheckIncludeFiles.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec2290423231.dir/CheckIncludeFiles.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c:2:26: fatal error: sys/inttypes.h: No such file or directory
+ #include <sys/inttypes.h>
+                          ^
+compilation terminated.
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec2290423231.dir/CheckIncludeFiles.c.o] Error 1
+make: *** [cmTryCompileExec2290423231/fast] Error 2
+
+Source:
+/* */
+#include <sys/inttypes.h>
+
+
+int main(void){return 0;}
+
+Determining if files winsock2.h exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3795654715/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3795654715.dir/build.make CMakeFiles/cmTryCompileExec3795654715.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3795654715.dir/CheckIncludeFiles.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec3795654715.dir/CheckIncludeFiles.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckIncludeFiles.c:2:22: fatal error: winsock2.h: No such file or directory
+ #include <winsock2.h>
+                      ^
+compilation terminated.
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec3795654715.dir/CheckIncludeFiles.c.o] Error 1
+make: *** [cmTryCompileExec3795654715/fast] Error 2
+
+Source:
+/* */
+#include <winsock2.h>
+
+
+int main(void){return 0;}
+
+Determining if the function fpurge exists failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3858471660/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3858471660.dir/build.make CMakeFiles/cmTryCompileExec3858471660.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3858471660.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=fpurge   -o CMakeFiles/cmTryCompileExec3858471660.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.2/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec3858471660
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3858471660.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=fpurge    CMakeFiles/cmTryCompileExec3858471660.dir/CheckFunctionExists.c.o  -o cmTryCompileExec3858471660 -rdynamic 
+CMakeFiles/cmTryCompileExec3858471660.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `fpurge'
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec3858471660] Error 1
+make: *** [cmTryCompileExec3858471660/fast] Error 2
+
+
+Determining if the function initstat_r exists failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec1228708611/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec1228708611.dir/build.make CMakeFiles/cmTryCompileExec1228708611.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec1228708611.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=initstat_r   -o CMakeFiles/cmTryCompileExec1228708611.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.2/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec1228708611
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1228708611.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=initstat_r    CMakeFiles/cmTryCompileExec1228708611.dir/CheckFunctionExists.c.o  -o cmTryCompileExec1228708611 -rdynamic 
+CMakeFiles/cmTryCompileExec1228708611.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `initstat_r'
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec1228708611] Error 1
+make: *** [cmTryCompileExec1228708611/fast] Error 2
+
+
+Determining if the function pthread_sigmask exists failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec2146945868/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2146945868.dir/build.make CMakeFiles/cmTryCompileExec2146945868.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2146945868.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_sigmask   -o CMakeFiles/cmTryCompileExec2146945868.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.2/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec2146945868
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2146945868.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_sigmask    CMakeFiles/cmTryCompileExec2146945868.dir/CheckFunctionExists.c.o  -o cmTryCompileExec2146945868 -rdynamic 
+CMakeFiles/cmTryCompileExec2146945868.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `pthread_sigmask'
+collect2: error: ld returned 1 exit status
+make[1]: *** [cmTryCompileExec2146945868] Error 1
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make: *** [cmTryCompileExec2146945868/fast] Error 2
+
+
+Determining if the function _NSGetExecutablePath exists failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3358876630/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3358876630.dir/build.make CMakeFiles/cmTryCompileExec3358876630.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3358876630.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=_NSGetExecutablePath   -o CMakeFiles/cmTryCompileExec3358876630.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.2/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec3358876630
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3358876630.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=_NSGetExecutablePath    CMakeFiles/cmTryCompileExec3358876630.dir/CheckFunctionExists.c.o  -o cmTryCompileExec3358876630 -rdynamic 
+CMakeFiles/cmTryCompileExec3358876630.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `_NSGetExecutablePath'
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec3358876630] Error 1
+make: *** [cmTryCompileExec3358876630/fast] Error 2
+
+
+Determining if the fgets_unlocked exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec485094022/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec485094022.dir/build.make CMakeFiles/cmTryCompileExec485094022.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec485094022.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec485094022.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘fgets_unlocked’ undeclared (first use in this function)
+   return ((int*)(&fgets_unlocked))[argc];
+                   ^
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec485094022.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec485094022/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef fgets_unlocked
+  return ((int*)(&fgets_unlocked))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the fputs_unlocked exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec882072811/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec882072811.dir/build.make CMakeFiles/cmTryCompileExec882072811.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec882072811.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec882072811.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘fputs_unlocked’ undeclared (first use in this function)
+   return ((int*)(&fputs_unlocked))[argc];
+                   ^
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec882072811.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec882072811/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef fputs_unlocked
+  return ((int*)(&fputs_unlocked))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the program_invocation_name exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3660962275/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3660962275.dir/build.make CMakeFiles/cmTryCompileExec3660962275.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3660962275.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec3660962275.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘program_invocation_name’ undeclared (first use in this function)
+   return ((int*)(&program_invocation_name))[argc];
+                   ^
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec3660962275.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec3660962275/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef program_invocation_name
+  return ((int*)(&program_invocation_name))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the program_invocation_short_name exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec4289072293/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec4289072293.dir/build.make CMakeFiles/cmTryCompileExec4289072293.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec4289072293.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec4289072293.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘program_invocation_short_name’ undeclared (first use in this function)
+   return ((int*)(&program_invocation_short_name))[argc];
+                   ^
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec4289072293.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec4289072293/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef program_invocation_short_name
+  return ((int*)(&program_invocation_short_name))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the environ exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec1485758431/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec1485758431.dir/build.make CMakeFiles/cmTryCompileExec1485758431.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec1485758431.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec1485758431.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘environ’ undeclared (first use in this function)
+   return ((int*)(&environ))[argc];
+                   ^
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec1485758431.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec1485758431/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <unistd.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef environ
+  return ((int*)(&environ))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the mbstate_t exist failed with the following output:
+Change Dir: /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3272843918/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3272843918.dir/build.make CMakeFiles/cmTryCompileExec3272843918.dir/build
+make[1]: Entering directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3272843918.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec3272843918.dir/CheckSymbolExists.c.o   -c /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: expected expression before ‘mbstate_t’
+   return ((int*)(&mbstate_t))[argc];
+                   ^
+make[1]: Leaving directory `/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec3272843918.dir/CheckSymbolExists.c.o] Error 1
+make: *** [cmTryCompileExec3272843918/fast] Error 2
+
+File /home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <wchar.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef mbstate_t
+  return ((int*)(&mbstate_t))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+

@@ -1,0 +1,4 @@
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/iconvcli.dir
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/icrt.dir
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/charset.dir
+/home/houzh/alitest/src/3rdparty/libiconv/out/CMakeFiles/iconv.dir
