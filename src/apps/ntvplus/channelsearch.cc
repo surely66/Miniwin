@@ -108,6 +108,9 @@ SearchWindow::SearchWindow(int x,int y,int w,int h,bool advance):NTVWindow(x,y,w
         for(i=0;cha[i];i++)ch_available->addItem(new Selector::ListItem(cha[i]));
         for(i=0;cht[i];i++)ch_type->addItem(new Selector::ListItem(cht[i]));
         for(i=0;chm[i];i++)sch_mode->addItem(new Selector::ListItem(chm[i]));
+        ch_available->setIndex(0);
+        ch_type->setIndex(0);
+        sch_mode->setIndex(0);
     
         ch_available->setLabelWidth(600);
         ch_type->setLabelWidth(600);
@@ -162,12 +165,12 @@ int SearchWindow::loadData(const std::string&fname){
 
 int SearchWindow::getSearchTransponders(std::vector<TRANSPONDER>&tps){
     int idx;
-    NGLOG_DEBUG("scgmode=%op",sch_mode);
-    if(sch_mode&&sch_mode->getIndex()==0){
+    NGLOG_DEBUG("schmode=%p",sch_mode);
+    if(sch_mode&&sch_mode->getIndex()==0){//0 single tp ,by nit
         idx=tplst->getIndex();
         TransponderItem*itm=(TransponderItem*)tplst->getItem(idx);
         tps.push_back(itm->tp);
-    }else{
+    }else{//all tp of selected satellite
         for(int i=0;i<tplst->getItemCount();i++){
               TransponderItem*itm=(TransponderItem*)tplst->getItem(i);
               tps.push_back(itm->tp);

@@ -5,13 +5,16 @@
 #include <dvbepg.h>
 #include <satellite.h>
 #include <diseqc.h>
-
+#include <string>
 using namespace ntvplus;
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
     Desktop*desktop=new Desktop();
     app.setName("com.ntvplus.dvbs");
-    app.setOpacity(0xAA);
+
+    app.setOpacity(app.getArgAsInt("alpha",255));
+    app.getString("mainmenu",app.getArg("language","eng"));
+
     desktop->setKeyListener([](int key)->bool{
          printf("rcv key:%x menu=%x\r\n",key,NGL_KEY_MENU);
          switch(key){

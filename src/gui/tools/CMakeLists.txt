@@ -7,10 +7,21 @@ set(SRCS_PAK ${CMAKE_SOURCE_DIR}/src/gui/core/filepak.cc
              ${CMAKE_SOURCE_DIR}/src/gui/core/gzstream.cc
              ./main.cc
 )
-include_directories(../core/)
+include_directories(../core/
+  ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
+)
+
 find_package(z)
+
 add_executable(respack ${SRCS_PAK})
+
 target_link_libraries(respack z)
+
+link_directories(${CMAKE_PROJECT_DIR}/libs)
+add_executable(lansplit lansplit.cc)
+target_link_libraries(lansplit jsoncpp)
+
+
 add_custom_command (TARGET respack POST_BUILD
 #  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/resource.h   #输出文件
   COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/respack  ${CMAKE_SOURCE_DIR}

@@ -28,7 +28,8 @@ void ImageButton::onDraw(GraphContext&canvas){
         if(img_)canvas.draw_image(img_,&rect,nullptr,ST_CENTER_INSIDE);
         canvas.set_color(getFgColor());
         if(text_.empty()==false){
-            canvas.draw_text(rect,text_,DT_CENTER|DT_BOTTOM);
+            std::string txt=App::getInstance().getString(text_);
+            canvas.draw_text(rect,txt,DT_CENTER|DT_BOTTOM);
         }
     }else{
         if(imghot)canvas.draw_image(imghot,&rect,nullptr,ST_CENTER_INSIDE);

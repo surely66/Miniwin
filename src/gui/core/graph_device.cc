@@ -43,6 +43,7 @@ GraphDevice::GraphDevice(int format){
     primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
     FT_Face ft_face;
     FT_New_Face(ft_library,"/usr/lib/fonts/droid_chn.ttf",0,&ft_face);
+    //FT_New_Face(ft_library,"./msyh.ttc",0,&ft_face);
     NGLOG_DEBUG("ft_library=%p ft_face=%p family=%s",ft_library,ft_face,ft_face->family_name);
     RefPtr<FontFace>face=FtFontFace::create(ft_face,FT_LOAD_FORCE_AUTOHINT);
     fonts[ft_face->family_name]=face;

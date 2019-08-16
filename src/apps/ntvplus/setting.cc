@@ -23,7 +23,8 @@ public:
 public:
    SettingItem(Json::Value v):AbsListView::ListItem(std::string()){
        if(v.isMember("name")){
-           setText(v["name"].asCString());
+           std::string id=v["name"].asCString();
+           setText(App::getInstance().getString(id));
        }else{//no name ,value is name
            char buf[32];
            sprintf(buf,"%d",v["value"].asInt());

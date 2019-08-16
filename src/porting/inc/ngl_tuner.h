@@ -63,6 +63,16 @@ typedef enum{
     NGL_NIM_CPOLAR_RIGHT=3/*Right Hand Polarization (13V)*/
 }NGLNimPolar;
 
+typedef enum{
+   NGL_22K_OFF=0,
+   NGL_22K_ON=1
+}NGLNim22K;
+
+typedef enum{
+   NGL_LNB_OFF=0,
+   NGL_LNB_ON=1
+}NGLNimLNB;
+
 typedef struct{ 
     UINT frequency;
     UINT symbol_rate;

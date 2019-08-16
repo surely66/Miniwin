@@ -30,6 +30,7 @@ INT nglSndSetMute(int idx,BOOL mute){
     return aui_snd_mute_set(snd_hdl,mute);
 }
 
-INT nglSndSetSPDIF(int idx){
+INT nglSndSetOutput(int dev,int type){
+    //aui_snd_out_data_type_set(snd_hdl,
 }
 

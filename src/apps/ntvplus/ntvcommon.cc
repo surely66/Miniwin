@@ -25,13 +25,13 @@ void NTVTitleBar::setTime(time_t tn){
 }
 
 void NTVTitleBar::setTitle(const std::string&txt){
-   title=txt;
+   title=txt;//App::getInstance().getString(txt);
    invalidate(nullptr);
 }
 
 void NTVTitleBar::onDraw(GraphContext&canvas){
     char buf[32];
-    const char*weekday[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+    const char*weekday[]={"sunday","monday","tuesday","wednesday","thursday","friday","saturday"};
     RECT rect=getClientRect();
     View::onDraw(canvas);
     int xx=50;
@@ -73,6 +73,7 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     canvas.get_text_extents(sdate,te1);
     rect.x=getWidth()-380;
     rect.width=te1.width+te1.height;
+    sweek=App::getInstance().getString(sweek);
     canvas.draw_text(rect,sweek+"\n"+sdate,DT_CENTER|DT_VCENTER|DT_MULTILINE);
 }
 

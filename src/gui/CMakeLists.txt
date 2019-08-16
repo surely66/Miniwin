@@ -30,7 +30,7 @@ include_directories(
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
 
-target_link_libraries(gui pthread pixman-1 png jpeg cairo-static freetype tvhal jsoncpp_lib unibreak svg usbmanager cairosvg)
+target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype tvhal jsoncpp_lib unibreak svg usbmanager cairosvg)
 # simplesvg)
 
 #add_custom_command(TARGET gui PRE_BUILD 

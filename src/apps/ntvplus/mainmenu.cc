@@ -30,7 +30,7 @@ static void onButtonClick(View&v){
 }
 
 Window*CreateMainMenu(){
-   const char* btnname[]={"Channels","TV guide","MultiMedia","настройки системы","Account账号"};
+   const char* btnname[]={"channels","tvguide","multimedia","syssettings","account"};
    const char*imgname[]={
           "channel_uns.png","channel_sel.png",
           "tv_uns.png","tv_sel.png",
@@ -40,7 +40,7 @@ Window*CreateMainMenu(){
    };
    NTVWindow*w=new NTVWindow(0,0,1280,720);
    w->initContent(NWS_TITLE|NWS_TOOLTIPS);
-   w->setText("MainMenu");
+   w->setText("mainmenu");
    for(int i=0;i<sizeof(btnname)/sizeof(char*);i++){
        ImageButton *btn=new ImageButton(btnname[i],220,230);
        if(i==0)btn->setFlag(View::Attr::ATTR_FOCUSED);
@@ -55,9 +55,7 @@ Window*CreateMainMenu(){
    w->addTipInfo("help_icon_4arrow.png","Navigation",400,160);
    w->addTipInfo("help_icon_ok.png","Select",-1,160);
    w->addTipInfo("help_icon_exit.png","Exit",-1,160);
-
-   std::string ss=App::getInstance().getString("mainmenu","eng");
-   NGLOG_DEBUG("load menustring=%s",ss.c_str());
+   
    NGLOG_DEBUG("show mainmenu");
    w->show();
    return w;

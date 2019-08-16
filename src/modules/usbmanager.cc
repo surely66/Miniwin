@@ -24,6 +24,7 @@
 #include <iostream>
 #include <strstream>
 #include <fstream>
+#include <mntent.h>
 
 NGL_MODULE(USBMONITOR)
 
@@ -63,7 +64,6 @@ static void USBMonitor(void*p){
     client.nl_groups = 1; /* receive broadcast message*/  
     setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &buffersize, sizeof(buffersize));  
     bind(sockfd, (struct sockaddr*)&client, sizeof(client));
-    send(sockfd,"add\n\0",4,0);   
     while (1) {  
         char buf[UEVENT_BUFFER_SIZE] = { 0 };  
         FD_ZERO(&fds);  
@@ -132,20 +132,31 @@ int USBManager::getDeviceInfo(const std::string&dev,BlockDevice&info){
 }
 
 int USBManager::getMountPoint(const std::string&dev,std::string&path){
-    std::ifstream fin("/proc/mounts");
-    std::string line;
-    while(!fin.eof()){
-         getline(fin,line);
-         size_t pos=line.find(' ');
-         if(std::string::npos==pos)continue;
-         std::string name=line.substr(0,pos);
-         NGLOG_DEBUG("name=%s  mountpoint:%s",name.c_str(),line.substr(pos).c_str());
-         size_t pm=name.find(dev);
-         if(std::string::npos!=pm){
-             path=line.substr(pos); 
-             return 0;
+    int rc=-1;
+    struct mntent *ent;
+    FILE*f=fopen("/proc/mounts","r");//setmntent("/etc/mtab","r");//"/proc/mounts", "r");
+    
+    if(nullptr==f)return -1;
+    ssize_t read;
+    size_t len;
+    char *line=NULL;
+    while(getdelim(&line,&len,'\n',f)!=-1){//;//if(len>0)line[rc]=0;
+         printf("%s",line);
+    }printf("\r\n==================222\r\n");
+    printf("====%s\r\n",line);
+    //free(line);
+    /*while(ent=getmntent(f)){
+         NGLOG_DEBUG("name=%s  type:%s mountpoint:%s ",ent->mnt_fsname, ent->mnt_type,ent->mnt_dir);
+         if(strstr(ent->mnt_fsname,dev.c_str())!=NULL){
+             path=ent->mnt_dir;
+             rc=0;
+             break;
          }
-    }return -1;
+    }*/
+    //ent=getmntent(f);
+    NGLOG_DEBUG("ent=%p",ent);
+    endmntent(f);
+    return rc;
 }
 
 void USBManager::onAddDevice(const std::string& dev){
