@@ -35,7 +35,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/arch_configure.cmake)
 
 #config
 include(${PROJECT_SOURCE_DIR}/cmake/config_configure.cmake)
-message("PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
+message("PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}  PROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}" )
 include_directories(
     pixman
     ${PROJECT_BINARY_DIR}/pixman
