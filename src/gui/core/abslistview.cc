@@ -40,7 +40,6 @@ void AbsListView::sort(ItemCompare cmp,bool revert){
 #if 1//std::sort myb caused crash :( if function cmp has logical error.
      std::sort(list_.begin(),list_.end(),
           [&](std::shared_ptr<ListItem>a, std::shared_ptr<ListItem> b)->bool{
-                 NGLOG_DEBUG_IF(a==nullptr||b==nullptr,"a=%p b=%p",a,b);
                  bool rc=cmp(*a,*b);
                  return (revert==false)?rc:(!rc);
           });

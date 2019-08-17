@@ -221,7 +221,7 @@ DWORD nglResetEvent(DWORD eventid)
      EVENT*e=(EVENT*)eventid;
      if(NULL==e)return NGL_INVALID_PARA;
      pthread_mutex_lock(&e->mtx);
-     e->triggered=false;
+     e->triggered=FALSE;
      pthread_mutex_unlock(&e->mtx);
      return 0;
 #else
@@ -236,7 +236,7 @@ DWORD nglSetEvent(DWORD eventid)
     EVENT*e=(EVENT*)eventid;
     pthread_mutex_lock(&e->mtx);
     pthread_cond_broadcast(&e->cond);
-    e->triggered=true;
+    e->triggered=TRUE;
     pthread_mutex_unlock(&e->mtx);
 #else
     aui_os_event_set((aui_hdl)eventid,0);

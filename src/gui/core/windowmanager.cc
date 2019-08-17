@@ -124,7 +124,7 @@ void WindowManager::removeWindow(std::shared_ptr<Window>w){
             break;
        }
    } 
-   NGLOG_VERBOSE("w=%p windows.size=%d",w,windows_.size());
+   NGLOG_VERBOSE("w=%p windows.size=%d",w.get(),windows_.size());
 }
 
 void WindowManager::onResize(int width, int height) {

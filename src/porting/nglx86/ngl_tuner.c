@@ -26,7 +26,7 @@ typedef struct{
 static NGLTUNER sTuners[];
 
 static void TunerStateProc(void*p){
-   while(true){
+   while(1){
       int rc,i,j;
       for(i=0;i<NB_TUNERS;i++){
          INT locked=-2;
@@ -41,7 +41,7 @@ static void TunerStateProc(void*p){
               if(sCallBacks[j].tuneridx!=i&&sCallBacks[j].tuneridx!=-1)continue;
               if(NULL==sCallBacks[j].Callback)continue;
               if( sTuners[i].locked!=locked )
-                  sCallBacks[j].Callback(i,(locked==AUI_NIM_STATUS_LOCKED),sCallBacks[j].param);
+                  sCallBacks[j].Callback(i,(locked!=0),sCallBacks[j].param);
               sCallBacks[j].locked=locked;
          }
          sTuners[i].locked=locked;
@@ -50,15 +50,14 @@ static void TunerStateProc(void*p){
    } 
 }
 
-static AUI_RTN_CODE nim_init_cb(void *pv_param);
 DWORD nglTunerInit(){
-    DWORD threadId;
+    DWORD i,threadId;
     if(0!=nim_mutex)return NGL_OK;
     NGLOG_DEBUG("");
     nglCreateMutex(&nim_mutex);
     for(i=0;i<NB_TUNERS;i++){
         sTuners[i].locked=-1;
-        sTuners[i].nim_id=sTuners[i].attr.ul_nim_id = i;
+        sTuners[i].nim_id= i;
     }
     nglCreateThread(&threadId,0,1024,TunerStateProc,NULL);
     memset(sCallBacks,0,sizeof(sCallBacks));
@@ -72,7 +71,7 @@ DWORD  nglTunerLock(int tuneridx,NGLTunerParam*tp){
     nglLockMutex(nim_mutex);
     sTuners[tuneridx].locked=-1;//set to -1 ,make sure atleast 1 state callback will be called
     nglUnlockMutex(nim_mutex);
-    NGLOG_DEBUG("aui_nim_connect(hdl=%p,ul_freq=%d/%d)=%d",sTuners[tuneridx].hdl,pc->ul_freq,tp->u.c.frequency,rc);
+    NGLOG_DEBUG("aui_nim_connect(ul_freq=%d)=%d",tp->u.c.frequency,rc);
     return NGL_OK;
 }
 

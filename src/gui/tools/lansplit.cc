@@ -3,6 +3,8 @@
 #include <fstream>
 #include <algorithm>
 
+typedef std::function<void(void)>VOIDFUN;
+
 int main(int argc,char*argv[]){
     Json::CharReaderBuilder builder;
     Json::Value root;

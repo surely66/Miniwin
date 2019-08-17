@@ -5,13 +5,9 @@
 #include <errno.h>
 NGL_MODULE(TIMER)
 #define USE_SYSTIME 1
-static aui_hdl hdl_rtc=0;
+
 static NGL_TIME last_setted_time,last_time_time;
 void nglTimerInit(){
-   if(0==hdl_rtc){
-       aui_rtc_init();
-       aui_rtc_open(&hdl_rtc);
-   }
 }
 
 void nglGetTime(NGL_TIME *pTime)
@@ -31,7 +27,6 @@ DWORD nglSetTime(NGL_TIME*ptime){
     struct timeval tv;
     struct timespec ts;
     NGL_TM tm;
-    aui_clock clock;
     if(NULL==ptime)
         return NGL_INVALID_PARA; 
 #ifndef  USE_SYSTIME

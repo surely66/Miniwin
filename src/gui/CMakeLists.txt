@@ -7,7 +7,8 @@ aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(core/svg SRCS_SVG)
 aux_source_directory(core/cairomm   SRCS_CAIROMM)
 
-add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_SVG})
+
+add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ) #${SRCS_SVG})
 
 include_directories(
     ./core ./core/svg 
@@ -30,7 +31,11 @@ include_directories(
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
 
-target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype tvhal jsoncpp_lib unibreak svg usbmanager cairosvg)
+target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype
+       	tvhal jsoncpp_lib unibreak usbmanager
+	#svg cairosvg
+)
+
 # simplesvg)
 
 #add_custom_command(TARGET gui PRE_BUILD 

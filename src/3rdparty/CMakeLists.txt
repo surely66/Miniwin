@@ -15,6 +15,11 @@ add_subdirectory(gtest)
 add_subdirectory(expat)
 add_subdirectory(jsoncpp)
 add_subdirectory(id3)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
+    add_subdirectory(directfb)
+endif()
+
 #add_subdirectory(libcroco)
 #add_subdirectory(libxml2)
 #add_subdirectory(svg-native-viewer/svgnative)

@@ -46,28 +46,18 @@ static DMXCHANNEL*GetChannel(int pid){
   return NULL;
 }
 #define CHECKFILTER(flt) {if((flt<Filters)||(flt>=&Filters[MAX_FILTER]))return NGL_INVALID_PARA;}
-static NGLDMXFILTER*GetFilter(aui_hdl hdl){
-   int i;
-   for(i=0;i<MAX_FILTER;i++){
-       if(Filters[i].hfilter==hdl)
-          return Filters+i;
-   }
-   return NULL;
-}
 
 DWORD nglDmxInit(){
     int i;
     DWORD thid;
     static int sDMX_INITED=0;
-    struct aui_attr_tsg attr_tsg;
-    struct aui_attr_tsi attr_tsi;
     if(mtx_dmx)return 0;
     NGLOG_DEBUG("nglDmxInit\r\n");
     nglCreateMutex(&mtx_dmx);
     
     for(i=0;i<MAX_CHANNEL;i++){
-        Channels[i].dmx=NULL;
-        Channels[i].channel=NULL;
+        //Channels[i].dmx=NULL;
+        //Channels[i].channel=NULL;
         Channels[i].pid=UNUSED_PID;
         Channels[i].num_filt=0;
     }
@@ -79,7 +69,7 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
     int rc;
     nglLockMutex(mtx_dmx);
     nglUnlockMutex(mtx_dmx);
-    return (DWORD)flt;
+    return (DWORD)0;
 }
 
 INT nglGetFilterPid( DWORD dwStbFilterHandle){

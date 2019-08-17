@@ -6,9 +6,6 @@
 NGL_MODULE(AV)
 
 typedef struct{
-    aui_hdl hdl_av;
-    aui_av_stream_info_t stream_info;
-    aui_attrAV attr;
 }NGLAV;
 
 #define NB_DEMUX 4 

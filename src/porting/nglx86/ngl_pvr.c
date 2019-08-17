@@ -1,8 +1,5 @@
 #include <ngl_types.h>
 #include <ngl_pvr.h>
-#include <aui_pvr.h>
-#include <aui_ca_pvr.h>
-#include <aui_dsc.h>
 #include <ngl_log.h>
 #include <ngl_timer.h>
 
@@ -11,7 +8,6 @@ NGL_MODULE(PVR)
 
 static unsigned char*pvr_buffer=NULL;
 typedef struct{
-   aui_hdl hdl;
    char *path;
 }NGLPVR;
 

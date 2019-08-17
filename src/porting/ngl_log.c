@@ -147,7 +147,8 @@ void nglLogParseModule(const char*log){
 }
 
 void nglLogParseModules(int argc,const char*argv[]){
-   for (int i = 1; i <argc; i++) {
+   int i;
+   for ( i = 1; i <argc; i++) {
        if(strchr(argv[i],':')){
           nglLogParseModule(argv[i]);
        }
