@@ -11,11 +11,11 @@ include_directories(../core/
   ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
 )
 
-find_package(z)
+#find_package(z)
 
 add_executable(respack ${SRCS_PAK})
 
-target_link_libraries(respack z)
+#target_link_libraries(respack z)
 
 link_directories(${CMAKE_PROJECT_DIR}/libs)
 add_executable(lansplit lansplit.cc)

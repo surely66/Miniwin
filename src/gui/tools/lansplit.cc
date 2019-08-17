@@ -34,23 +34,12 @@ int main(int argc,char*argv[]){
     for(int i=0;i<lannames.size();i++){
         if(lannames[i]=="valuename")continue;
         std::string ofname="strings-"+lannames[i]+".json";
-#if 1 
         Json::StreamWriterBuilder builder;
         builder["commentStyle"] = "None";
         std::transform(ofname.begin(), ofname.end(), ofname.begin(), ::tolower);
         std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
         std::ofstream fout(ofname);
         writer->write(jlans[lannames[i]],&fout);
-#else 
-       std::ofstream fout(ofname);
-       Json::Value  jstrs=jlans[lannames[i]];
-       Json::Value::Members strs=jstrs.getMemberNames();
-       fout<<"{"<<std::endl;
-       for(int j=0;j<strs.size();j++){
-              fout<<"\""<<strs[j]<<"\":\""<<jstrs[strs[j]].asCString()<<"\""<<(j<strs.size()-1?",":" ") <<std::endl;
-       }
-       fout<<"}"<<std::endl;
-#endif
     }
     return 0;
 }
