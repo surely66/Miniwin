@@ -17,7 +17,7 @@ Window*CreateChannelPF();
 Window*CreateChannelSearch(bool advance=false);
 Window*CreateMultiMedia();
 Window*CreatePVRWindow();
-Window*CreateSearchResultWindow(std::vector<TRANSPONDER>tps,int mode=0);
+Window*CreateSearchResultWindow(std::vector<TRANSPONDER>tps,INT searchmode=0);//0 for NIT search others TP search
 
 Window*CreatePlayerCtrlWindow(const std::string&);
 Window*CreateMediaWindow();

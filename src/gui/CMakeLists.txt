@@ -53,11 +53,8 @@ add_custom_command(TARGET gui POST_BUILD
     COMMAND cp -u cairomm/*.h  ${CMAKE_SOURCE_DIR}/include/gui/cairomm   
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/core
     COMMENT "Copy GUI Header Files")
-add_executable(svgtest core/svgtest.c)
-target_link_libraries(svgtest jpeg png svg)
 
 install (TARGETS gui  DESTINATION lib)
-install (TARGETS svgtest  DESTINATION bin)
 install (TARGETS respackt  DESTINATION bin)
 install (FILES ${MMHEADERS} DESTINATION include/gui/cairomm/)
 install (FILES ${GUIHEADERS} DESTINATION include/gui/)

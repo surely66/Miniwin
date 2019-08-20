@@ -65,7 +65,7 @@ TEST_F(EPGTest,BAT){
    nglSetSectionFilterParameters(flt,1,mask,match);
    nglStartSectionFilter(flt);
    nglSleep(10000);
-   DtvInitLCN(1000);
+   DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
 }
 
 TEST_F(EPGTest,TEST){

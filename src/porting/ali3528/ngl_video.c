@@ -7,6 +7,7 @@
 #include <ngl_video.h>
 #include <ngl_log.h>
 #include <ngl_disp.h>
+#include <ngl_snd.h>
 
 NGL_MODULE(AV)
 
@@ -77,6 +78,7 @@ INT nglAvInit(){
     aui_snd_init(NULL,NULL);
     aui_log_priority_set(AUI_MODULE_AV,AUI_LOG_PRIO_DEBUG);
     nglDispInit();
+    nglSndInit();
     NGLOG_DEBUG("nglAvInit");
     for(i=0;i<NB_DEMUX;i++){
         NGLAV*av=&sAvPlayers[i];

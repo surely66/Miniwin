@@ -122,7 +122,6 @@ int DtvLoadProgramsData(const char*fname){
         fread(&ts.netid,sizeof(USHORT),1,f);
         fread(&ts.tsid,sizeof(USHORT),1,f);
         fread(&ts.tune,sizeof(NGLTunerParam),1,f);
-        NGLOG_DEBUG("load ts %d.%d freq:%d",ts.netid,ts.tsid,ts.tune.u.s.frequency);
         do{
             fread(sec,4,1,f);
             NGLOG_DUMP("TABLE",sec,4);
@@ -138,6 +137,7 @@ int DtvLoadProgramsData(const char*fname){
             default:NGLOG_ERROR("unknown tableid %x",sec[0]);
             }
         }while(!feof(f));
+        NGLOG_DEBUG("load ts %d.%d freq:%d pmt.size=%d",ts.netid,ts.tsid,ts.tune.u.s.frequency,ts.pmt.size());
         gStreams.push_back(ts);
     }
     do{
@@ -418,7 +418,7 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     switch(item){
     case SKI_VISIBLE:*value=(got->second->lcn&0x8000)?TRUE:FALSE;break;
     case SKI_DELETED:*value=got->second->deleted;break;
-    case SKI_LCN    :*value=(got->second->lcn&0x3FFF);break;
+    case SKI_LCN    :*value=(got->second->lcn&0x3FF);break;
     default:return NGL_ERROR;
     }
     return NGL_OK;
@@ -452,44 +452,45 @@ static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
        lcn=lcndata->lcn_start++;
     std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*loc);
     if(got!=service_lcn.end())
-        got->second->lcn=lcn;
+        got->second->lcn=lcn&0x3FF;
     return 1;
 }
 
-INT DtvInitLCN(USHORT lcn_start){
+INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
     int count=0;
     std::vector<SERVICELOCATOR> vsvc;
     std::vector<USHORT> vlcn;
     std::unordered_map<SERVICELOCATOR,USHORT>lcnmap;
     NGLOG_DEBUG("lcn start from %d",lcn_start);
-    for(auto sec:bats){
-        BAT b(sec);
-        SERVICELOCATOR svcs[64];
-        USHORT lcns[64];
-        DVBStream tss[32];
-        int tscount=b.getStreams(tss,false);
-        int num=b.getLCN(svcs,lcns);
-        if(num>0){//Nordig LCNV1
-            count+=num;
-            for(int i=0;i<num;i++){vsvc.push_back(svcs[i]);vlcn.push_back(lcns[i]);}
-            b.matchServices(vsvc.data(),vsvc.size());
-        }else{//Nordig V2
-            for(int i=0;i<tscount;i++){
-                int sc=tss[i].getLCN(svcs,lcns);
-                num+=sc;
+    if(mode&LCN_FROM_BAT){
+        for(auto sec:bats){
+            BAT b(sec);
+            SERVICELOCATOR svcs[64];
+            USHORT lcns[64];
+            DVBStream tss[32];
+            int tscount=b.getStreams(tss,false);
+            int num=b.getLCN(svcs,lcns);
+            if(num>0){//Nordig LCNV1
+                count+=num;
                 for(int i=0;i<num;i++){vsvc.push_back(svcs[i]);vlcn.push_back(lcns[i]);}
+                 b.matchServices(vsvc.data(),vsvc.size());
+            }else{//Nordig V2
+                for(int i=0;i<tscount;i++){
+                    int sc=tss[i].getLCN(svcs,lcns);
+                    num+=sc;
+                    for(int i=0;i<num;i++){vsvc.push_back(svcs[i]);vlcn.push_back(lcns[i]);}
+                }
             }
         }
+        NGLOG_DEBUG("%d service %d lcn",vsvc.size(),vlcn.size());
+        for(int i=0;i<vsvc.size();i++){ 
+            lcnmap[vsvc[i]]=vlcn[i];
+            NGLOG_VERBOSE("\t%d.%d.%d-->%d visible=%d",vsvc[i].netid,vsvc[i].tsid,vsvc[i].sid,(vlcn[i]&0x3FF),(vlcn[i]&0x8000)!=0);
+        }
     }
-    
-    NGLOG_DEBUG("%d service %d lcn",vsvc.size(),vlcn.size());
-    for(int i=0;i<vsvc.size();i++){ 
-        lcnmap[vsvc[i]]=vlcn[i];
-        NGLOG_VERBOSE("\t%d.%d.%d-->%d visible=%d",vsvc[i].netid,vsvc[i].tsid,vsvc[i].sid,(vlcn[i]&0x3FFF),(vlcn[i]&0x8000)!=0);
-    }
-
     LCNDATA lcndata={lcn_start,lcnmap};
-    DtvEnumService(LCN_CBK,&lcndata);
+    if(mode&LCN_FROM_USER)
+         DtvEnumService(LCN_CBK,&lcndata);
     return count;
 }
 

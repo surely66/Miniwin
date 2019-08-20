@@ -6,12 +6,16 @@
 #include<satellite.h>
 #include<ngl_log.h>
 #include<favgroup.h>
+#include<preferences.h>
+#include<ngl_disp.h>
+
 NGL_MODULE(DVBAPP)
 namespace nglui{
 
 
 DVBApp::DVBApp(int argc,const char**argv)
   :App(argc,argv){
+    Preferences pref;
     nglTunerInit();
     nglDmxInit();
     nglAvInit();
@@ -19,7 +23,10 @@ DVBApp::DVBApp(int argc,const char**argv)
     LoadSatelliteFromDB("satellites.json");
     DtvLoadProgramsData("dvb_programs.dat");
     FavInit("my_favorites.json");
-    DtvInitLCN(1000);
+    DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
+    pref.load("settings.pref");
+    nglDispSetResolution(pref.getInt("pciture","resolution",DISP_RES_720P));
+    
 }
 
 }//namespace

@@ -205,6 +205,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      aui_gfx_surface_clip_rect_set(surf_handle,&region_rect,AUI_GE_CLIP_INSIDE);
      aui_gfx_surface_fill(surf_handle,(hwsurface?0x0:0xFF000000),&region_rect);
      *surface=(DWORD)surf_handle;
+     aui_gfx_layer_antifliker_on_off(surf_handle,0);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d ret=%d",surf_handle,hwsurface,ret);
      return NGL_OK;
 #endif

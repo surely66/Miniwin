@@ -19,8 +19,8 @@ add_library(tvhal SHARED ${SRCS_COMMON})
 add_library(tvhal_static STATIC ${SRCS_COMMON})
 include_directories(inc)
 add_subdirectory(${NGL_CHIP_PLATFORM})
-target_link_libraries(tvhal $ENV{NGL_CHIP_PLATFORM} ${NGL_PLATFORM_LIBS})
-target_link_libraries(tvhal_static $ENV{NGL_CHIP_PLATFORM} ${NGL_PLATFORM_LIBS})
+target_link_libraries(tvhal ${NGL_CHIP_PLATFORM} ${NGL_PLATFORM_LIBS})
+target_link_libraries(tvhal_static ${NGL_CHIP_PLATFORM} ${NGL_PLATFORM_LIBS})
 
 add_subdirectory(tests)
 

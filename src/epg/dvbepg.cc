@@ -102,7 +102,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
          AddBATSection((BAT&)psitbl,&changed);
          break;
     case TBID_NIT:
-    case TBID_NIT_OTHER:{
+    case TBID_NIT_OTHER:{NGLOG_DEBUG("===RCV NIT===");
              SECTIONLIST*nitsecs=(SECTIONLIST*)UserData;
              itr=std::find(nitsecs->begin(),nitsecs->end(),psitbl);
              if(itr==nitsecs->end())nitsecs->push_back(psitbl);
@@ -323,13 +323,13 @@ static void  SearchProc(void*p)
                      int num=n2.getStreams(streams,false);
                      for(int i=0;i<num;i++){
                          if(streams[i].getDelivery(&tpinfo)){
-                              NGLOG_DEBUG("[%d] freq=%x",schFrequencies.size(),tpinfo.u.c.frequency);
+                              NGLOG_DEBUG("[%d] freq=%d",schFrequencies.size(),tpinfo.u.c.frequency);
                               schFrequencies.push_back(tpinfo);
                          }  
                      }
                  }
                  tunningIndex=0;
-                 SENDMSG(MSG_TUNNING,schFrequencies.size(),0);
+                 SENDMSG(MSG_TUNNING,0,schFrequencies.size());
                  NGLOG_DEBUG("nit sections.size=%d frequency.size=%d",nitsecs.size(),schFrequencies.size());
              }break;
         default:break;

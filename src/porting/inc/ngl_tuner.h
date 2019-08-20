@@ -74,14 +74,14 @@ typedef enum{
 }NGLNimLNB;
 
 typedef struct{ 
-    UINT frequency;
+    UINT frequency;//DVBC coded in MHz,followed by 300-468
     UINT symbol_rate;
     NGLQamMode modulation;
     NGLBandWidth bandwidth;
 }NGLCableParam;
 
 typedef struct{
-    UINT frequency;
+    UINT frequency;//DVBT coded in 10Hz
     NGLBandWidth bandwidth;
     NGLNimFEC fec; 
     NGLGuardInter guard_interval;
@@ -90,7 +90,7 @@ typedef struct{
 }NGLTerristrialParam;
 
 typedef struct{
-   UINT frequency;
+   UINT frequency;//for DVBS frequency coded in MHz
    UINT symbol_rate;
    NGLModulation modulation;
    NGLNimFEC fec;    

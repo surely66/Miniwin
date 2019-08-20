@@ -258,20 +258,20 @@ bool DVBStream::getDelivery(NGLTunerParam*tp){
   TAG_TERRSTRIAL_DELIVERY 0x5A
   TAG_SATELLITE2_DELIVERY 0x79*/
     BYTE*p=findDescriptor(TAG_CABLE_DELIVERYY);
-    if(p){
+    if(p){//frequency in DVBC is Mhz
         tp->u.c.frequency=Hex2BCD((p[2]<<24)|(p[3]<<16)|(p[4]<<8)|p[5]);
         tp->u.c.modulation=(NGLQamMode)p[8];
         tp->u.c.symbol_rate=Hex2BCD((p[9]<<20)|(p[10]<<12)|(p[11]<<4)|(p[12]>>4));
         //fecinner=p[12]&0x0F;
         return 1;
-    }else if(p=findDescriptor(TAG_SATELLITE_DELIVERY)){
+    }else if(p=findDescriptor(TAG_SATELLITE_DELIVERY)){//frequency for DVBS Ghz
         tp->u.s.frequency=Hex2BCD((p[2]<<24)|(p[3]<<16)|(p[4]<<8)|p[5]);
         tp->u.s.polar=(NGLNimPolar)( (p[8]>>5)&0x03);
         tp->u.s.symbol_rate=Hex2BCD((p[9]<<20)|(p[10]<<12)|(p[11]<<4)|(p[12]>>4));
         tp->u.s.modulation=(NGLModulation)(p[8]&0x03);
         tp->u.s.fec=(NGLNimFEC)(p[12]&0x0F);
         return 1;
-    }else if(p=findDescriptor(TAG_TERRSTRIAL_DELIVERY)){
+    }else if(p=findDescriptor(TAG_TERRSTRIAL_DELIVERY)){//frequency for DVBT is 10Hz
         tp->u.t.frequency=Hex2BCD((p[2]<<24)|(p[3]<<16)|(p[4]<<8)|p[5]);
         tp->u.t.bandwidth=(NGLBandWidth)(p[6]>>5);
         //tp->u.t.modulation

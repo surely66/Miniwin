@@ -166,7 +166,7 @@ int SearchWindow::loadData(const std::string&fname){
 int SearchWindow::getSearchTransponders(std::vector<TRANSPONDER>&tps){
     int idx;
     NGLOG_DEBUG("schmode=%p",sch_mode);
-    if(sch_mode&&sch_mode->getIndex()==0){//0 single tp ,by nit
+    if(sch_mode&&sch_mode->getIndex()==0){//index=0 single tp ,index=1 by nit
         idx=tplst->getIndex();
         TransponderItem*itm=(TransponderItem*)tplst->getItem(idx);
         tps.push_back(itm->tp);
@@ -180,12 +180,13 @@ int SearchWindow::getSearchTransponders(std::vector<TRANSPONDER>&tps){
 }
 
 bool SearchWindow::onKeyRelease(KeyEvent&k){
-     NGLOG_DEBUG("search=%p",search);
+     NGLOG_DEBUG("search=%p schmod=%d",search,(sch_mode?sch_mode->getIndex():-1));
      if( search && search->hasFlag(Attr::ATTR_FOCUSED) && (search->getIndex()==1)
                && (k.getKeyCode()==NGL_KEY_ENTER) ){
          std::vector<TRANSPONDER>tps;
          getSearchTransponders(tps);
-         CreateSearchResultWindow(tps,0);
+         int mode=(sch_mode&&sch_mode->getIndex()==1)?0:tps.size();
+         CreateSearchResultWindow(tps,mode);
          return true;
      }
      if(k.getKeyCode()==KEY_GREEN||k.getKeyCode()==KEY_BLUE){

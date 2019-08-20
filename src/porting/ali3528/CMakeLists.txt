@@ -12,8 +12,9 @@ set(SRCS_3528
    ngl_tuner.c
    ngl_smc.c
    ngl_video.c
-   ngl_audio.c
+   ngl_snd.c
    ngl_disp.c
+   ngl_panel.c
    ngl_pvr.c
    ngl_ir.cc
    ngl_graph.c

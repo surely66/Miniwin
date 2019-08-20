@@ -1,4 +1,6 @@
 #include<appmenus.h>
+#include<ngl_disp.h>
+#include<ngl_snd.h>
 /*typedef std::function<void(View&v,int value)>SettingChangeListener;
 typedef std::function<Window*(int)>SubMenuCreateListener;
 typedef std::function<void(Window*,int id)>SettingDataLoadingListener;
@@ -43,6 +45,25 @@ static void time_changed(View&v,int value){
     }
 }
 
+static void picture_load(Window*w){}
+static void picture_changed(View&v,int value){
+   Selector&s=(Selector&)v;
+   switch(v.getId()){
+   case ID_FIRST_EDITABLE_ID:    nglDispSetResolution(value);break;
+   case ID_FIRST_EDITABLE_ID+1:  nglDispSetAspectRatio(value);break;
+   case ID_FIRST_EDITABLE_ID+2:  nglDispSetMatchMode(value);break;
+   case ID_FIRST_EDITABLE_ID+3:  nglDispSetBrightNess((5+value)*10);break;
+   case ID_FIRST_EDITABLE_ID+4:  nglDispSetContrast((5+value)*10);break; 
+   case ID_FIRST_EDITABLE_ID+5:  nglDispSetSaturation((5+value)*10);break;
+   }
+}
+static void sound_changed(View&v,int value){
+   switch(v.getId()){
+   case ID_FIRST_EDITABLE_ID  :nglSndSetOutput(SDT_SPDIF,value);break;
+   case ID_FIRST_EDITABLE_ID+1:nglSndSetOutput(SDT_HDMI,value);break;
+   case ID_FIRST_EDITABLE_ID+2:nglSndSetOutput(SDT_CVBS,value);break;
+   }
+}
 static void network_load(Window*w){
     std::vector<std::string>nets;
     int cnt=getNetworkInterface(nets);
@@ -77,6 +98,8 @@ typedef struct{
 
 static UI_ACTIONS setting_actions[]={
    {1,time_load,time_changed},
+   {2,picture_load,picture_changed},
+   {3,nullptr,sound_changed},
    {11,network_load,network_changed}
 };
 

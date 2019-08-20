@@ -32,6 +32,8 @@ public:
        }
        if(v.isMember("value")&&v["value"].isInt())
             setValue(v["value"].asInt());
+       if(v.isMember("value")&&v["value"].isBool())
+            setValue(v["value"].asBool());
        value=v;
    }
    virtual void onGetSize(AbsListView&lv,int* w,int* h)override{
@@ -179,8 +181,8 @@ void SettingWindow::loadUIItems(EditableWindow*w,Json::Value root,int y){
             if(v.isMember("items")){
                  Json::Value values=v["items"];
                 if(values.isString())getArray(values.asString(),values);
-                //NGLOG_VERBOSE("values.isarray=%d size=%d values:%s",values.isArray(),values.size(),values.toStyledString().c_str());
                 int vsaved=pref.getInt(w->getText(),s->getText(),0);
+                NGLOG_DEBUG("%s.%s=%d",w->getText().c_str(),s->getText().c_str(),vsaved);
                 for(int j=0;j<values.size();j++){
                     SettingItem*itm=new SettingItem(values[j]);
                     s->addItem(itm);

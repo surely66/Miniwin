@@ -55,14 +55,14 @@
         ],
         "ranges55":[
             {"value":-5},{"value":-4},{"value":-3},{"value":-2},{"value":-1},{"value":0},
-            {"value":0},{"value":1},{"value":2},{"value":3},{"value":4},{"value":5}
+            {"value":1},{"value":2},{"value":3},{"value":4},{"value":5}
         ]},
         
     {"name":"sound","id":3,"items":[
             {"name":"spdif","type":"selector","focused":true,"items":[
-                                 {"name":"stero","value": 0},  {"name":"dolbydigital","value":1} ]},
-            {"name":"hdmi","type":"selector","items":[ {"name":"stero","value":0}, {"name":"dolbydigital","value":1} ]},
-            {"name":"analogue","type":"selector","items":[ {"name":"mono","value":0}, {"name":"stero","value":1} ]}
+                                 {"name":"stero","value": 1},  {"name":"dolbydigital","value":2} ]},
+            {"name":"hdmi","type":"selector","items":[ {"name":"stero","value":1}, {"name":"dolbydigital","value":2} ]},
+            {"name":"analogue","type":"selector","items":[ {"name":"mono","value":1}, {"name":"stero","value":2} ]}
         ]},
     {"name":"duration","id":4,"items":[
             {"name":"infobar","type":"selector","focused":true,"items":"durations"},
@@ -138,7 +138,7 @@
             {"name":"button","type":"selector","items":"yesno"},
             {"name":"tvrecord","type":"selector","items":"yesno"}
         ],
-        "yesno":[{"name":"yes","value":true},{"name":"no","value":false}]},
+        "yesno":[{"name":"yes","value":1},{"name":"no","value":0}]},
     {"name":"externaldrive","items":[
             {"name":"safetyremoval","type":"selector","items":[{"name":"removedrive","type":"selector","items":[
                         {"name":"no","value":0},{"name":"yes","value":1}

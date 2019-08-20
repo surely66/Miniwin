@@ -68,7 +68,7 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      if(closure.data==nullptr)return img;
      if(ext=="svg"){
          //img=nano_loadSVG((const char*)closure.data,closure.size);
-         img=loadSVG((const char*)closure.data,closure.size);
+         //img=loadSVG((const char*)closure.data,closure.size);
      }else if(ext=="png")
          img=ImageSurface::create_from_png(pak_read,&closure);
      else if(ext=="jpg"||ext=="jpeg"){

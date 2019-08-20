@@ -22,17 +22,17 @@ public:
     std::vector<TRANSPONDER>transponders;
 public:
     SearchResultWindow(int x,int y,int w,int h);
-    void Search(std::vector<TRANSPONDER>tps,int mode){
+    void Search(std::vector<TRANSPONDER>tps,INT  schmode){
          transponders=tps;
          notify.SERVICE_CBK=SVC_CBK;
          notify.FINISHTP=FINISHEDTP;
          notify.NEWTP=NEW_TP;
          notify.userdata=this;
-         NGLOG_DEBUG("search %d tp",transponders.size());
-         DtvSearch(transponders.data(),transponders.size(),&notify);
+         NGLOG_DEBUG("search %d tp searmode=%d(0 for NIT search)",transponders.size(),schmode);
+         DtvSearch(transponders.data(),schmode,&notify);
     }
     void onReceivedService(const SERVICELOCATOR*loc,const DVBService*svc){
-         char servicename[128],providername[128];
+         char servicename[256],providername[256];
          svc->getServiceName(servicename,providername);
          switch(svc->serviceType){
          case SVC_VIDEO:left->addItem(new ChannelItem(servicename,loc));break;
@@ -74,8 +74,6 @@ SearchResultWindow::SearchResultWindow(int x,int y,int w,int h)
      sig_strength->setPos(50,580);
      sig_quality->setSize(300,10);
      sig_quality->setPos(50,600);    
-     addChildView(sig_strength);
-     addChildView(sig_quality);
 
      percent=new TextField("0%",200,120);
      percent->setPos(1000,520);
@@ -88,10 +86,10 @@ SearchResultWindow::SearchResultWindow(int x,int y,int w,int h)
      memset(&notify,0,sizeof(SEARCHNOTIFY));
 }
 
-Window*CreateSearchResultWindow(std::vector<TRANSPONDER>tps,int mode){
+Window*CreateSearchResultWindow(std::vector<TRANSPONDER>tps,INT schmode){
      SearchResultWindow*w=new SearchResultWindow(0,0,1280,720);
      w->setText("Search"); 
-     w->Search(tps,mode);
+     w->Search(tps,schmode);
      w->addTipInfo("help_icon_4arrow.png","Navigation",50,160);
      w->addTipInfo("help_icon_ok.png","Select",-1,160);
      w->addTipInfo("help_icon_back.png","Back",-1,160);
