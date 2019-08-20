@@ -1,5 +1,5 @@
 #include<ntvcommon.h>
-#include<application.h>
+#include<app.h>
 #include<ngl_timer.h>
 
 namespace ntvplus{

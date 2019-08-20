@@ -18,7 +18,7 @@ option ( ENABLE_NLS "Translation of program messages to the user's native langua
 set ( USE_MBSTATE_T 1 )
 set ( BROKEN_WCHAR_H 0 )
 set ( HAVE_WCHAR_T 0)
-message("PROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}========")
+
 # setup default include directories 
 include_directories(${PROJECT_BINARY_DIR}/include)
 
@@ -52,13 +52,17 @@ iconv_configure_file (LIBRARY_NAME charset
   INPUT libcharset/include/localcharset.h.build.in 
   OUTPUT ${PROJECT_BINARY_DIR}/include/localcharset.h )
 
+iconv_configure_file (LIBRARY_NAME iconv
+  INPUT srclib/uniwidth.in.h
+  OUTPUT ${PROJECT_BINARY_DIR}/srclib/uniwidth.h)
+
 # Dirty fix for MinGW
 if ( MINGW )
   add_definitions ( -DELOOP=0 -DHAVE_DECL_STRERROR_R=0 )
   configure_file ( srclib/alloca.in.h ${PROJECT_SOURCE_DIR}/srclib/alloca.h )
 endif ()
 
-include_directories ( ${PROJECT_SOURCE_DIR} include srclib )
+include_directories ( ${PROJECT_SOURCE_DIR} include srclib)
 add_definitions ( -Dset_relocation_prefix=libcharset_set_relocation_prefix -Drelocate=libcharset_relocate -DHAVE_CONFIG_H -DINSTALLPREFIX=NULL -DNO_XMALLOC -DBUILDING_LIBCHARSET -DINSTALLDIR="" -DLIBDIR="" -DENABLE_RELOCATABLE=1 -DIN_LIBRARY )
 
 # libcharset

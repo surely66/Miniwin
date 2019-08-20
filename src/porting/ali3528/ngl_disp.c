@@ -86,9 +86,10 @@ DWORD nglDispSetResolution(int res){
     osd_param.output_width = output_width;
     osd_param.input_height = 720;
     osd_param.output_height = output_height;
-    rc = aui_find_dev_by_idx(AUI_MODULE_GFX, AUI_OSD_LAYER_GMA0, &layer_hd);
+    if(0!=aui_find_dev_by_idx(AUI_MODULE_GFX, AUI_OSD_LAYER_GMA0, &layer_hd))
+        aui_gfx_layer_open(AUI_OSD_LAYER_GMA0,&layer_hd);
     rc= aui_gfx_layer_scale(layer_hd,&osd_param);
-    NGLOG_DEBUG("aui_dis_tv_system_set fail ret = %d",rc); 
+    NGLOG_DEBUG("aui_dis_tv_system_set ret = %d",rc); 
 	
     /** step 3, set HD TV encoder signal source**/
     /** HD TV encoder will be attached to DEN**/

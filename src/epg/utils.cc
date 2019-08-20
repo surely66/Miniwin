@@ -5,6 +5,7 @@
 #include <utils.h>
 #include <ngl_log.h>
 #include <ctype.h>
+#include <errno.h>
 NGL_MODULE(UTILS)
 
 class CodeConverter {
@@ -13,7 +14,7 @@ private:
 public:
     CodeConverter(const char *from_charset,const char *to_charset) {
         cd = iconv_open(to_charset,from_charset);
-        NGLOG_DEBUG_IF(-1==(int)cd,"iconv_open=%d ",cd);
+        NGLOG_DEBUG_IF(-1==(int)cd,"iconv_open=%d errno=%d",cd,errno);
     }
     ~CodeConverter() {
         iconv_close(cd);

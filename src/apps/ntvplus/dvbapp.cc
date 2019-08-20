@@ -19,13 +19,15 @@ DVBApp::DVBApp(int argc,const char**argv)
     nglTunerInit();
     nglDmxInit();
     nglAvInit();
-    NGLOG_DEBUG("DVBApp::DVBApp");
     LoadSatelliteFromDB("satellites.json");
     DtvLoadProgramsData("dvb_programs.dat");
     FavInit("my_favorites.json");
     DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
     pref.load("settings.pref");
-    nglDispSetResolution(pref.getInt("pciture","resolution",DISP_RES_720P));
+    int res=pref.getInt("pciture","resolution",DISP_RES_720P);
+    NGLOG_DEBUG("DVBApp::DVBApp resolution=%d",res);
+    
+    nglDispSetResolution(res);
     
 }
 

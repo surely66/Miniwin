@@ -13,7 +13,7 @@ add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ) #${SRCS_SVG})
 include_directories(
     ./core ./core/svg 
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/porting
+    ${CMAKE_SOURCE_DIR}/src/porting/inc
     ${CMAKE_SOURCE_DIR}/include/cairo
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libjpeg/
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libpng/
@@ -30,6 +30,8 @@ include_directories(
 
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
+
+link_directories(${CMAKE_BINARY_DIR}/src/3rdparty/libpng/)
 
 target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype
        	tvhal jsoncpp_lib unibreak usbmanager

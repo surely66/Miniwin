@@ -9,7 +9,7 @@ find_package(ZLIB REQUIRED)
 find_package(Freetype)
 find_package(Threads)
 #find_package(Fontconfig)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
 
 include(Configure_config.cmake)
 include(Configure_features.cmake)
@@ -18,6 +18,7 @@ include_directories(${cairo_BINARY_DIR}
    ../freetype-2.10.0/include
    ../zlib-1.2.11/
    ${CMAKE_SOURCE_DIR}/include/porting
+   ${CMAKE_SOURCE_DIR}/src/porting/inc
 )
 
 set(ZLIB_FOUND 1)
