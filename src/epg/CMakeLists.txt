@@ -7,16 +7,20 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 aux_source_directory(./ SRCS_EPG)
-#add_compile_options(-fPIC)
+add_definitions(-DLIBICONV_PLUG)
 add_library(dvbepg SHARED ${SRCS_EPG})
 include_directories(
    ./
+   ${CMAKE_SOURCE_DIR}/src/3rdparty/libiconv/include
    ${CMAKE_SOURCE_DIR}/include
    ${CMAKE_SOURCE_DIR}/include/porting
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
+   ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
    ../
 )
+
 target_link_libraries(dvbepg tvhal iconv jsoncpp_lib)
+
+#link_directories(${CMAKE_BINARY_DIR}/src/3rdparty/libiconv)
 
 add_custom_command(TARGET dvbepg POST_BUILD
     COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/epg

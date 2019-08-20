@@ -43,7 +43,11 @@ DWORD nglSetTime(NGL_TIME*ptime){
     last_time_time=time(NULL);
 #else
     int rc=stime(ptime);
-    NGLOG_DEBUG("stime=%d",rc);
+    tv.tv_sec=*ptime;
+    tv.tv_usec=0;
+    rc=settimeofday(&tv,NULL);
+    NGLOG_VERBOSE("stime=%d tz=%s timezone=%d",rc,getenv("TZ"),timezone);
+    tzset();
 #endif;
     return NGL_OK;
 }

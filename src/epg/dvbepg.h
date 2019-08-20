@@ -31,6 +31,7 @@ typedef struct{
   for normal usage ,we can use TP_CBK and SVC_CBK
   for advance usage, we can use ADVANCE_CBK,ie:SI Parser App
 */
+int DtvEpgInit();
 void DtvSearch(const TRANSPONDER*tunerparams,int size,SEARCHNOTIFY*notify);
 
 DWORD DtvRegisterNotify(DTV_NOTIFY notify,void*userdata);

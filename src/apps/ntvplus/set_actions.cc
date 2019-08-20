@@ -22,11 +22,13 @@ static void time_load(Window*w){
         sprintf(buf,"%02d:00",i);
         s->addItem(new Selector::ListItem(buf,i));
     }
+    printf("zone offset=%d\r\n",timezone/3600);
+    s->setIndex(12+timezone/3600);
+
     s=(Selector*)w->findViewById(ID_FIRST_EDITABLE_ID+1);
 
     time_t tnow=time(NULL);
     struct tm *tmnow=localtime(&tnow);
-    printf("zone offset=%d\r\n",(mktime(tmnow)-tnow)/3600);
     EditBox*edt=(EditBox*)w->findViewById(ID_FIRST_EDITABLE_ID+2);
     edt->setEditMode(1);
     sprintf(buf,"%02d:%02d",tmnow->tm_hour,tmnow->tm_min);
@@ -37,9 +39,8 @@ static void time_changed(View&v,int value){
     case ID_FIRST_EDITABLE_ID:{
              Selector&s=(Selector&)v;
              char zone[8];
-             sprintf(zone,"UTC%s%d",(value>=0?"+":""),value);
+             sprintf(zone,"GMT%s%d",(value>=0?"+":""),value);
              setenv("TZ",zone,1);tzset();
-             printf("timezone setto %s\r\n",zone);
         }break;
     default:break;
     }

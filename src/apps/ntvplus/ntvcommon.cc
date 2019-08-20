@@ -55,14 +55,18 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     canvas.draw_text(rect,title); 
 
     time_t tnow=time(NULL); 
-    struct tm *tmnow=localtime(&tnow);
+    struct tm tmnow;
+    gmtime_r(&tnow,&tmnow);
     TextExtents te1,te2;
-
-    sprintf(buf,"%02d:%02d:%02d",tmnow->tm_hour,tmnow->tm_min,tmnow->tm_sec);
+    
+    printf("gmtime=%s ",asctime(gmtime(&tnow)));
+    printf("localtime=%s",asctime(localtime(&tnow)));
+    
+    sprintf(buf,"%02d:%02d:%02d",tmnow.tm_hour,tmnow.tm_min,tmnow.tm_sec);
     std::string stime=buf;
-    sprintf(buf,"%02d/%02d/%d",tmnow->tm_mon+1,tmnow->tm_mday,1900+tmnow->tm_year);
+    sprintf(buf,"%02d/%02d/%d",tmnow.tm_mon+1,tmnow.tm_mday,1900+tmnow.tm_year);
     std::string sdate=buf;
-    std::string sweek=weekday[tmnow->tm_wday];
+    std::string sweek=weekday[tmnow.tm_wday];
 
     canvas.get_text_extents(stime,te2);
     rect.x=getWidth()-te2.width-50;

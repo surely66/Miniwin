@@ -1,31 +1,68 @@
+#include <iconv.h>//libc hass iconv.h
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <iconv.h>
 #include <utils.h>
 #include <ngl_log.h>
 #include <ctype.h>
 #include <errno.h>
+#include <dlfcn.h>
 NGL_MODULE(UTILS)
+
+#ifdef __GLIBC__
+typedef iconv_t (*_iconv_open)(const char* tocode, const char* fromcode);
+typedef size_t (*_iconv) (iconv_t cd,  char* * inbuf, size_t *inbytesleft, char* * outbuf, size_t *outbytesleft);
+typedef int (*_iconv_close) (iconv_t cd);
+#endif
 
 class CodeConverter {
 private:
     iconv_t cd;
+#ifdef __GLIBC__
+static void*sohandle;
+static _iconv_open iconvopen;
+static _iconv iconv_conv;
+static _iconv_close iconvclose;
+#endif
 public:
     CodeConverter(const char *from_charset,const char *to_charset) {
-        cd = iconv_open(to_charset,from_charset);
-        NGLOG_DEBUG_IF(-1==(int)cd,"iconv_open=%d errno=%d",cd,errno);
+#ifdef __GLIBC__
+        if(nullptr==sohandle){
+            sohandle=dlopen("libiconv.so",RTLD_LAZY);
+            iconvopen=(_iconv_open)dlsym(sohandle,"libiconv_open");
+            iconv_conv=(_iconv)dlsym(sohandle,"libiconv");
+            iconvclose=(_iconv_close)dlsym(sohandle,"libiconv_close");
+            NGLOG_DEBUG_IF((sohandle==NULL)||(iconvopen==NULL)||(iconv_conv==NULL)||(iconvclose==NULL),
+                  "iconv_open=%d errno=%d sohdl=%p funcs=%p/%p/%p",cd,errno,sohandle,iconvopen,iconv_conv,iconvclose);
+        }
+        cd =iconvopen(to_charset,from_charset);
+#else
+        cd =iconv_open(to_charset,from_charset);
+#endif
+        NGLOG_DEBUG_IF(-1==(int)cd,"iconv_open=%d errno=%d sohdl=%p",cd,errno);
     }
     ~CodeConverter() {
+#ifdef __GLIBC__
+        iconvclose(cd);
+#else
         iconv_close(cd);
+#endif 
     }
     int convert(char *inbuf,int inlen,char *outbuf,int outlen) {
         char**pin=&inbuf,**pout=&outbuf;
         int lenin=outlen;
+#ifdef __GLIBC__
+        int rc=iconv_conv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
+#else
         int rc=iconv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
+#endif
         return lenin-outlen;
     }
 };
+void*CodeConverter::sohandle=nullptr;
+_iconv_open CodeConverter::iconvopen=nullptr;
+_iconv CodeConverter::iconv_conv=nullptr;
+_iconv_close CodeConverter::iconvclose=nullptr;
 
 INT Hex2BCD(INT x){
     INT bcd=0;

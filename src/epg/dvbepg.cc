@@ -337,7 +337,7 @@ static void  SearchProc(void*p)
     }
 }
 
-static int Init(){
+int DtvEpgInit(){
     BYTE mask;
     BYTE match;
     DWORD thid;
@@ -345,6 +345,7 @@ static int Init(){
        return 0;
     nglDmxInit();
     nglTunerInit();
+    nglAvInit();
     msgQ=nglMsgQCreate(10,sizeof(EPGMSG));
     mask=0xC0;match=0x4E;
     fltEIT=CreateFilter(PID_EIT,&mask,&match,1,(void*)fltEIT,true);
@@ -356,7 +357,6 @@ static int Init(){
 
 void DtvSearch(const TRANSPONDER*tuningparams, int size, SEARCHNOTIFY*notify){
     EPGMSG msg;
-    Init();    
     schFrequencies.clear();
     msg.param1=size;//0 for NIT search
     if(size==0)size++;

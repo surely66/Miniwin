@@ -16,9 +16,7 @@ namespace nglui{
 DVBApp::DVBApp(int argc,const char**argv)
   :App(argc,argv){
     Preferences pref;
-    nglTunerInit();
-    nglDmxInit();
-    nglAvInit();
+    DtvEpgInit();
     LoadSatelliteFromDB("satellites.json");
     DtvLoadProgramsData("dvb_programs.dat");
     FavInit("my_favorites.json");
