@@ -5,6 +5,8 @@
 NGL_MODULE(CHANNELEPG)
 namespace nglui{
 
+ChannelBar::ChannelBar(const std::string& txt):ListView::ListItem(txt){
+}
 void ChannelBar::addEvent(const TVEvent&evt){
      events.push_back(evt);
 }
@@ -27,24 +29,38 @@ void ChannelEpgView::DefaultPainter(AbsListView&lv,const AbsListView::ListItem&i
      float pixelmin =((ChannelEpgView&)lv).getPixelPerMinute();
      int nameWidth=((ChannelEpgView&)lv).getChannelNameWidth();
      ChannelBar&bar=(ChannelBar&)itm;
+     ChannelEpgView&chv=(ChannelEpgView&)lv;
      canvas.set_font_size(16);
+     time_t now=time(NULL);
+     int lastisnow=0;
      for(auto e:bar.events){
          RECT r=bar.rect;
          r.x=((int)(e.start-starttime))/60*pixelmin+nameWidth;
          r.width=e.duration/60*pixelmin;
-         canvas.set_color(0xFF888888);
+         int color=chv.getColor(EVENT_FEATURE);
+         if(e.start<now)
+             color=chv.getColor(EVENT_POST);
+         else if(e.start<now&&e.start+e.duration>now){
+             color=chv.getColor(EVENT_NOW);
+             lastisnow=1;
+         }else if(e.start>now){
+             color=chv.getColor(lastisnow?EVENT_NEXT:EVENT_FEATURE);
+             lastisnow=0;
+         }
+         canvas.set_color(color);
          r.height-=1;
          r.width-=1;
          canvas.draw_rect(r);
-         canvas.set_color(0xFFFF0000);//lv.getFgColor());
+         canvas.set_color(lv.getFgColor());
          canvas.draw_text(r,e.name);
      }
      RECT r=bar.rect;
-     canvas.set_color(state?0xFFFF0000:0xFF444444);
+     canvas.set_color(chv.getColor(state?CHANNEL_FOCUSED:CHANNEL_BG ));
+     NGLOG_DEBUG("%s state=%d",bar.getText().c_str(),state);
      r.width=nameWidth-1;
      r.height-=1;
      canvas.draw_rect(r);
-     canvas.set_color(0xFF000000); 
+     canvas.set_color(chv.getColor(CHANNEL_FG)); 
      canvas.draw_text(r,bar.getText());
 }
 
@@ -70,6 +86,25 @@ ChannelEpgView::ChannelEpgView(int w,int h):ListView(w,h){
      nameWidth=120;
      timeRuleHeight=12;
      item_painter_=ChannelEpgView::DefaultPainter;
+   
+     colors[ RULER_BG ] =0xFFFFFFFF;
+     colors[ RULER_FG ] =0xFF000000;
+     colors[CHANNEL_BG] =0xFF000000;
+     colors[CHANNEL_FG] =0xFFFFFFFF;
+     colors[CHANNEL_BAR]=0xFF000000;
+     colors[CHANNEL_FOCUSED]=0xFF00FF00;
+     colors[EVENT_POST] =0xFF222222;
+     colors[ EVENT_NOW ]=0xFF444444;
+     colors[ EVENT_NEXT]=0xFF666666;
+     colors[EVENT_FEATURE]=0xFF888888;
+}
+
+void ChannelEpgView::setColor(int idx,UINT color){
+    colors[idx]=color;
+}
+
+UINT ChannelEpgView::getColor(int idx){
+   return colors[idx];
 }
 
 void ChannelEpgView::setStartTime(ULONG t){
@@ -108,7 +143,7 @@ float ChannelEpgView::getPixelPerMinute(){
 
 void ChannelEpgView::drawTimeRule(GraphContext&canvas){
     ULONG st=starttime;
-    canvas.set_color(0xFF000000);
+    canvas.set_color(getColor(RULER_FG));
     std::string ts;
     int y,x=nameWidth;
     NGL_TM t;
@@ -154,6 +189,7 @@ void ChannelEpgView::onDraw(GraphContext&canvas){
     if(list_.size()>0)
       list_[0]->onGetSize(*this,nullptr,&r.height);
     drawTimeRule(canvas);
+    NGLOG_DEBUG("index=%d",index_);
     for(auto itm=list_.begin()+idx;itm<list_.end();itm++,idx++){
         (*itm)->rect=r;
         item_painter_(*this,*(*itm),idx==index_,canvas);

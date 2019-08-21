@@ -42,7 +42,6 @@ INT DtvEnumService(DTV_SERVICE_CBK cbk,void*userdata);
 void DtvGetCurrentService(SERVICELOCATOR*sloc);
 
 INT DtvGetServicePmt(const SERVICELOCATOR*sloc,BYTE*pmt);
-INT DtvGetServicePidInfo(const SERVICELOCATOR*sloc,ELEMENTSTREAM*es,USHORT*pcr);
 
 INT DtvRemoveStreamByTP(int tpid);
 

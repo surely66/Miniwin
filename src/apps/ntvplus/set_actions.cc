@@ -1,17 +1,8 @@
 #include<appmenus.h>
 #include<ngl_disp.h>
 #include<ngl_snd.h>
-/*typedef std::function<void(View&v,int value)>SettingChangeListener;
-typedef std::function<Window*(int)>SubMenuCreateListener;
-typedef std::function<void(Window*,int id)>SettingDataLoadingListener;
-typedef struct{
-    SettingChangeListener onSettingChange;
-    SubMenuCreateListener onSubMenuCreate;
-    SettingDataLoadingListener onLoadData;
-}SettingConfig;*/
-extern int getNetworkInfo(const char*sfname,char*sipaddr,char*smask,char*sgetway,char*mac);
-extern int setNetworkInfo(const char*sfname,char*sipaddr,char*smask,char*sgateway,char*smac);
-extern int getNetworkInterface(std::vector<std::string>&nets);
+#include<netsetting.h>
+
 namespace ntvplus{
 
 #define ID_FIRST_EDITABLE_ID 100
@@ -58,6 +49,7 @@ static void picture_changed(View&v,int value){
    case ID_FIRST_EDITABLE_ID+5:  nglDispSetSaturation((5+value)*10);break;
    }
 }
+
 static void sound_changed(View&v,int value){
    switch(v.getId()){
    case ID_FIRST_EDITABLE_ID  :nglSndSetOutput(SDT_SPDIF,value);break;
@@ -65,6 +57,7 @@ static void sound_changed(View&v,int value){
    case ID_FIRST_EDITABLE_ID+2:nglSndSetOutput(SDT_CVBS,value);break;
    }
 }
+
 static void network_load(Window*w){
     std::vector<std::string>nets;
     int cnt=getNetworkInterface(nets);
@@ -89,6 +82,18 @@ static void network_load(Window*w){
 
 static void network_changed(View&v,int value){
     printf("=====network_changed %d\r\n",v.getId());
+    Selector*sif=(Selector*)v.getParent()->findViewById(ID_FIRST_EDITABLE_ID);
+    std::string ifname=sif->getItem(sif->getIndex())->getText();
+    std::string ipaddr;
+    if(v.getId()>ID_FIRST_EDITABLE_ID){
+        ipaddr=((EditBox&)v).getText();
+        printf("===ipaddr=%s\r\n",ipaddr.c_str());
+    }
+    switch(v.getId()-ID_FIRST_EDITABLE_ID){
+    case 1:setNetworkIP(ifname.c_str(),ipaddr.c_str());break;
+    case 2:setNetworkMask(ifname.c_str(),ipaddr.c_str());break;
+    default:break;
+    }
 }
 
 typedef struct{

@@ -55,11 +55,14 @@ public :
         initContent(NWS_TITLE|NWS_TOOLTIPS);
    }
    void ItemChangeListener(AbsListView&lv,int index){
-       EditableWindow*w=(EditableWindow*)lv.getParent();
+       //EditableWindow*w=(EditableWindow*)lv.getParent();
        AbsListView::ListItem*itm=lv.getItem(index);
        NGLOG_DEBUG("index=%d value=%d",index,itm->getValue());
        pref->setValue(getText(),lv.getText(),itm->getValue());
-       NTVSettingChanged(w->id,lv,itm->getValue());
+       NTVSettingChanged(id,lv,itm->getValue());
+   }
+   void OnTextChanged(EditBox&e){
+       NTVSettingChanged(id,e,-1);
    }
 };
 
@@ -214,6 +217,7 @@ void SettingWindow::loadUIItems(EditableWindow*w,Json::Value root,int y){
             e->setLabelColor(0xFF000000);
             e->setLabel(v["name"].asCString());
             w->addChildView(e)->setId(control_id++);
+            e->setTextWatcher(std::bind(&EditableWindow::OnTextChanged,w,std::placeholders::_1));
         }else{
             NGLOG_DEBUG("unknown ui component:%s",ctrl.c_str());
         } 

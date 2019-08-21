@@ -45,9 +45,9 @@ DWORD nglSetTime(NGL_TIME*ptime){
     int rc=stime(ptime);
     tv.tv_sec=*ptime;
     tv.tv_usec=0;
-    rc=settimeofday(&tv,NULL);
-    NGLOG_VERBOSE("stime=%d tz=%s timezone=%d",rc,getenv("TZ"),timezone);
-    tzset();
+    //rc=settimeofday(&tv,NULL);
+    NGLOG_VERBOSE("stime=%d %s tz=%s timezone=%d",rc,ctime(ptime),getenv("TZ"),timezone);
+    NGLOG_VERBOSE("settime=%ld gettime=%ld",*ptime,time(NULL));
 #endif;
     return NGL_OK;
 }

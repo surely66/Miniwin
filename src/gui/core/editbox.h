@@ -5,6 +5,8 @@
 namespace nglui{
 
 class EditBox:public Widget{
+public:
+  typedef std::function<void (EditBox&)>AfterTextChanged;
 protected:
   int edit_mode_;//0-->insert mode 1-->replace_mode
   int caret_pos_;
@@ -12,10 +14,12 @@ protected:
   int label_alignment_;
   std::string label_;
   int labelBkColor;
+  AfterTextChanged afterChanged;
 public:
   EditBox(int w,int h);
   EditBox(const std::string&txt,int w,int h);
   void setLabelColor(int color);
+  virtual void setTextWatcher(AfterTextChanged ls);
   virtual void setLabelWidth(int w);
   virtual void setLabel(const std::string&txt);
   virtual void setLabelAlignment(int align);

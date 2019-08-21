@@ -59,8 +59,8 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     gmtime_r(&tnow,&tmnow);
     TextExtents te1,te2;
     
-    printf("gmtime=%s ",asctime(gmtime(&tnow)));
-    printf("localtime=%s",asctime(localtime(&tnow)));
+    //printf("gmtime=%s ",asctime(gmtime(&tnow)));
+    //printf("localtime=%s",asctime(localtime(&tnow)));
     
     sprintf(buf,"%02d:%02d:%02d",tmnow.tm_hour,tmnow.tm_min,tmnow.tm_sec);
     std::string stime=buf;

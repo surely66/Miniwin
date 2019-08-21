@@ -4,6 +4,7 @@
 namespace nglui{
 
 struct TVEvent{
+   UINT id;
    std::string name;
    ULONG start;
    ULONG duration;
@@ -11,16 +12,9 @@ struct TVEvent{
 
 class ChannelBar:public ListView::ListItem{
 public:
-    enum{
-      RULER_BK,
-      RULER_LINE,
-      CHANNEL_BK,
-      CHANNEL_TXT,
-      CHANNEL_BAR
-    };
     std::vector<TVEvent>events;
 public:
-    ChannelBar(const std::string& txt):ListView::ListItem(txt){}
+    ChannelBar(const std::string& txt);
     void addEvent(const TVEvent&evt);
     void addEvent(const std::string name,ULONG starttm,ULONG dur);
     void clearEvents();
@@ -29,14 +23,31 @@ public:
 };
 
 class ChannelEpgView:public ListView{
+public:
+    enum{
+      RULER_BG,
+      RULER_FG,
+      CHANNEL_BG,
+      CHANNEL_FG,
+      CHANNEL_BAR,
+      CHANNEL_FOCUSED,
+      EVENT_POST,
+      EVENT_NOW,
+      EVENT_NEXT,
+      EVENT_FEATURE,
+      COLOR_LAST
+    };
 protected:
     ULONG starttime;
     float pixelMinute;
     int nameWidth;
     int timeRuleHeight;
+    int colors[COLOR_LAST];
     void drawTimeRule(GraphContext&canvas);
 public:
     ChannelEpgView(int w,int h);
+    void setColor(int idx,UINT color);
+    UINT getColor(int idx);
     void setStartTime(ULONG t);
     void setPixelPerMinute(float p);
     void setChannelNameWidth(int w);

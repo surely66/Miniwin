@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <net/if_arp.h>
 #include <linux/rtnetlink.h> 
 #include <unistd.h>
 #include <vector>
@@ -68,9 +69,10 @@ void parseRoutes(struct nlmsghdr *nlHdr, struct route_info *rtInfo,char *gateway
     rtMsg = (struct rtmsg *)NLMSG_DATA(nlHdr);
     // If the route is not for AF_INET or does not belong to main routing table
     //then return.
-    if((rtMsg->rtm_family != AF_INET) || (rtMsg->rtm_table != RT_TABLE_MAIN))
+    if((rtMsg->rtm_family != AF_INET) ){//|| (rtMsg->rtm_table != RT_TABLE_MAIN)){
+        printf("%s:%d error %d,%d \r\n",__FUNCTION__,__LINE__,(rtMsg->rtm_family != AF_INET),(rtMsg->rtm_table != RT_TABLE_MAIN));
         return;
-
+    }
     rtAttr = (struct rtattr *)RTM_RTA(rtMsg);
     rtLen = RTM_PAYLOAD(nlHdr);
     for(;RTA_OK(rtAttr,rtLen);rtAttr = RTA_NEXT(rtAttr,rtLen)){
@@ -82,6 +84,7 @@ void parseRoutes(struct nlmsghdr *nlHdr, struct route_info *rtInfo,char *gateway
         }
     }
     dst.s_addr = rtInfo->dstAddr;
+    printf("dst:%s\r\n",(char *)inet_ntoa(dst));
     if (strstr((char *)inet_ntoa(dst), "0.0.0.0")){
         if(strcmp(ifName,rtInfo->ifName)==0){
             gate.s_addr = rtInfo->gateWay;
@@ -89,11 +92,12 @@ void parseRoutes(struct nlmsghdr *nlHdr, struct route_info *rtInfo,char *gateway
         }
         gate.s_addr = rtInfo->srcAddr;
         gate.s_addr = rtInfo->dstAddr;
+        printf("###  %s:%s  %s\r\n",ifName,rtInfo->ifName,(char *)inet_ntoa(gate));
     }
     return;
 }
 
-int get_gateway(const char*ifName,char *gateway)
+int getNetworkGateway(const char*ifName,char *gateway)
 {
     struct nlmsghdr *nlMsg;
     struct rtmsg *rtMsg;
@@ -183,19 +187,15 @@ int getNetworkInfo(const char*sfname,char*sipaddr,char*smask,char*sgateway,char*
     }
     close(socket_fd);
     char buff[256]={0};
-    get_gateway(sfname,buff);
+    getNetworkGateway(sfname,buff);
     if(sgateway)strcpy(sgateway,buff);
-    NGLOG_VERBOSE("interface:%s getway: %s",sfname, buff);
+    NGLOG_DEBUG("interface:%s getway: %s",sfname, buff);
     return 0;
 }
-
-int setNetworkInfo(const char*sfname,char*sipaddr,char*smask,char*sgateway,char*smac) {
+int setNetworkIP(const char*sfname,const char*sipaddr) {
     struct sockaddr_in *sin;
     struct ifreq ifr;
-    char ip[32],mac[32];
-    char netmask[32];
-    char broadcast[32];
-    int socket_fd;
+    int rc,socket_fd;
     if((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
          perror("socket");
          return -1;
@@ -205,41 +205,77 @@ int setNetworkInfo(const char*sfname,char*sipaddr,char*smask,char*sgateway,char*
     strcpy(ifr.ifr_name, sfname);
     memset(&sin, 0, sizeof(sin));
 //设置IP地址
-    if(ioctl(socket_fd, SIOCGIFADDR, &ifr) != -1){
-        sin = (struct sockaddr_in *)&ifr.ifr_addr;
-        sin->sin_family = AF_INET;
-        inet_aton(sipaddr, &(sin->sin_addr));
-        ioctl( socket_fd, SIOCSIFADDR, &ifr);
-    }
-    
-//设置广播地址
-    if(ioctl(socket_fd, SIOCGIFBRDADDR, &ifr) != -1){
-         sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;
-         sin->sin_family = AF_INET;
-         inet_aton(sipaddr, &(sin->sin_addr));
-         ioctl( socket_fd,SIOCSIFBRDADDR,&ifr);
-    }
-//设置子网掩码
-    if(ioctl(socket_fd, SIOCGIFNETMASK, &ifr) != -1){
-        sin = (struct sockaddr_in *)&ifr.ifr_broadaddr;
-        sin->sin_family = AF_INET;
-        inet_aton(sipaddr, &(sin->sin_addr));
-        ioctl( socket_fd,SIOCSIFNETMASK,&ifr);
-    }
-//设置硬件MAC地址
-    if(ioctl(socket_fd, SIOCSIFHWADDR, &ifr) != -1){
-        sin = (struct sockaddr_in *)&ifr.ifr_netmask;
-        unsigned char*b=(unsigned char*)ifr.ifr_netmask.sa_data;
-        sprintf(mac,"%02x:%02x:%02x:%02x:%02x:%02x",b[0],b[1],b[2],b[3],b[4],b[5]);
-        if(smask)strcpy(smac,mac);
-        NGLOG_VERBOSE("Mac address is %s", mac);
-    }
+    sin = (struct sockaddr_in *)&ifr.ifr_addr;
+    sin->sin_family = AF_INET;
+    inet_aton(sipaddr, &(sin->sin_addr));
+    rc=ioctl( socket_fd, SIOCSIFADDR, &ifr);
     close(socket_fd);
-    char buff[256], ifName[12];
-    get_gateway(buff, ifName);
-    if(sgateway)strcpy(sgateway,buff);
-    NGLOG_VERBOSE("interface:%s getway: %s",ifName, buff);
-    return 0;
+    printf("%s:%d ioctrl=%d ipaddr=%s\r\n",__FUNCTION__,__LINE__,rc,sipaddr);
+    return rc;
+}
+int setNetworkMask(const char*sfname,const char*smask){
+    struct sockaddr_in *sin;
+    struct ifreq ifr;
+    int rc,socket_fd;
+    if((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+         perror("socket");
+         return -1;
+    }
+
+    memset(&ifr, 0, sizeof(ifr));
+    strcpy(ifr.ifr_name, sfname);
+    memset(&sin, 0, sizeof(sin));
+//设置IP地址
+    sin = (struct sockaddr_in *)&ifr.ifr_addr;
+    sin->sin_family = AF_INET;
+    inet_aton(smask, &(sin->sin_addr));
+    rc=ioctl( socket_fd,SIOCSIFNETMASK, &ifr);
+    close(socket_fd);
+    printf("%s:%d ioctrl=%d\r\n",__FUNCTION__,__LINE__,rc);
+    return rc;
+}
+int setNetworkBAddr(const char*sfname,const char*saddr){
+    struct sockaddr_in *sin;
+    struct ifreq ifr;
+    int rc,socket_fd;
+    if((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+         perror("socket");
+         return -1;
+    }
+
+    memset(&ifr, 0, sizeof(ifr));
+    strcpy(ifr.ifr_name, sfname);
+    memset(&sin, 0, sizeof(sin));
+//设置IP地址
+    sin = (struct sockaddr_in *)&ifr.ifr_addr;
+    sin->sin_family = AF_INET;
+    inet_aton(saddr, &(sin->sin_addr));
+    rc=ioctl( socket_fd,SIOCSIFBRDADDR, &ifr);
+    close(socket_fd);
+    printf("%s:%d ioctrl=%d\r\n",__FUNCTION__,__LINE__,rc);
+    return rc;
+}
+
+int setNetworkMac(const char*sfname,const char*smac){
+    struct sockaddr_in *sin;
+    struct ifreq ifr;
+    int rc,socket_fd;
+    if((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+         perror("socket");
+         return -1;
+    }
+
+    memset(&ifr, 0, sizeof(ifr));
+    strcpy(ifr.ifr_name, sfname);
+    memset(&sin, 0, sizeof(sin));
+
+    ifr.ifr_addr.sa_family = ARPHRD_ETHER;
+    strncpy(ifr.ifr_name, (const char *)sfname, IFNAMSIZ - 1 );
+    memcpy((unsigned char *)ifr.ifr_hwaddr.sa_data, smac, 6);
+    
+    rc=ioctl(socket_fd, SIOCSIFHWADDR, &ifr);
+    close(socket_fd);
+    printf("%s:%d ioctrl=%d\r\n",__FUNCTION__,__LINE__,rc);
 }
 
 int getNetworkInterface(std::vector<std::string>&nets){

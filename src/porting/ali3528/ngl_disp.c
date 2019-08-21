@@ -117,13 +117,13 @@ DWORD nglDispSetResolution(int res){
     return NGL_OK;
 }
 
-DWORD nglDispSetAspectRatio(int r){
-    int rc,ratio;
+DWORD nglDispSetAspectRatio(int ratio){
+    int rc;
     switch(ratio){
     case DISP_APR_AUTO:   ratio=AUI_DIS_AP_AUTO;break;
     case DISP_APR_4_3:    ratio=AUI_DIS_AP_4_3;break;
     case DISP_APR_16_9:   ratio=AUI_DIS_AP_16_9;break;
-    default:return NGL_ERROR;
+    default:NGLOG_DEBUG("Invalid value %d",ratio);return NGL_ERROR;
     }    
     rc=aui_dis_aspect_ratio_set(dis_hd,ratio);
     NGLOG_DEBUG("ratio=%d rc=%d",ratio,rc);
@@ -180,6 +180,3 @@ DWORD nglDispSetSaturation(int value){
     NGLOG_DEBUG("rc=%d value=%d ",value,rc);
 }
 
-DWORD nglDispSetTvSystem(){
-    
-}

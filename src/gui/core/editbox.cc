@@ -18,6 +18,11 @@ EditBox::EditBox(const std::string&txt,int w,int h):Widget(txt,w,h){
     label_width_=0;
     caret_pos_=0;
     labelBkColor=0;
+    afterChanged=nullptr;
+}
+
+void EditBox::setTextWatcher(AfterTextChanged ls){
+    afterChanged=ls;
 }
 
 void EditBox::setCaretPos(int idx){
@@ -69,22 +74,28 @@ bool EditBox::onKeyRelease(KeyEvent&evt){
             setCaretPos(caret_pos_+1);
             return true;
         }break;
-    case NGL_KEY_UP:
-        if(caret_pos_<text_.size()){
-           ch=text_[caret_pos_];
-           if(ch>'0')ch--;
-           if(ch=='0')ch='9';
-           text_[caret_pos_]=ch;
-           invalidate(nullptr);
-           return true;
-        }break;
     case NGL_KEY_DOWN:
         if(caret_pos_<text_.size()){
            ch=text_[caret_pos_];
-           if(ch<'9')ch++;
-           if(ch=='9')ch='0';
-           text_[caret_pos_]=ch;
-           invalidate(nullptr);
+           if(ch>='0'&&ch<='9'){
+              if(ch>'0')ch--;
+              else if(ch=='0')ch='9';
+              text_[caret_pos_]=ch;
+              if(nullptr!=afterChanged)afterChanged(*this);
+              invalidate(nullptr);
+           }
+           return true;
+        }break;
+    case NGL_KEY_UP:
+        if(caret_pos_<text_.size()){
+           ch=text_[caret_pos_];
+           if(ch>='0'&&ch<='9'){
+               if(ch<'9')ch++;
+               else if(ch=='9')ch='0';
+               text_[caret_pos_]=ch;
+               if(nullptr!=afterChanged)afterChanged(*this);
+               invalidate(nullptr);
+           }
            return true; 
         }break;
     case NGL_KEY_BACKSPACE:
@@ -97,6 +108,7 @@ bool EditBox::onKeyRelease(KeyEvent&evt){
         }else{
            text_[caret_pos_]=ch;
         }
+        if(nullptr!=afterChanged)afterChanged(*this);
         invalidate(nullptr);
         return true;
     default:break; 
