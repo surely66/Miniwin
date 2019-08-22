@@ -12,7 +12,7 @@
 #include <ngl_log.h>
 #include <dvbepg.h>
 #include <tvdata.h>
-#include <favgroup.h>
+#include <favorite.h>
 #include <lrucache.h>
 #include <stdint.h>
 #include <string.h>

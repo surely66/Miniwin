@@ -3,10 +3,12 @@
 #include <ngl_types.h>
 #include <ngl_tuner.h>
 #include <si_table.h>
+#include <satellite.h>
+#include <favorite.h>
 #include <tvdata.h>
 #include <vector>
 NGL_BEGIN_DECLS
-typedef NGLTunerParam TRANSPONDER;
+
 typedef void(*DTV_TP_CBK)(const TRANSPONDER*tp,int idx,int tpcount,void*userdata);
 typedef void(*DTV_ADVANCE_CBK)(USHORT netid,USHORT tsid,std::vector<PSITable>&pat,std::vector<PSITable>&pmt,std::vector<PSITable>&sdt,void*userdata);
 

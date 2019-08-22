@@ -1,14 +1,12 @@
 #include <tvdata.h>
-#include <si_table.h>
 #include <vector>
 #include <lrucache.h>
-#include <satellite.h>
+#include <dvbepg.h>
 #include <algorithm>
 #include <vector>
-#include <lrucache.h>
 #include <ngl_log.h>
 #include <ngl_dmx.h>
-#include <favgroup.h>
+#include <favorite.h>
 #include <map>
 
 NGL_MODULE(TVDATA)
@@ -398,10 +396,12 @@ INT DtvCreateGroupByBAT(){
 class ServiceData:public DVBService{
 public:
    BOOL deleted;
+   BOOL visible;
    USHORT lcn;
    ServiceData(const BYTE*buf,INT len,bool deep=true):DVBService(buf,len,deep){
        lcn=0xFFFF;
        deleted=FALSE;
+       visible=TRUE;
    }
    ServiceData(const DVBService&b):DVBService(b){
        lcn=0xFFFF;
@@ -416,9 +416,9 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     if(got==service_lcn.end()||(value==NULL))
         return NGL_ERROR;
     switch(item){
-    case SKI_VISIBLE:*value=(got->second->lcn&0x8000)?TRUE:FALSE;break;
+    case SKI_VISIBLE:*value=got->second->visible;break;
     case SKI_DELETED:*value=got->second->deleted;break;
-    case SKI_LCN    :*value=(got->second->lcn&0x3FFF)&(~lcnmask);break;
+    case SKI_LCN    :*value=got->second->lcn;break;
     default:return NGL_ERROR;
     }
     return NGL_OK;
@@ -446,13 +446,22 @@ public:
 };
 
 static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
-    USHORT lcn;
     LCNDATA *lcndata=(LCNDATA*)userdata;
-    if(NGL_OK!=lcndata->getLCN(*loc,&lcn))
-       lcn=lcndata->lcn_start++;
-    std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*loc);
+    USHORT lcn;
+    if(NGL_OK!=lcndata->getLCN(*loc,&lcn)){
+       service_lcn[*loc]->lcn=lcn=lcndata->lcn_start++;
+       printf("\t*service %d.%d.%d lcn not found setto %d\r\n",loc->netid,loc->tsid,loc->sid,lcn);
+    }else{
+       service_lcn[*loc]->visible=lcn&0x8000;
+       service_lcn[*loc]->lcn=(lcn&0x3FFF)&lcnmask;
+    }
+    /*std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*loc);
     if(got!=service_lcn.end())
-        got->second->lcn=(lcn&0x3FFF)&(~lcnmask);
+        got->second->lcn=lcn;
+    else{
+        printf("\t#service %d.%d.%d lcn not found setto %d\r\n",loc->netid,loc->tsid,loc->sid,lcn);
+        service_lcn[*loc]->lcn=lcn;
+    }*/
     return 1;
 }
 
@@ -499,7 +508,7 @@ INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
     LCNDATA lcndata={lcn_start,lcnmap};
     if(mode&LCN_FROM_USER)//service with lcn has been putto lcnmap,so we enum all service,add theservice without lcn to be identified from lcnstart
          DtvEnumService(LCN_CBK,&lcndata);
-    NGLOG_DEBUG("lcnmask=%x",lcnmask);
+    NGLOG_DEBUG("lcnmask=%x LCN::fromBAT=%d fromUSER=%d",lcnmask,!!(mode&LCN_FROM_BAT),!!(mode&LCN_FROM_USER));
     return count;
 }
 

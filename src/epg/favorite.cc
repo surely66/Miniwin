@@ -1,4 +1,4 @@
-#include <favgroup.h>
+#include <favorite.h>
 #include <si_table.h>
 #include <tvdata.h>
 #include <string>

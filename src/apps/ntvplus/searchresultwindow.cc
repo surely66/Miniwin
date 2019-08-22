@@ -15,8 +15,11 @@ class SearchResultWindow:public NTVWindow{
 protected:
     ListView*left;
     ListView*right;
+    
     ProgressBar*progress;
     TextField*percent;
+    TextField*txt_sat;
+    TextField*txt_tp;
     SEARCHNOTIFY notify;
 public:
     std::vector<TRANSPONDER>transponders;
@@ -47,6 +50,8 @@ public:
               ChannelItem*itm=(ChannelItem*)left->getItem(0);
               if(itm)DtvPlay(&itm->svc,nullptr);
               DtvSaveProgramsData("dvb_programs.dat");
+              FavInit(App::getInstance().getArg("favorite","favorites.json"));
+              DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
          }
     }
 };
@@ -69,9 +74,18 @@ SearchResultWindow::SearchResultWindow(int x,int y,int w,int h)
      left->setFgColor(getFgColor());
      right->setBgColor(getBgColor());
      right->setFgColor(getFgColor());
-      
+     
+     txt_sat=new TextField("SatelliteName",200,25);
+     addChildView(txt_sat)->setPos(50,480);
+
+     txt_tp=new TextField("Transponderxxx",200,25);
+     addChildView(txt_tp)->setPos(50,506);
+
+     addChildView(new TextField("Strength",120,25))->setPos(50,535);
      sig_strength->setSize(300,10);
-     sig_strength->setPos(50,580);
+     sig_strength->setPos(50,560);
+
+     addChildView(new TextField("Quality",120,25))->setPos(50,570);
      sig_quality->setSize(300,10);
      sig_quality->setPos(50,600);    
 

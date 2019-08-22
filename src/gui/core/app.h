@@ -26,7 +26,8 @@ public:
      const std::string getString(const std::string&id,const std::string&lan="");
 
      size_t loadFile(const std::string&fname,unsigned char**buffer)const;
-
+     void setArg(const std::string&key,const std::string&value);
+     bool hasArg(const std::string&key);
      const std::string&getArg(const std::string&key,const std::string&def="");
 
      int getArgAsInt(const std::string&key,int def);

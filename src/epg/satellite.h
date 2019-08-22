@@ -2,9 +2,9 @@
 #define __SATELLITE_H__
 #include <ngl_types.h>
 #include <ngl_tuner.h>
-#include <dvbepg.h>
-NGL_BEGIN_DECLS
 
+NGL_BEGIN_DECLS
+typedef NGLTunerParam TRANSPONDER;
 #define MAX_SATELLITE_NAME_LEN 32
 typedef struct{
    USHORT position;

@@ -55,6 +55,14 @@ const std::string&App::getArg(const std::string&key,const std::string&def){
     return args[key];
 }
 
+bool App::hasArg(const std::string&key){
+    auto itr=args.find(key);
+    return itr==args.end();
+}
+void App::setArg(const std::string&key,const std::string&value){
+    args[key]=value;
+}
+
 int App::getArgAsInt(const std::string&key,int def){
     auto itr=args.find(key);
     if(itr==args.end()||itr->second.empty())

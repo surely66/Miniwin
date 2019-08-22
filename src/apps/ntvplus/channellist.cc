@@ -3,7 +3,6 @@
 #include <appmenus.h>
 #include <ngl_types.h>
 #include <dvbepg.h>
-#include <favgroup.h>
 #include <ngl_log.h>
 #include <ngl_panel.h>
 #define IDC_CHANNELS 100
