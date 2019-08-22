@@ -19,6 +19,8 @@ public:
   EditBox(int w,int h);
   EditBox(const std::string&txt,int w,int h);
   void setLabelColor(int color);
+  const std::string&replace(size_t start,size_t len,const std::string&txt);
+  const std::string&replace(size_t start,size_t len,const char*txt,size_t size);
   virtual void setTextWatcher(AfterTextChanged ls);
   virtual void setLabelWidth(int w);
   virtual void setLabel(const std::string&txt);

@@ -93,8 +93,16 @@ public:
            Json::Value array=itm->value["items"];
            right->clearAllItems();
            for(int i=0;i<array.size();i++){
-              NGLOG_VERBOSE("%d:%s",i,array[i].toStyledString().c_str());
-              right->addItem(new SettingItem(array[i]));
+              Json::Value b,a=array[i];
+              NGLOG_VERBOSE("%d:type:%d %s",i,array.type(),a.toStyledString().c_str());
+              /*if(a.isMember("items")&&a["items"].isString()){
+                   std::string key=a["items"].asString();
+                   if(stacks.size()){
+                      getArray(key,b);a=b;
+                      for(int i=0;i<a.size();i++)right->addItem(new SettingItem(a[i]));
+                   } 
+              }else*/
+              right->addItem(new SettingItem(a));
            }
        });
    }

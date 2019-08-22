@@ -21,6 +21,8 @@ include_directories(
      include
      ../../include/
      ../porting/inc/
+     ${CMAKE_BINARY_DIR}/include
+     ${CMAKE_SOURCE_DIR}/include/curl
      #${TOOLCHAIN_DIR}/host/usr/mipsel-buildroot-linux-gnu/sysroot/usr/include/aliplatform
      #${TOOLCHAIN_DIR}/host/usr/mipsel-buildroot-linux-gnu/sysroot/usr/include/ali_common
 )

@@ -203,16 +203,36 @@
                                {"name":"transponder","type":"selector","item":[]},
                                {"name":"search","type":"selector","items":[]}
                           ]},
-                     {"name":"searchuponturnon","type":"selector","items":[]}
+                     {"name":"searchuponturnon","id":55,"type":"selector","items":"yesno"}
                  ]},
-            {"name":"generalsettings","id":14,"items":[
-                     {"name":"systempassword","type":"selector","items":[]},
-                     {"name":"factorysettings","type":"selector","items":[]},
-                     {"name":"supplymanagement","type":"selector","items":[]}
+            {"name":"generalsettings","items":[
+                     {"name":"systempassword","id":13,"items":[
+                           {"name":"changepwd","type":"selector","items":"yesno"},
+                           {"name":"curpwd","type":"edit"},
+                           {"name":"newpwd1","type":"edit"},
+                           {"name":"newpwd2","type":"edit"}
+                        ]},
+                     {"name":"factorysettings","id":14,"items":[
+                           {"name":"restore","type":"selector","items":"yesno"}]},
+                     {"name":"supplymanagement","id":15,"items":[
+                             {"name":"energysave","type":"selector","items":"yesno"}
+                        ]}
                  ]},
-            {"name":"information","id":15,"items":[
-                     {"name":"aboutdevice","type":"selector","items":[]},
-                     {"name":"aboutsignal","type":"selector","items":[]} 
+            {"name":"information","items":[
+                     {"name":"aboutdevice","id":16,"items":[
+                          {"name":"model","type":"edit"},
+                          {"name":"hwver","type":"edit"},
+                          {"name":"swver","type":"edit"}
+                       ]},
+                     {"name":"aboutsignal","id":17,"items":[
+                          {"name":"channel","type":"edit"}, 
+                          {"name":"satellite","type":"edit"}, 
+                          {"name":"transponder","type":"edit"}, 
+                          {"name":"videopid","type":"edit"}, 
+                          {"name":"broadcast","type":"edit"}, 
+                          {"name":"modulation","type":"edit"}, 
+                          {"name":"fec","type":"edit"} 
+                       ]} 
                  ]}
         ]}
     ]

@@ -95,6 +95,16 @@ static void ali_aui_pvr_callback(aui_hdl handle, unsigned int msg_type, unsigned
     }
 }
 
+static unsigned short ali_pvr_get_ts_dsc_handle_callback(unsigned short program_id,aui_hdl *p_dsc_handler){
+    aui_hdl hdl;
+    if (aui_find_dev_by_idx(AUI_MODULE_DSC,0, &hdl)) {
+        AUI_PRINTF("aui_find_dev_by_idx fault\n");
+        return -1;
+    }
+    *p_dsc_handler = hdl;
+    return 0;
+}
+
 static char lastPVR[512];
 
 DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
@@ -103,6 +113,8 @@ DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
     AUI_RTN_CODE ret= AUI_RTN_SUCCESS;
     aui_record_prog_param st_arp;
     aui_ca_pvr_callback ca_pvr_callback;
+    aui_ca_pvr_config config;
+    MEMSET(&config,0,sizeof(aui_ca_pvr_config));
 
     nglPvrInit();
     #ifdef AUI_LINUX
@@ -133,10 +145,26 @@ DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
 
     st_arp.ca_mode=0;//0--free 1 ca scrambled
     st_arp.rec_type = AUI_PVR_REC_TYPE_TS;    
-    st_arp.is_reencrypt = 0;
-    st_arp.rec_special_mode = AUI_PVR_NONE;
-    st_arp.is_scrambled = 0;
+    switch(st_arp.dmx_id){//param->encrypt){
+    case 0:
+         st_arp.is_reencrypt = 0;
+         st_arp.rec_special_mode = AUI_PVR_NONE;
+         st_arp.is_scrambled = 0;
+         break;
+    case 1:
+         st_arp.is_reencrypt = 1;
+	 st_arp.rec_special_mode = AUI_RSM_GEN_CA_MULTI_RE_ENCRYPTION;
+	 st_arp.is_scrambled = 0;
+         //ali_pvr_open_csa_sub_device();
+         //init_pvr_encrypt_mode(AUI_PVR_VMX_MULTI_RE_ENCRYPTION);
+         config.special_mode = st_arp.rec_special_mode;
+   	 aui_ca_pvr_init_ext(&config);
 
+         ca_pvr_callback.fp_pure_data_callback = NULL;
+ 	 ca_pvr_callback.fp_ts_callback = ali_pvr_get_ts_dsc_handle_callback;
+	 aui_ca_register_callback(&ca_pvr_callback);
+         break;
+    }
     if(NULL==record_path){
         char fname[64];
         NGL_TIME tnow;

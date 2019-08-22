@@ -410,7 +410,7 @@ public:
 };
 
 static std::unordered_map<SERVICELOCATOR,ServiceData*>service_lcn;
-
+static USHORT lcnmask=0xFFFF;
 INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*svc);
     if(got==service_lcn.end()||(value==NULL))
@@ -418,7 +418,7 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     switch(item){
     case SKI_VISIBLE:*value=(got->second->lcn&0x8000)?TRUE:FALSE;break;
     case SKI_DELETED:*value=got->second->deleted;break;
-    case SKI_LCN    :*value=(got->second->lcn&0x3FF);break;
+    case SKI_LCN    :*value=(got->second->lcn&0x3FFF)&(~lcnmask);break;
     default:return NGL_ERROR;
     }
     return NGL_OK;
@@ -452,7 +452,7 @@ static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
        lcn=lcndata->lcn_start++;
     std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*loc);
     if(got!=service_lcn.end())
-        got->second->lcn=lcn&0x3FF;
+        got->second->lcn=(lcn&0x3FFF)&(~lcnmask);
     return 1;
 }
 
@@ -471,26 +471,35 @@ INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
             int tscount=b.getStreams(tss,false);
             int num=b.getLCN(svcs,lcns);
             if(num>0){//Nordig LCNV1
-                count+=num;
-                for(int i=0;i<num;i++){vsvc.push_back(svcs[i]);vlcn.push_back(lcns[i]);}
+                 count+=num;
+                 for(int i=0;i<num;i++){
+                     vsvc.push_back(svcs[i]);
+                     vlcn.push_back(lcns[i]);
+                     lcnmask&=lcns[i];
+                 }
                  b.matchServices(vsvc.data(),vsvc.size());
             }else{//Nordig V2
                 for(int i=0;i<tscount;i++){
                     int sc=tss[i].getLCN(svcs,lcns);
                     num+=sc;
-                    for(int i=0;i<num;i++){vsvc.push_back(svcs[i]);vlcn.push_back(lcns[i]);}
+                    for(int i=0;i<num;i++){
+                        vsvc.push_back(svcs[i]);
+                        vlcn.push_back(lcns[i]);
+                        lcnmask&=lcns[i];
+                    }
                 }
             }
         }
         NGLOG_DEBUG("%d service %d lcn",vsvc.size(),vlcn.size());
         for(int i=0;i<vsvc.size();i++){ 
             lcnmap[vsvc[i]]=vlcn[i];
-            NGLOG_VERBOSE("\t%d.%d.%d-->%d visible=%d",vsvc[i].netid,vsvc[i].tsid,vsvc[i].sid,(vlcn[i]&0x3FF),(vlcn[i]&0x8000)!=0);
+            NGLOG_VERBOSE("\t%d.%d.%d-->%d visible=%d",vsvc[i].netid,vsvc[i].tsid,vsvc[i].sid,(vlcn[i]&0x3FFF)&(~lcnmask),(vlcn[i]&0x8000)!=0);
         }
     }
     LCNDATA lcndata={lcn_start,lcnmap};
-    if(mode&LCN_FROM_USER)
+    if(mode&LCN_FROM_USER)//service with lcn has been putto lcnmap,so we enum all service,add theservice without lcn to be identified from lcnstart
          DtvEnumService(LCN_CBK,&lcndata);
+    NGLOG_DEBUG("lcnmask=%x",lcnmask);
     return count;
 }
 

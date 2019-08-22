@@ -29,7 +29,16 @@ void EditBox::setCaretPos(int idx){
     caret_pos_=idx; 
     invalidate(nullptr);
 }
-
+const std::string& EditBox::replace(size_t start,size_t len,const std::string&txt){
+    text_.replace(start,len,txt);
+    invalidate(nullptr);
+    return text_;
+}
+const std::string& EditBox::replace(size_t start,size_t len,const char*txt,size_t size){
+    text_.replace(start,len,txt,size);
+    invalidate(nullptr);
+    return text_;
+}
 void EditBox::setEditMode(int mode){
     edit_mode_=mode;
 }
