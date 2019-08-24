@@ -150,7 +150,6 @@ void GraphDevice::ComposeProc(void*param){
                 POINT pt=s->screenPos;
                 NGLRect srec={pt.x,pt.y,0,0};
                 DWORD nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
-                //nglFillRect(nglsurface,&rr,0x00FF0000);
                 if(GraphDevice::CheckOverlapped(s,i++))continue;
                 nglBlit(dev->primarySurface,nglsurface,nullptr,&srec);
             }
