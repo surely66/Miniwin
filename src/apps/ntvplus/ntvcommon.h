@@ -1,7 +1,7 @@
 #ifndef __NTV_COMMON_H__
 #define __NTV_COMMON_H__
 #include<ngl_types.h>
-#include<satellite.h>
+#include<dvbepg.h>
 #include<windows.h>
 #define KEY_RED    NGL_KEY_F0
 #define KEY_GREEN  NGL_KEY_F1

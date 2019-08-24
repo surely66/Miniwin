@@ -17,7 +17,7 @@ DVBApp::DVBApp(int argc,const char**argv)
     DtvEpgInit();
     LoadSatelliteFromDB("satellites.json");
     DtvLoadProgramsData("dvb_programs.dat");
-    FavInit(getArg("favorite","favorites.json"));
+    FavInit(getArg("favorite","favorites.json").c_str());
     DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
     pref.load("settings.pref");
     int res=pref.getInt("pciture","resolution",DISP_RES_720P);

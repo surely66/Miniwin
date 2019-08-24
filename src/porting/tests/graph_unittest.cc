@@ -1,4 +1,5 @@
 #include<ngl_graph.h>
+#include<ngl_os.h>
 #include <gtest/gtest.h>
 
 class GRAPH:public testing::Test{
@@ -52,14 +53,23 @@ TEST_F(GRAPH,Blit){
    DWORD hwsurface=0,swsurface;
    nglCreateSurface(&hwsurface,1280,720,0,1);
    NGLRect r1={0,0,1280,720};
-   nglFillRect(hwsurface,&r1,0xFFFFFFFF);
-   nglCreateSurface(&swsurface,800,600,0,0);
-   NGLRect r={0,0,800,600};
-   nglFillRect(swsurface,&r,0xFF0000FF);
-  
-   nglBlit(hwsurface,swsurface,NULL,&r);
+   nglFillRect(hwsurface,&r1,0x00000);
    nglFlip(hwsurface);
-   sleep(3);
+
+   nglCreateSurface(&swsurface,800,600,0,0);
+   NGLRect rf={0,0,800,600};
+   nglFillRect(swsurface,&rf,0xFF444444);
+   NGLRect r={100,50,640,480};
+   nglFillRect(swsurface,&r,0x0);
+   for(int i=-1;i<10;i++){
+       blitflag=(i==-1)?0:(1<<i);
+       for(int j=0;j<13;j++){
+           porterduff=j;printf("blitflags=%x:%x\r\n",blitflag,porterduff);
+           nglBlit(hwsurface,swsurface,NULL,NULL);
+           nglFlip(hwsurface);
+           nglSleep(200);
+       }
+   }
    nglDestroySurface(swsurface);
    nglDestroySurface(hwsurface);
 }

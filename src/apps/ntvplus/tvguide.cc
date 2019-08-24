@@ -48,6 +48,12 @@ public:
    ~TVWindow(){
        nglAvSetVideoWindow(0,NULL,NULL);
    }
+   /*virtual void onDraw(GraphContext&c)override{
+       c.set_source_rgba(0,0,0,0);
+       printf("TVWindow::ondraw\r\n");
+       c.draw_rect(40,70,320,240);
+       NTVWindow::onDraw(c);
+   }*/
    virtual void onEITS(const SERVICELOCATOR*svc)override;
    virtual bool onKeyRelease(KeyEvent&k)override;
    virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
@@ -95,12 +101,13 @@ bool TVWindow::onKeyRelease(KeyEvent&k){
 
 Window*CreateTVGuide(){
     TVWindow*w=new TVWindow(0,0,1280,720);
+    w->setBgColor(0);
     w->initContent(NWS_TITLE|NWS_TOOLTIPS);
     w->setText("TV Guide");
-    View*vv=new TextField(std::string(),320,240);
+    View*vv=new View(320,240);
     vv->setFlag(View::Attr::ATTR_BORDER);
     vv->setPos(40,70);
-    vv->setBgColor(0x0000);
+    vv->setBgColor(0x000000);
     w->addChildView(vv); 
     NGLRect rcv={40,70,320,240};
     nglAvSetVideoWindow(0,NULL,&rcv);

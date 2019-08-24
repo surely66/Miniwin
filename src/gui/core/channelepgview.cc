@@ -56,7 +56,6 @@ void ChannelEpgView::DefaultPainter(AbsListView&lv,const AbsListView::ListItem&i
      }
      RECT r=bar.rect;
      canvas.set_color(chv.getColor(state?CHANNEL_FOCUSED:CHANNEL_BG ));
-     NGLOG_DEBUG("%s state=%d",bar.getText().c_str(),state);
      r.width=nameWidth-1;
      r.height-=1;
      canvas.draw_rect(r);
@@ -189,7 +188,6 @@ void ChannelEpgView::onDraw(GraphContext&canvas){
     if(list_.size()>0)
       list_[0]->onGetSize(*this,nullptr,&r.height);
     drawTimeRule(canvas);
-    NGLOG_DEBUG("index=%d",index_);
     for(auto itm=list_.begin()+idx;itm<list_.end();itm++,idx++){
         (*itm)->rect=r;
         item_painter_(*this,*(*itm),idx==index_,canvas);

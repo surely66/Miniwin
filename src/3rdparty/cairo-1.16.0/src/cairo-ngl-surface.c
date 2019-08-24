@@ -163,6 +163,7 @@ _cairo_ngl_surface_unmap_image (void *abstract_surface,
 				cairo_image_surface_t *image)
 {
     cairo_ngl_surface_t *surface = abstract_surface;
+     nglUnlockSurface(surface->nglsurface);
     return _cairo_image_surface_unmap_image (&surface->image.base, image);
 }
 
@@ -176,7 +177,7 @@ _cairo_ngl_surface_flush (void *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     NGLOG_VERBOSE("nglsurface=%p surface->image.pixman_image=%p",surface->nglsurface,surface->image.pixman_image);
     if (surface->image.pixman_image) {
-	nglUnlockSurface(surface->nglsurface);//surface->dfb_surface->Unlock (surface->dfb_surface);
+	//nglUnlockSurface(surface->nglsurface);//surface->dfb_surface->Unlock (surface->dfb_surface);
 
 	pixman_image_unref (surface->image.pixman_image);
 	surface->image.pixman_image = NULL;

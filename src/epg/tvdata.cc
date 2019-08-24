@@ -450,18 +450,10 @@ static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
     USHORT lcn;
     if(NGL_OK!=lcndata->getLCN(*loc,&lcn)){
        service_lcn[*loc]->lcn=lcn=lcndata->lcn_start++;
-       printf("\t*service %d.%d.%d lcn not found setto %d\r\n",loc->netid,loc->tsid,loc->sid,lcn);
     }else{
        service_lcn[*loc]->visible=lcn&0x8000;
        service_lcn[*loc]->lcn=(lcn&0x3FFF)&lcnmask;
     }
-    /*std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*loc);
-    if(got!=service_lcn.end())
-        got->second->lcn=lcn;
-    else{
-        printf("\t#service %d.%d.%d lcn not found setto %d\r\n",loc->netid,loc->tsid,loc->sid,lcn);
-        service_lcn[*loc]->lcn=lcn;
-    }*/
     return 1;
 }
 

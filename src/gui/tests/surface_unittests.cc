@@ -279,3 +279,19 @@ TEST_F(CONTEXT,Font){
     }
     nglSleep(1000);
 }
+TEST_F(CONTEXT,ALPHA){
+     RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(1280,720));
+     ctx->set_color(0xFFFFFFFF);
+     ctx->draw_rect(0,0,1280,720);
+     ctx->set_color(0x80FF0000);
+     ctx->draw_rect(200,200,480,320);
+     ctx->dump2png("alpha.png");
+}
+TEST_F(CONTEXT,HOLE){
+     RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(1280,720));
+     ctx->set_color(0xFFFFFFFF);
+     ctx->draw_rect(0,0,1280,720);
+     ctx->set_color(0);
+     ctx->draw_rect(200,200,480,320);
+     ctx->dump2png("hole.png");
+}

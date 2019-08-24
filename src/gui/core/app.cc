@@ -104,10 +104,10 @@ size_t App::loadFile(const std::string&fname,unsigned char**buffer)const{
 
 
 int App::exec(){
-    //WindowManager::getInstance()->run();
-    while(1){
+    WindowManager::getInstance()->run();
+    /*while(1){
        nglSleep(1000);
-    }
+    }*/
 }
 void App::setName(const std::string&appname){
     setproctitle(appname.c_str());

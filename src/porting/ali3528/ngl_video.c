@@ -159,13 +159,16 @@ INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
      dst.h=dst.h*2880/720;
      int rc;
      int mode=(dst.w>=src.w&&dst.h>=src.h)?AUI_VIEW_MODE_FULL:AUI_VIEW_MODE_PREVIEW;
-     aui_hdl dis_hdl;
+     aui_hdl dis_hdl,dis_sd;
      aui_find_dev_by_idx( AUI_MODULE_DIS, AUI_DIS_HD, &dis_hdl ); 
+     aui_find_dev_by_idx( AUI_MODULE_DIS, AUI_DIS_SD, &dis_sd ); 
 
      if(mode==AUI_VIEW_MODE_PREVIEW){
           rc=aui_dis_mode_set(dis_hdl,mode,&src,&dst);
+          rc=aui_dis_mode_set(dis_sd,mode,&src,&dst);
      }else{
           rc=aui_dis_mode_set(dis_hdl,mode,NULL,NULL);
+          rc=aui_dis_mode_set(dis_sd,mode,NULL,NULL);
      }
      NGLOG_DEBUG("aui_dis_mode_set(hd=%p/%p mode=%d %dx%d)=%d ",av->attr.pv_hdl_dis_hd,dis_hdl,mode,dst.w,dst.h,rc);
      return rc;

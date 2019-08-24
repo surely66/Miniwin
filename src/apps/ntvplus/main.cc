@@ -22,6 +22,7 @@ int main(int argc,const char*argv[]){
          case NGL_KEY_ENTER:CreateChannelList();return true;
          case NGL_KEY_UP:
          case NGL_KEY_DOWN:CreateChannelPF();return true;
+         case NGL_KEY_EPG: CreateTVGuide();return true;
          case NGL_KEY_ESCAPE:exit(0);
          default:return false;
          }

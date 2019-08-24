@@ -3,7 +3,8 @@
 #include <ngl_types.h>
 
 NGL_BEGIN_DECLS
-
+extern int blitflag;
+extern int porterduff;
 typedef enum {
   GPF_UNKNOWN,
   GPF_ARGB4444,

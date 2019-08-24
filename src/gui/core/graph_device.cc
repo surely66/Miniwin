@@ -137,16 +137,18 @@ bool GraphDevice::CheckOverlapped(GraphContext*c,int idx){
 
 void GraphDevice::ComposeProc(void*param){
     GraphDevice*dev=(GraphDevice*)param;
+    int writed=0;
     NGLOG_DEBUG("Compose Thread started primarySurface=%p graphEvent=%p....",dev->primarySurface,dev->graphEvent);
     while(true){
         if(nglWaitEvent(dev->graphEvent,100)==NGL_OK) {
             int i=0;
+            NGLRect rr={40,70,320,240}; 
             nglFillRect(dev->primarySurface,nullptr,0);
             for(auto s:gSurfaces){
                 POINT pt=s->screenPos;
                 NGLRect srec={pt.x,pt.y,0,0};
                 DWORD nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
-                NGLOG_VERBOSE("nglBlit %p to %d,%d",nglsurface,srec.x,srec.y);
+                //nglFillRect(nglsurface,&rr,0x00FF0000);
                 if(GraphDevice::CheckOverlapped(s,i++))continue;
                 nglBlit(dev->primarySurface,nglsurface,nullptr,&srec);
             }

@@ -50,7 +50,7 @@ public:
               ChannelItem*itm=(ChannelItem*)left->getItem(0);
               if(itm)DtvPlay(&itm->svc,nullptr);
               DtvSaveProgramsData("dvb_programs.dat");
-              FavInit(App::getInstance().getArg("favorite","favorites.json"));
+              FavInit(App::getInstance().getArg("favorite","favorites.json").c_str());
               DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
          }
     }
