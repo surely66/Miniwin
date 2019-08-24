@@ -86,10 +86,12 @@ GraphContext*GraphDevice::createContext(int width,int height){
     DWORD nglsurface;
     nglCreateSurface(&nglsurface,width,height,0,0);
     cairo_surface_t*surface=cairo_ngl_surface_create(nglsurface);
-    NGLOG_VERBOSE("nglsurface=%p cairo_surface=%p size=%dx%d",nglsurface,surface,width,height);     
     GraphContext*graph_ctx=new GraphContext(this,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
+    NGLOG_VERBOSE("nglsurface=%p cairo_surface=%p size=%dx%d content=%x operatopr=%d",nglsurface,surface,width,height,cairo_surface_get_content(surface),
+        graph_ctx->get_operator());     
     gSurfaces.push_back(graph_ctx);
     graph_ctx->dev=this;
+    //graph_ctx->set_operator(OPERATOR_SOURCE);
     graph_ctx->set_font_face(getFont());
     graph_ctx->set_antialias(ANTIALIAS_GRAY);//ANTIALIAS_SUBPIXEL);
     return graph_ctx;

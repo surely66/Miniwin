@@ -48,7 +48,7 @@ bool GroupView::isDirty(){
 
 void GroupView::onDraw(GraphContext& canvas) {
     // Draw the background color, if enabled
-    RECT rect;
+    RECT rect=getClientRect();
     canvas.reset_clip();
     clip(canvas);
     if(hasFlag(Attr::ATTR_BORDER)){
@@ -56,7 +56,8 @@ void GroupView::onDraw(GraphContext& canvas) {
          canvas.rectangle(getClientRect());
          canvas.stroke();
     }
-    
+    canvas.set_color(getBgColor());
+    canvas.draw_rect(rect);
     for(auto child : children_){
         rect=child->getBound();
         cairo_rectangle_int_t r={rect.x,rect.y,rect.width,rect.height};
@@ -73,8 +74,6 @@ void GroupView::onDraw(GraphContext& canvas) {
             }
         }child->resetClip();
     }
-    canvas.set_color(getBgColor());
-    canvas.draw_rect(rect);
     resetClip();
 }
 

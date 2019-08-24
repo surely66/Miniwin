@@ -65,11 +65,7 @@ _ngl_format_to_content (int  format)
 {
     cairo_content_t content = 0;
 
-    /*if (DFB_PIXELFORMAT_HAS_ALPHA (format))
-	content |= CAIRO_CONTENT_ALPHA;
-    if (DFB_COLOR_BITS_PER_PIXEL (format))
-	content |= CAIRO_CONTENT_COLOR_ALPHA;*/
-    content|=CAIRO_CONTENT_ALPHA;
+    content|=CAIRO_CONTENT_COLOR_ALPHA;
     assert(content);
     return content;
 }
@@ -143,7 +139,7 @@ _cairo_ngl_surface_map_to_image (void *abstract_surface,
 
 	if (nglLockSurface (surface->nglsurface,&data, &pitch))
 	    return _cairo_image_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-	image = pixman_image_create_bits (surface->image.pixman_format,
+	image = pixman_image_create_bits (PIXMAN_a8r8g8b8,//surface->image.pixman_format,
 					  surface->image.width,
 					  surface->image.height,
 					  data, pitch);

@@ -295,3 +295,22 @@ TEST_F(CONTEXT,HOLE){
      ctx->draw_rect(200,200,480,320);
      ctx->dump2png("hole.png");
 }
+TEST_F(CONTEXT,HOLE2){
+    RefPtr<GraphContext>ctx(GraphDevice::getInstance()->getPrimaryContext());
+     ctx->set_color(0xFFFFFFFF);
+     ctx->draw_rect(0,0,1280,720);
+     ctx->set_source_rgba(0,0,0,0);
+     ctx->draw_rect(200,200,480,320);
+     ctx->dump2png("hole2.png");
+}
+TEST_F(CONTEXT,HOLE3){
+     RefPtr<ImageSurface>img=ImageSurface::create(FORMAT_ARGB32,1280,720);
+     RefPtr<Context>ctx=Context::create(img);
+     ctx->set_source_rgb(1,0.5,1);
+     ctx->rectangle(0,0,1280,720);
+     ctx->fill();
+     ctx->set_source_rgba(0,1,0,0.1);
+     ctx->rectangle(200,200,480,320);
+     ctx->fill();
+     img->write_to_png("hole3.png");
+}

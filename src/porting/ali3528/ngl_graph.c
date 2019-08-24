@@ -13,7 +13,7 @@ NGL_MODULE(GRAPH)
 
 static IDirectFB *directfb=NULL;
 //AUI porting has some crash roblem,but work's fine  
-//#define USE_DIRECTFB 1
+#define USE_DIRECTFB 1
 
 static int created_surface=0;
 static int destroyed_surface=0;
@@ -38,7 +38,6 @@ DWORD nglGraphInit()
     if(0==inited){
         aui_gfx_init(NULL, NULL);
         inited++;
-        //aui_log_priority_set(AUI_MODULE_GFX,AUI_LOG_PRIO_DEBUG);
     } 
 #endif
     return NGL_OK;
@@ -188,7 +187,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      if(!hwsurface)dfbsurface->MakeClient(dfbsurface);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d",dfbsurface,hwsurface);
      created_surface++;
-     dfbsurface->Clear(dfbsurface,0,0,0,(hwsurface?00:0xFF));
+     dfbsurface->Clear(dfbsurface,0,0,0,0x00);
      *surface=(DWORD)dfbsurface;
      return NGL_OK;
 #else
@@ -208,7 +207,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      }
      region_rect.uWidth=width; region_rect.uHeight=height;
      aui_gfx_surface_clip_rect_set(surf_handle,&region_rect,AUI_GE_CLIP_INSIDE);
-     aui_gfx_surface_fill(surf_handle,(hwsurface?0x0:0xFF000000),&region_rect);
+     aui_gfx_surface_fill(surf_handle,0,&region_rect);
      *surface=(DWORD)surf_handle;
      aui_gfx_layer_antifliker_on_off(surf_handle,0);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d ret=%d",surf_handle,hwsurface,ret);
@@ -230,11 +229,6 @@ DWORD nglBlit(DWORD dstsurface,DWORD srcsurface,const NGLRect*srcrect,const NGLR
 #ifdef USE_DIRECTFB
      IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
      IDirectFBSurface*dfbdst=(IDirectFBSurface*)dstsurface;
-     //dfbdst->SetBlittingFlags(dfbdst,DSBLIT_BLEND_COLORALPHA);//DSBLIT_NOFX);//DSBLIT_BLEND_ALPHACHANNEL);//|DSBLIT_DST_PREMULTIPLY|DSBLIT_SRC_PREMULTIPLY);
-     //dfbsrc->SetBlittingFlags(dfbsrc,DSBLIT_BLEND_COLORALPHA);//DSBLIT_SRC_COLORKEY);
-     //dfbdst->SetPorterDuff(dfbdst,porterduff);//DSPD_SRC);
-     //dfbsrc->SetDstColorKey(dfbsrc,0,0,0);
-     //dfbsrc->SetBlittingFlags(dfbsrc,DSBLIT_SRC_COLORKEY);
      int ret=dfbdst->Blit(dfbdst,dfbsrc,srcrect,(dstrect?dstrect->x:0),(dstrect?dstrect->y:0));
      NGLOG_VERBOSE_IF(ret,"dstsurface=%p srcsurface=%p ret=%d",dstsurface,srcsurface,ret);
      return ret;

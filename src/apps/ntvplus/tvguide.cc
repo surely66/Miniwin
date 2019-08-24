@@ -48,12 +48,6 @@ public:
    ~TVWindow(){
        nglAvSetVideoWindow(0,NULL,NULL);
    }
-   /*virtual void onDraw(GraphContext&c)override{
-       c.set_source_rgba(0,0,0,0);
-       printf("TVWindow::ondraw\r\n");
-       c.draw_rect(40,70,320,240);
-       NTVWindow::onDraw(c);
-   }*/
    virtual void onEITS(const SERVICELOCATOR*svc)override;
    virtual bool onKeyRelease(KeyEvent&k)override;
    virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
