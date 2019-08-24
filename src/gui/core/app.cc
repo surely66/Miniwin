@@ -34,6 +34,9 @@ App::App(int argc,const char*argv[]){
     mInst=this;
     spt_init(argc,(char**)argv);
     setName(argv[0]);
+
+    nglGraphInit();
+
     USBManager::getInstance().startMonitor();
     do{
         c=getopt_long(argc,(char*const*)argv,"a",app_options,&option_index);
@@ -43,6 +46,7 @@ App::App(int argc,const char*argv[]){
             NGLOG_VERBOSE("args[%d]%s:%s",option_index,key.c_str(),optarg);
         }
     }while(c>=0);
+    setOpacity(getArgAsInt("alpha",255));
 }
 App&App::getInstance(){
     return *mInst;

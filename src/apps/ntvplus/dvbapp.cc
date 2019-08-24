@@ -14,6 +14,7 @@ namespace nglui{
 DVBApp::DVBApp(int argc,const char**argv)
   :App(argc,argv){
     Preferences pref;
+    nglGraphInit();
     DtvEpgInit();
     LoadSatelliteFromDB("satellites.json");
     DtvLoadProgramsData("dvb_programs.dat");
@@ -22,7 +23,7 @@ DVBApp::DVBApp(int argc,const char**argv)
     pref.load("settings.pref");
     int res=pref.getInt("pciture","resolution",DISP_RES_720P);
     NGLOG_DEBUG("DVBApp::DVBApp resolution=%d",res);
-    
+    setOpacity(200);//getArgAsInt("alpha",255));    
     nglDispSetResolution(res);
     
 }

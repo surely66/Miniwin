@@ -31,8 +31,8 @@ DWORD nglGraphInit()
     directfb->GetDisplayLayer( directfb, DLID_PRIMARY, &dispLayer );
     dispLayer->GetConfiguration( dispLayer, &dispCfg );
     NGLOG_DEBUG("directfb=%p options=%x",directfb,dispCfg.options);
-    dispCfg.options=DLOP_ALPHACHANNEL|DLOP_SRC_COLORKEY|DLOP_OPACITY|DLOP_SRC_COLORKEY; 
-    //dispLayer->SetConfiguration(dispLayer,&dispCfg);
+    dispCfg.options=DLOP_OPACITY;//ALPHACHANNEL|DLOP_SRC_COLORKEY|DLOP_OPACITY|DLOP_SRC_COLORKEY; 
+    dispLayer->SetConfiguration(dispLayer,&dispCfg);
 #else
     static int inited=0;
     if(0==inited){
@@ -114,6 +114,7 @@ DWORD nglUnlockSurface(DWORD surface){
 }
 
 DWORD nglSurfaceSetOpacity(DWORD surface,BYTE alpha){
+    NGLOG_DEBUG("==setopacity=%x",alpha);
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     IDirectFBDisplayLayer *dispLayer;
@@ -187,7 +188,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      if(!hwsurface)dfbsurface->MakeClient(dfbsurface);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d",dfbsurface,hwsurface);
      created_surface++;
-     dfbsurface->Clear(dfbsurface,0,0,0,0x00);
+     dfbsurface->Clear(dfbsurface,0,0,0,hwsurface?0x00:0xFF);
      *surface=(DWORD)dfbsurface;
      return NGL_OK;
 #else
@@ -207,7 +208,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      }
      region_rect.uWidth=width; region_rect.uHeight=height;
      aui_gfx_surface_clip_rect_set(surf_handle,&region_rect,AUI_GE_CLIP_INSIDE);
-     aui_gfx_surface_fill(surf_handle,0,&region_rect);
+     aui_gfx_surface_fill(surf_handle,hwsurface?0:0xFF,&region_rect);
      *surface=(DWORD)surf_handle;
      aui_gfx_layer_antifliker_on_off(surf_handle,0);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d ret=%d",surf_handle,hwsurface,ret);

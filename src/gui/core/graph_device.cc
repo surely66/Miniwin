@@ -38,7 +38,7 @@ GraphDevice::GraphDevice(int format){
     graphEvent=nglCreateEvent(0,0);
     nglCreateSurface(&primarySurface,width,height,0,1);
     NGLOG_DEBUG("primarySurface=%p size=%dx%d graphEvent=%x ",primarySurface,width,height,graphEvent);
-    
+
     cairo_surface_t*surface=cairo_ngl_surface_create(primarySurface);
     primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
     FT_Face ft_face;
