@@ -17,7 +17,7 @@ add_subdirectory(jsoncpp)
 add_subdirectory(id3)
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
-    add_subdirectory(directfb)
+	# add_subdirectory(directfb)
 endif()
 
 #add_subdirectory(libcroco)

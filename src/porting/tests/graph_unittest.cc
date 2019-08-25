@@ -62,9 +62,7 @@ TEST_F(GRAPH,Blit){
    NGLRect r={100,50,640,480};
    nglFillRect(swsurface,&r,0x0);
    for(int i=-1;i<10;i++){
-       blitflag=(i==-1)?0:(1<<i);
        for(int j=0;j<13;j++){
-           porterduff=j;printf("blitflags=%x:%x\r\n",blitflag,porterduff);
            nglBlit(hwsurface,swsurface,NULL,NULL);
            nglFlip(hwsurface);
            nglSleep(200);

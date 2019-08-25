@@ -23,8 +23,9 @@ set(SRCS_X86
 add_library(nglx86 STATIC ${SRCS_X86})
 include(platform.cmake)
 
+find_package(GTK2  REQUIRED gtk)
 
-include_directories(${DIRECTFB_INCLUDE_DIR} ${NGL_PLATFORM_INCDIRS}
+include_directories(${GTK2_INCLUDE_DIRS}
   ../inc ./)
 
 

@@ -23,7 +23,7 @@ typedef struct{
    INT locked;
 }NGLTUNER;
 
-static NGLTUNER sTuners[];
+static NGLTUNER sTuners[2];
 
 static void TunerStateProc(void*p){
    while(1){
