@@ -16,5 +16,6 @@
 #include <app.h>
 #include <toolbar.h>
 #include <desktop.h>
+#include <keyboard.h>
 
 using namespace nglui;

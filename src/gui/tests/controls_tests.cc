@@ -167,4 +167,7 @@ TEST_F(CONTROLS,ChannelEPGView){
     }
     nglSleep(28000);
 }
-
+TEST_F(CONTROLS,Keyboard){
+    Window*w=new Keyboard(200,200,800,300);
+    nglSleep(8000);
+}
