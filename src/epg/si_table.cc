@@ -253,7 +253,7 @@ EIT::operator const SERVICELOCATOR()const{
 }
 
 bool DVBStream::getDelivery(NGLTunerParam*tp){
-/*TAG_SATELLITE_DELIVERY 0x43
+  /*TAG_SATELLITE_DELIVERY 0x43
   TAG_CABLE_DELIVERYY    0x44
   TAG_TERRSTRIAL_DELIVERY 0x5A
   TAG_SATELLITE2_DELIVERY 0x79*/
@@ -276,6 +276,7 @@ bool DVBStream::getDelivery(NGLTunerParam*tp){
     }else if(p=findDescriptor(TAG_TERRSTRIAL_DELIVERY)){//frequency for DVBT is 10Hz
         tp->u.t.frequency=Hex2BCD((p[2]<<24)|(p[3]<<16)|(p[4]<<8)|p[5]);
         tp->u.t.bandwidth=(NGLBandWidth)(p[6]>>5);
+        tp->u.t.guard_interval=(NGLGuardInter)((p[8]>>3)&3);
         //tp->u.t.modulation
         tp->u.t.guard_interval=(NGLGuardInter)((p[8]>>3)&0x03);//tobe convert
         return 1;

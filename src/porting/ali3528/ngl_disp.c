@@ -20,7 +20,7 @@ DWORD nglDispInit(){
 	NGLOG_DEBUG("aui_dis_open HD =%d",rc);
     }
 
-    NGLOG_DEBUG("\n init_dis_handle(),222\n");	
+    NGLOG_DEBUG("init_dis_handle(),222");	
 	
     if (aui_find_dev_by_idx(AUI_MODULE_DIS, AUI_DIS_SD, &dis_sd)){
 	attr_dis.uc_dev_idx = AUI_DIS_SD;

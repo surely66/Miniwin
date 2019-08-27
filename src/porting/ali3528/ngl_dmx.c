@@ -129,7 +129,7 @@ DWORD nglDmxInit(){
     aui_hdl tsg_hdl;
     aui_hdl tsi_hdl;
     if(mtx_dmx)return 0;
-    NGLOG_DEBUG("nglDmxInit\r\n");
+    NGLOG_DEBUG("nglDmxInit");
     aui_dmx_init(NULL,NULL);
     aui_log_priority_set(AUI_MODULE_DMX,AUI_LOG_PRIO_ERR);
     nglCreateMutex(&mtx_dmx);
@@ -177,11 +177,9 @@ DWORD nglDmxInit(){
 
     aui_tsg_init(NULL,NULL);
 
-    NGLOG_DEBUG("");
     bzero(&attr_tsg,sizeof(aui_attr_tsg));
     attr_tsg.ul_tsg_clk = 24;
     attr_tsg.ul_bit_rate = 100;
-    NGLOG_DEBUG("");
     aui_tsg_open(&attr_tsg,&tsg_hdl);
     aui_tsg_start(tsg_hdl,&attr_tsg);
     //aui_tsi_open(&tsi_hdl);

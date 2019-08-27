@@ -68,7 +68,6 @@ DWORD nglTunerInit(){
     int i,ret ;
     DWORD threadId;
     if(0!=nim_mutex)return NGL_OK;
-    NGLOG_DEBUG("");
     nglCreateMutex(&nim_mutex);
     ret=aui_nim_init(nim_init_cb);
     aui_log_priority_set(AUI_MODULE_NIM,AUI_LOG_PRIO_DEBUG);
