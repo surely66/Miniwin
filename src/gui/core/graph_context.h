@@ -29,6 +29,8 @@ enum TEXTALIGNMENT{
 #define RGB(r,g,b,a) RGBA(r,g,b,0xFF)
 
 class GraphContext:public Cairo::Context{
+private:
+    BOOL isSubCanvas;
 protected:
     class GraphDevice*dev;
     POINT screenPos;

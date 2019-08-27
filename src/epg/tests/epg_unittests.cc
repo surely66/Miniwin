@@ -54,8 +54,19 @@ static USHORT lcn[64];
 static int cnt=0;
 static void FilterCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData){
    BAT b(pBuffer);
+   NIT n(pBuffer);
+   char name[128];
    DVBStream tss[32];
-   AddBATSection(b,NULL);
+   if(b.tableId()==TBID_BAT)AddBATSection(b,NULL);
+   int tsc=n.getStreams(tss,false);
+   int rc=n.getName(name,NULL);
+   printf("name:%s  rc=%d\r\n",name,rc);
+   for(int i=0;i<tsc;i++){
+        NGLTunerParam tp;
+        tss[i].getDelivery(&tp);
+        printf("TS[%2d] freq=%d symbol=%d pos=%d direction=%d\r\n",i,tp.u.s.frequency,tp.u.s.symbol_rate,tp.u.s.position,
+             tp.u.s.direction);
+   }
 }
 TEST_F(EPGTest,BAT){
    BYTE mask[8],match[8];
@@ -66,6 +77,16 @@ TEST_F(EPGTest,BAT){
    nglStartSectionFilter(flt);
    nglSleep(10000);
    DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
+}
+
+TEST_F(EPGTest,NIT){
+   BYTE mask[8],match[8];
+   DWORD flt=nglAllocateSectionFilter(1,PID_NIT,FilterCBK,NULL,NGL_DMX_SECTION);
+   mask[0]=0xFF;
+   match[0]=TBID_NIT;
+   nglSetSectionFilterParameters(flt,1,mask,match);
+   nglStartSectionFilter(flt);
+   nglSleep(10000);
 }
 
 TEST_F(EPGTest,TEST){

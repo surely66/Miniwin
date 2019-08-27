@@ -64,7 +64,7 @@ SatEditorWindow::SatEditorWindow(int x,int y,int w,int h):Window(x,y,w,h){
     addChildView(pos);
     NEWCTRL("Direction",w,dir);
     dir->addItem(new Selector::ListItem("East",0));
-    dir->addItem(new Selector::ListItem("Weast",1));
+    dir->addItem(new Selector::ListItem("West",1));
     listener=nullptr;
 }
 

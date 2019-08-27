@@ -93,6 +93,7 @@ typedef struct{
    UINT frequency;//for DVBS frequency coded in MHz
    UINT symbol_rate;
    NGLModulation modulation;
+   USHORT position;
    NGLNimFEC fec;    
    NGLNimPolar polar;
    USHORT direction;//0 weast 1-east

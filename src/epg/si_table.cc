@@ -266,6 +266,8 @@ bool DVBStream::getDelivery(NGLTunerParam*tp){
         return 1;
     }else if(p=findDescriptor(TAG_SATELLITE_DELIVERY)){//frequency for DVBS Ghz
         tp->u.s.frequency=Hex2BCD((p[2]<<24)|(p[3]<<16)|(p[4]<<8)|p[5]);
+        tp->u.s.position=Hex2BCD(p[6]<<8|p[7]);
+        tp->u.s.direction=p[8]>>7;
         tp->u.s.polar=(NGLNimPolar)( (p[8]>>5)&0x03);
         tp->u.s.symbol_rate=Hex2BCD((p[9]<<20)|(p[10]<<12)|(p[11]<<4)|(p[12]>>4));
         tp->u.s.modulation=(NGLModulation)(p[8]&0x03);
@@ -353,8 +355,7 @@ int DVBStream::getLCN(SERVICELOCATOR*svc,USHORT*lcn){
         NordigLCNDescriptor nd(netid,tsid,pd,pd[1],false);
         return nd.getLCN(svc,lcn);
     }
-    pd=findDescriptor(TAG_NORDIG_LCN2);
-    if(nullptr!=pd){
+    if(pd=findDescriptor(TAG_NORDIG_LCN2)){
         NordigLCNDescriptorV2 nd(netid,tsid,pd,pd[1],false);
         return nd.getLCN(svc,lcn);
     }
@@ -365,13 +366,11 @@ int NIT::getName(char*name,const char*lan){
     int len,rc=0;
     BYTE*pd=getNetworkDescriptors(len);
     Descriptors des(pd,len,false);
-    pd=des.findDescriptor(TAG_MULTI_NETWORK_NAME);
-    if(pd){
+    if(pd=des.findDescriptor(TAG_MULTI_NETWORK_NAME)){
         MultiBouquetNameDescriptor md(pd,pd[1],false);
-        rc=getName(name,lan);
+        return md.getName(name,lan);
     }
-    if(rc==0){
-        pd=des.findDescriptor(TAG_NETWORK_NAME);
+    if(pd=des.findDescriptor(TAG_NETWORK_NAME)){
         NameDescriptor sd(pd,pd[1],false);
         return sd.getName(name);
     }
@@ -379,14 +378,14 @@ int NIT::getName(char*name,const char*lan){
 }
 
 int BAT::getName(char*name,const char*lan){
-    int len,rc=0;
+    int len;
     BYTE*pd=getBouquetDescriptors(len);
     Descriptors des(pd,len,false);
     if(pd=des.findDescriptor(TAG_MULTI_BOUQUET_NAME)){
         MultiBouquetNameDescriptor md(pd,pd[1],false);
-        rc=getName(name,lan);
+        return md.getName(name,lan);
     }
-    if( (rc==0) && (pd=des.findDescriptor(TAG_BOUQUET_NAME)) ){
+    if( pd=des.findDescriptor(TAG_BOUQUET_NAME) ){
         NameDescriptor sd(pd,pd[1],false);
         return sd.getName(name);
     }
