@@ -1,4 +1,5 @@
 #include<keyboard.h>
+#include<json/json.h>
 
 namespace nglui{
 //keycode data from: https://github.com/mBut/jquery.mlkeyboard/tree/master/src/layouts
@@ -9,19 +10,27 @@ typedef struct{
    UINT c2;
    USHORT w;
    USHORT h;
+   char*text;
 }KEYDEF;
 extern KEYDEF US[];
 
 Keyboard::Keyboard(int x,int y,int w,int h):Window(x,y,w,h){
-    kv=new KeyboardView(w,h);
+    kv=new KeyboardView(w,h-8);
+    setBgColor(0xFF000010);
+    kv->setFgColor(0xFFFFFFFF);
+    kv->setBgColor(0xFF000000);
     addChildView(kv);
-    for(int i=0;i<55;i++){
+    for(int i=0;i<56;i++){
         KEYDEF &k=US[i];
         USHORT w=(k.c1==KV::KC_NONE)?k.w:(k.w==0?1:k.w)*40;
         USHORT h=(k.c1==KV::KC_NONE)?k.h:(k.h==0?1:k.h)*40;
         if(k.c1==KV::KC_NONE&&k.w==0)h=42;
-        kv->addKey(k.c1,k.c2,w,h);
-    }
+        kv->addKey(k.c1,k.c2,w,h,k.text);
+    }invalidate(nullptr);
+}
+
+void Keyboard::setBuddy(EditBox*buddy){
+    kv->setBuddy(buddy);
 }
 
 KEYDEF US[]={//English (US)
@@ -32,12 +41,12 @@ KEYDEF US[]={//English (US)
     { 'p', 'P'  },   { '[', '{' },   { ']', '}' },   { '\\','|'  },  {KV::KC_NONE,KV::KC_NONE},
 
     { 'a', 'A'  },   { 's', 'S' },   { 'd', 'D' },   { 'f', 'F'  },  { 'g', 'G' },    { 'h', 'H' },   { 'j', 'J' },    { 'k', 'K' },   { 'l', 'L'  },
-    { ';', ':'  },   { '\'','\"'},   {KV::KC_NONE,KV::KC_NONE},
+    { ';', ':'  },   { '\'','\"'},   {KV::KC_NONE,KV::KC_NONE},      {KV::KC_NONE,KV::KC_NONE,20},
 
     {'z', 'Z',  },   {'x', 'X',  },   {'c', 'C',},   {'v',  'V', },  {'b', 'B', },    {'n', 'N', },   {'m', 'M', },    {',', '<', },   {'.', '>',  },
     {'/', '?',  },   {KV::KC_NONE,KV::KC_NONE},
 
-    {KV::KC_CAPS,KV::KC_CAPS,2},{KV::KC_SPACE,KV::KC_SPACE,5},{KV::KC_LANS,KV::KC_LANS,2}
+    {KV::KC_CAPS,KV::KC_CAPS,2,0,"CAP"},{0x20,0x20,6,0,"Space"},{KV::KC_LANS,KV::KC_LANS,4,0,"Language"}
 
  };
 

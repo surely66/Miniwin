@@ -35,12 +35,6 @@ public:
                txt="You clicked view which it's id:"+std::to_string(wparam);
                Toast::makeText(txt,2000)->setPos(300,wparam*20);
                break;
-         case WM_SELCHANGE:
-               tip=(Widget*)findViewById(ID_TIPINFO);
-               txt="onMessage: You Select Item:"+std::to_string(lparam)+" of view id:"+std::to_string(wparam);
-               if(tip)
-                  tip->setText(txt);
-               break;
          default:return false;
          }
          return true;
@@ -75,12 +69,24 @@ TEST_F(CONTROLS,Button){
 }
 
 TEST_F(CONTROLS,EditBox){
+    const std::string sss[]={
+         "Normal","","",
+         "A-Z","Abc","^[A-Za-z]+$",
+         "Digit","123","^[1-9]\\d*$",
+         "IP","0.0.0.0","\\d+\\.\\d+\\.\\d+\\.\\d+",
+    };
     Window*w=new MyWindow(100,100,800,600);
     w->setLayout(new LinearLayout());
-    w->addChildView(new EditBox(200,40));
-    EditBox *e=new EditBox(200,40);
-    e->setEditMode(1);
-    w->addChildView(e);
+    for(int i=0;i<4;i++){
+        EditBox *e=new EditBox(780,40);
+        e->setBgColor(0Xff444444);
+        e->setLabelWidth(300);
+        e->setLabel(sss[i*3]);
+        e->setText(sss[i*3+1]);
+        e->setPattern(sss[i*3+2]);     
+        w->addChildView(e);
+        //e->setEditMode(1);
+    }
     nglSleep(30000);
 }
 

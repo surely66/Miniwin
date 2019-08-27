@@ -13,7 +13,7 @@ NGL_MODULE(GRAPH)
 
 static IDirectFB *directfb=NULL;
 //AUI porting has some crash roblem,but work's fine  
-#define USE_DIRECTFB 1
+//#define USE_DIRECTFB 1
 
 static int created_surface=0;
 static int destroyed_surface=0;

@@ -9,18 +9,22 @@ public:
   typedef std::function<void (EditBox&)>AfterTextChanged;
 protected:
   int edit_mode_;//0-->insert mode 1-->replace_mode
-  int caret_pos_;
+  int caretPos;
   int label_width_;
   int label_alignment_;
   std::string label_;
+  std::string inputPattern;
   int labelBkColor;
   AfterTextChanged afterChanged;
+  bool match();
 public:
   EditBox(int w,int h);
   EditBox(const std::string&txt,int w,int h);
+  static int Unicode2UTF8(UINT unicode,std::string&utf8);
   void setLabelColor(int color);
   const std::string&replace(size_t start,size_t len,const std::string&txt);
   const std::string&replace(size_t start,size_t len,const char*txt,size_t size);
+  void setPattern(const std::string&pattern);
   virtual void setTextWatcher(AfterTextChanged ls);
   virtual void setLabelWidth(int w);
   virtual void setLabel(const std::string&txt);
@@ -31,6 +35,7 @@ public:
   virtual void setCaretPos(int idx);
   virtual int getCaretPos();
   virtual bool onKeyRelease(KeyEvent&evt)override; 
+  virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp);
 };
 }//endof nglui
 

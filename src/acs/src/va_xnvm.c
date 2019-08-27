@@ -1,236 +1,432 @@
-/*
-  FILE : stub_xnvm.c
-  PURPOSE: This file is a stub for linking tests.
-*/
-
+#include <time.h>
 #include <stdio.h>
-#if 1 //(!defined VAOPT_ENABLE_ACS30 && !defined VAOPT_ENABLE_ACS31)
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <semaphore.h>
+#include <sys/time.h>
+
+#include <aui_common.h>
+#include <aui_flash.h>
+
+#include "va_setup.h"
 #include "va_xnvm.h"
-#include "aui_flash.h"
-#include <va_setup.h>
 #include <ngl_types.h>
 #include <ngl_log.h>
-#include <ngl_msgq.h>
-NGL_MODULE(ACSXNVM)
 
-typedef struct{
-  UINT32 addr;
-  UINT32 size;
-  FILE*file;
-  const char*fname;
-  aui_hdl hdl;
-}NVMSEGMENT;
+NGL_MODULE(VAXNVM)
 
-typedef struct{
-  int isread;
-  void* hdl;
-  DWORD vahdl;
-  unsigned char*buffer;
-  UINT offset;
-  UINT size; 
-}NVMREQUEST;
-#define XNVM_START_ADDR    0// 0x730000  //ALI3528
-//kVA_SETUP_ACS_DATA_SEGMENT_SIZE   64*1024
-static NVMSEGMENT Segments[eSEGMENT_LAST]={
-  //init segment addr and size eSEGMENT_SOFTWARE = 0, eSEGMENT_ACS_DATA_1, eSEGMENT_ACS_DATA_2, eSEGMENT_LOADER_DATA
-  {XNVM_START_ADDR+kVA_SETUP_ACS_DATA_SEGMENT_SIZE*0,kVA_SETUP_ACS_DATA_SEGMENT_SIZE,NULL,"./software.dat",NULL},//this segment is optional
-  {XNVM_START_ADDR+kVA_SETUP_ACS_DATA_SEGMENT_SIZE*1,kVA_SETUP_ACS_DATA_SEGMENT_SIZE,NULL,"./acsdata1.dat",NULL},
-  {XNVM_START_ADDR+kVA_SETUP_ACS_DATA_SEGMENT_SIZE*2,kVA_SETUP_ACS_DATA_SEGMENT_SIZE,NULL,"./acsdata2.dat",NULL},
-  {XNVM_START_ADDR+kVA_SETUP_ACS_DATA_SEGMENT_SIZE*3,kVA_SETUP_ACS_DATA_SEGMENT_SIZE,NULL,"./aceloader.dat",NULL}//this segment is optional
+#define VA_NVM_DUMP  NGLOG_DUMP 
+
+#define VA_NVM_FLASH_ID     10 //mtd8 for VA XNVM module
+#define SEGMENT_SOFTWARE_SIZE       kVA_SETUP_ACS_DATA_SEGMENT_SIZE
+#define SEGMENT_ACS_DATA_SIZE       kVA_SETUP_ACS_DATA_SEGMENT_SIZE
+#define SEGMENT_LOADER_DATA_SIZE    kVA_SETUP_ACS_DATA_SEGMENT_SIZE
+
+#define XNVM_BLOCK_NAME         "va_xvnm"
+
+#define XNVM_STATUS_IDEL        0
+#define XNVM_STATUS_OPEN        (1 << 0)
+#define XNVM_STATUS_READING     (1 << 1)
+#define XNVM_STATUS_READ        (1 << 2)
+#define XNVM_STATUS_WRITING     (1 << 3)
+#define XNVM_STATUS_WRITTEN      (1 << 4)
+#define XNVM_STATUS_CLOSE       (1 << 5)
+
+
+typedef struct nvm_segment_info{
+    DWORD dwVaXnvmHandle;
+    DWORD segment_offset;
+    DWORD segment_size;
+    aui_hdl flash_hdl;
+    DWORD dwStbXnvmHandle;
+
+    UINT32 read_uiOffset;
+    UINT32 read_uiSize;
+    BYTE* pReadData;
+
+    UINT32 write_uiOffset;
+    UINT32 write_uiSize;
+    BYTE* pWriteData;
+    
+    int status;
+}nvm_segment_info;
+
+
+static unsigned long m_segmnet_size[] =
+{
+    SEGMENT_SOFTWARE_SIZE,
+    SEGMENT_ACS_DATA_SIZE,
+    SEGMENT_ACS_DATA_SIZE,
+    SEGMENT_LOADER_DATA_SIZE,
 };
-static DWORD msgq_nvm=0;
-static int NVMWrite(void*hdl,UINT offset,BYTE*buf,UINT size);
-static int NVMRead(void*hdl,UINT offset,BYTE*buf,UINT size);
+
+nvm_segment_info m_nvm_segment[eSEGMENT_LAST];
+static int m_nvm_init = 0;
 static int va_find_mtd_dev_num(const char *mtd_name,char *mtd_dev, unsigned int max_len);
-static void NVMProc(void*p){
-   while(1){
-       int ret=0;
-       NVMREQUEST req;
-       if(NGL_OK!=nglMsgQReceive(msgq_nvm,&req,sizeof(NVMREQUEST),1000))continue;
-       if(req.isread)
-            ret=NVMRead(req.hdl,req.offset,req.buffer,req.size);
-       else
-            ret=NVMWrite(req.hdl,req.offset,req.buffer,req.size);
-       if(kVA_OK==ret)
-            VA_XNVM_RequestDone(req.vahdl);
-       else VA_XNVM_RequestFailed(req.vahdl);
-       NGLOG_DEBUG("     =====%s::VA_XNVM_RequestDone(%p). ret=%d",__FUNCTION__,req.vahdl,ret);
-   }
+
+static aui_hdl va_nvm_flash_handle_get()
+{
+    int i;
+    for (i = 0; i < eSEGMENT_LAST; i ++){
+        if (m_nvm_segment[i].flash_hdl)
+            return m_nvm_segment[i].flash_hdl;
+    }
+
+    return NULL;
 }
 
-//#define USE_FILE 1 
+//check if the VNVM handle is a legal handle
+static int va_nvm_legal_handle(DWORD dwStbXnvmHandle)
+{
+    int i;
+    for (i = 0; i < eSEGMENT_LAST; i ++){
+        if (dwStbXnvmHandle == m_nvm_segment[i].dwStbXnvmHandle)
+            return 1;
+    }
+    return 0;
+}
+
+static int va_nvm_if_device_busy(DWORD dwStbXnvmHandle)
+{
+
+    nvm_segment_info *segment_info = (nvm_segment_info*)dwStbXnvmHandle;
+
+    if ((XNVM_STATUS_READING & segment_info->status) ||
+        (XNVM_STATUS_WRITING & segment_info->status))
+        return 1;
+    return 0;
+}
+
+
+static void *va_nvm_read_thread(void *arg)
+{
+    AUI_RTN_CODE ret = AUI_RTN_FAIL;
+    unsigned long real_size = 0;
+    unsigned long start_addr = 0;
+    nvm_segment_info *segment_info = (nvm_segment_info*)arg;
+
+    pthread_detach(pthread_self());
+
+    if (!arg){
+        NGLOG_ERROR("arg is NULL!");
+        ret = AUI_RTN_FAIL;
+        goto read_exit;
+    }
+
+    start_addr = segment_info->segment_offset + segment_info->read_uiOffset;
+	ret = aui_flash_read(segment_info->flash_hdl, start_addr, 
+        segment_info->read_uiSize, &real_size, segment_info->pReadData);
+    if (ret != AUI_RTN_SUCCESS){
+        NGLOG_ERROR("aui_flash_read error! ret=%d", (int)ret);
+        goto read_exit;
+    }
+
+read_exit:    
+    segment_info->status = XNVM_STATUS_READ;
+
+    if (ret){
+        VA_XNVM_RequestFailed(segment_info->dwVaXnvmHandle);
+    }else{
+        VA_XNVM_RequestDone(segment_info->dwVaXnvmHandle);
+    }
+
+    pthread_exit(NULL);
+}
+
+
+static void *va_nvm_write_thread(void *arg)
+{
+    AUI_RTN_CODE ret = AUI_RTN_FAIL;
+    unsigned long real_size = 0;
+    unsigned long start_addr = 0;
+    nvm_segment_info *segment_info = (nvm_segment_info*)arg;
+
+    pthread_detach(pthread_self());
+
+    if (!arg){
+        NGLOG_ERROR("arg is NULL!");
+        ret = AUI_RTN_FAIL;
+        goto write_exit;
+    }
+
+    start_addr = segment_info->segment_offset + segment_info->write_uiOffset;
+	ret = aui_flash_auto_erase_write(segment_info->flash_hdl, start_addr, 
+        segment_info->write_uiSize, &real_size, segment_info->pWriteData);
+    if (ret != AUI_RTN_SUCCESS){
+        NGLOG_ERROR("aui_flash_write error! ret=%d", (int)ret);
+        goto write_exit;
+    }
+
+write_exit:    
+    segment_info->status = XNVM_STATUS_WRITTEN;
+
+    if (ret){
+        VA_XNVM_RequestFailed(segment_info->dwVaXnvmHandle);
+    }else{
+        VA_XNVM_RequestDone(segment_info->dwVaXnvmHandle);
+    }
+    pthread_exit(NULL);
+}
+
+static char* va_find_last_mtd_dev(const char *head,
+		const char *tail, const char *key)
+{
+	char *pos;
+	unsigned int len;
+	if (tail == NULL || key == NULL)
+	{
+		return NULL;
+	}
+
+	len = strlen(key);
+	pos = (char *)(tail - len);
+	while (strncmp(pos, key, len) != 0 &&
+			(pos - head >= 0))
+	{
+		pos--;
+	}
+
+	if (pos - head < 0)
+	{
+		return NULL;
+	}
+
+	return pos;
+}
+
+
 DWORD   VA_XNVM_Open(DWORD dwVaXnvmHandle, tVA_XNVM_Segment eSegment)
 {
+    AUI_RTN_CODE ret = AUI_RTN_SUCCESS;
+    aui_hdl flash_hdl = NULL;
     aui_flash_open_param open_param;
-    aui_hdl flash_handle = 0;
-    NVMSEGMENT*s=NULL;
-    char mtd_dev[128];
-    va_find_mtd_dev_num("va_xvnm",mtd_dev,32);
-    if(eSegment<0||eSegment>= eSEGMENT_LAST)
-        return  kVA_ILLEGAL_HANDLE;
-    s=Segments+eSegment;
-    if(s->file!=NULL||s->hdl!=NULL){
-       NGLOG_DEBUG("VA_XNVM_Open file=%p ,hdl=%p",s->file,s->hdl);
-       return  kVA_ILLEGAL_HANDLE;
+    int i;
+
+    
+    NGLOG_DEBUG("parameter: dwVaXnvmHandle=0x%x, eSegment=%d!", (unsigned int)dwVaXnvmHandle, (int)eSegment);
+    
+    if (0 == m_nvm_init){
+        ret = aui_flash_init(NULL, NULL);
+        if (ret){
+            NGLOG_ERROR("aui_flash_init error: %d", (int)ret);
+            return kVA_ILLEGAL_HANDLE;
+        }
+        unsigned long offset = 0;
+        memset(m_nvm_segment, 0, sizeof(m_nvm_segment));
+        for (i = 0; i < eSEGMENT_LAST; i ++){
+            m_nvm_segment[i].dwVaXnvmHandle = kVA_ILLEGAL_HANDLE;
+            m_nvm_segment[i].segment_size = m_segmnet_size[i];
+            m_nvm_segment[i].segment_offset = offset;
+            m_nvm_segment[i].status = XNVM_STATUS_IDEL;
+            offset += m_segmnet_size[i];
+        }
+        m_nvm_init = 1;
     }
-    if(0==msgq_nvm){
-        DWORD tid;
-        msgq_nvm=nglMsgQCreate(16,sizeof(NVMREQUEST));
-        nglCreateThread(&tid,0,0,NVMProc,NULL);
-    }
-#ifndef USE_FILE
-    static int inited=0;
-    if(0==inited){
-        aui_flash_init(NULL,NULL);
-        inited++;
-    }
-    bzero(&open_param,sizeof(open_param));
-    open_param.flash_id =atoi(mtd_dev + 3);//eSegment;//?
-    open_param.flash_type =AUI_FLASH_TYPE_NAND;//AUI_FLASH_TYPE_NOR;//AUI_FLASH_TYPE_NAND;
-    NGLOG_DEBUG("%s  dwVaXnvmHandle=0x%x flash_id=%d segment=%d",__FUNCTION__,dwVaXnvmHandle,open_param.flash_id,eSegment);
-    AUI_RTN_CODE err = aui_flash_open(&open_param, &flash_handle);
-    aui_flash_info flash_info;
-    bzero(&flash_info,sizeof(flash_info));
-    NGLOG_DEBUG("aui_flash_open segment %d result=%d  flash_handle=%p",eSegment,err,&flash_handle);
-    if(err)
+
+    if (m_nvm_segment[eSegment].flash_hdl){
+        NGLOG_ERROR("XNVM segment %d is already open!", (int)eSegment);
         return kVA_ILLEGAL_HANDLE;
-    err=aui_flash_info_get(flash_handle, &flash_info);
-    NGLOG_DEBUG("VA_XNVM_Open.aui_flash_info_get=%d segment %d startaddr=%x size=0x%x blockcng=%d,blksize=0x%x handle=%p",err,eSegment,flash_info.star_address,
-           flash_info.flash_size, flash_info.block_cnt,flash_info.block_size,s);
-    s->hdl=flash_handle;
-    //s->size=flash_info.flash_size;
-#else
-    s->file=fopen(s->fname,"ab+");
-    NGLOG_DEBUG("fname=%s file=%p  size=0x%x",s->fname,s->file,s->size);
-    fseek(s->file,0,SEEK_END);
-    long i,fsize=ftell(s->file);
-    if(s->file&&(fsize<s->size)){
-        int cnt=(s->size-fsize+127)/128;
-        unsigned char buf[128];
-        memset(buf,0xFF,128); 
-        for(i=0;i<cnt;i++)
-           fwrite(buf,128,1,s->file);
     }
-#endif
-    return (DWORD)s;
+    for (i = 0; i < eSEGMENT_LAST; i ++){
+        if (dwVaXnvmHandle == m_nvm_segment[i].dwVaXnvmHandle){
+            NGLOG_ERROR("dwVaXnvmHandle(%d) has already been used!", i);
+            return kVA_ILLEGAL_HANDLE;
+        }
+    }
+
+    flash_hdl = va_nvm_flash_handle_get();
+    memset(&open_param, 0, sizeof(aui_flash_open_param));
+    if (!flash_hdl){
+        char mtd_dev[128] = {0};
+        //all segments use one same mtd flash device
+        if (va_find_mtd_dev_num(XNVM_BLOCK_NAME, mtd_dev, 32)){
+            NGLOG_ERROR("find_mtd_dev_num() error!");
+            return kVA_ILLEGAL_HANDLE;
+        }else{
+            open_param.flash_id = atoi(mtd_dev + 3); // mtd_dev: "mtd1"
+        }
+    	open_param.flash_type = AUI_FLASH_TYPE_NAND;
+
+    	ret = aui_flash_open(&open_param, &flash_hdl);
+        if (ret){
+            NGLOG_ERROR("aui_flash_open error: %d", (int)ret);
+            return kVA_ILLEGAL_HANDLE;
+        }
+    }
+
+    NGLOG_DEBUG("flash handle: 0x%x", (unsigned int)flash_hdl);    
+    m_nvm_segment[eSegment].flash_hdl = flash_hdl;
+    m_nvm_segment[eSegment].dwVaXnvmHandle = dwVaXnvmHandle;
+    m_nvm_segment[eSegment].dwStbXnvmHandle= (DWORD)(&(m_nvm_segment[eSegment]));
+    m_nvm_segment[eSegment].status = XNVM_STATUS_OPEN;
+
+    return (m_nvm_segment[eSegment].dwStbXnvmHandle);
+    
 }
 
-INT VA_XNVM_Close(DWORD dwStbXnvmHandle)
+    
+INT     VA_XNVM_Close(DWORD dwStbXnvmHandle)
 {
-    NVMSEGMENT*s=(NVMSEGMENT*)dwStbXnvmHandle;
-    NGLOG_DEBUG("%s\r\n",__FUNCTION__);
-    if(s<Segments||s>=&Segments[eSEGMENT_LAST])
+    int i;
+    int segment_cnt = 0;
+    AUI_RTN_CODE ret = AUI_RTN_SUCCESS;
+    nvm_segment_info *segment_info = (nvm_segment_info*)dwStbXnvmHandle;
+
+    NGLOG_DEBUG("parameter: dwStbXnvmHandle=0x%x!",(unsigned int)dwStbXnvmHandle);
+
+    if (0 == dwStbXnvmHandle){
+        NGLOG_ERROR("dwStbXnvmHandle is 0!");
         return kVA_INVALID_PARAMETER;
-    if(s->hdl==NULL&&s->file==NULL)
-        return kVA_ILLEGAL_HANDLE;
-#ifndef USE_FILE
-    if(s->hdl)
-        aui_flash_close(s->hdl);
-#else
-    if(s->file);
-        fclose(s->file);
-#endif
-    s->hdl=NULL;
-    s->file=NULL;
+    }
+
+    if (!va_nvm_legal_handle(dwStbXnvmHandle)){
+        NGLOG_ERROR("dwStbXnvmHandle is illegal handle!");
+        return kVA_INVALID_PARAMETER;
+    }
+    
+    segment_cnt = 0;
+    for (i = 0; i < eSEGMENT_LAST; i ++){
+        if (m_nvm_segment[i].flash_hdl)
+            segment_cnt ++;
+    }
+
+    if (0 == segment_cnt){
+        //Close mtd flash device when all segments are closed.
+        NGLOG_DEBUG("aui_flash_close handle: 0x%x", (unsigned int)(segment_info->flash_hdl));
+        ret = aui_flash_close(segment_info->flash_hdl);
+        if (ret){
+            NGLOG_ERROR("aui_flash_close error: %d", (int)ret);
+            return kVA_ERROR;
+        }
+    }
+    segment_info->dwVaXnvmHandle = kVA_ILLEGAL_HANDLE;
+    segment_info->dwStbXnvmHandle = 0;
+    segment_info->flash_hdl = NULL;
+    segment_info->status = XNVM_STATUS_CLOSE;
+
+    segment_info->read_uiOffset = 0;
+    segment_info->read_uiSize = 0;
+    segment_info->pReadData = NULL;
+    segment_info->write_uiOffset = 0;
+    segment_info->write_uiSize = 0;
+    segment_info->pWriteData = NULL;
+
     return kVA_OK;
 }
 
-INT VA_XNVM_Read (DWORD dwStbXnvmHandle, UINT32 uiOffset, UINT32 uiSize, BYTE* pReadData)
+
+INT     VA_XNVM_Read (DWORD dwStbXnvmHandle, UINT32 uiOffset, UINT32 uiSize, BYTE* pReadData)
 {
-   NVMSEGMENT*s=(NVMSEGMENT*)dwStbXnvmHandle;
-   INT32 ret,readed;
-   if(s<Segments||s>=&Segments[eSEGMENT_LAST])
-       return kVA_INVALID_PARAMETER;
-   NGLOG_DEBUG("handle=%p %s offset=0x%x size=0x%x segmentaddr=%x:%x",s,__FUNCTION__,uiOffset,uiSize,s->addr,s->size);
-   if(uiOffset+uiSize>s->size||pReadData==NULL||uiSize ==0)
-       return kVA_INVALID_PARAMETER;
-   if(s->hdl==NULL&&s->file==NULL) return kVA_ILLEGAL_HANDLE;
+    nvm_segment_info *segment_info = (nvm_segment_info*)dwStbXnvmHandle;
+	pthread_t va_read_t;
 
-   NVMREQUEST req;
-   req.isread=1;
-   req.vahdl=dwStbXnvmHandle;
-   req.offset=uiOffset;
-#ifndef USE_FILE
-   req.hdl=s->hdl;
-   req.offset+=s->addr;
-#else
-   req.hdl=s->file;
-#endif
-   req.size=uiSize;
-   req.buffer=pReadData;
-   nglMsgQSend(msgq_nvm,&req,sizeof(NVMREQUEST),100);
-   return kVA_OK;
-}
-static int NVMRead(void*hdl,UINT offset,BYTE*buf,UINT size){
-   UINT readed;
-   int ret;
-#ifndef USE_FILE
-   ret=aui_flash_read(hdl,offset,size,&readed,buf);
-#else
-   ret=fseek((FILE*)hdl,offset,SEEK_SET);
-   readed=fread(buf,1,size,(FILE*)hdl);
-#endif
-   NGLOG_DEBUG("readed=0x%x return %d",readed,ret);
-   return ret==0?kVA_OK:kVA_ERROR;
+    
+    NGLOG_DEBUG("parameter: dwStbXnvmHandle=0x%x, uiOffset=%d, uiSize=%d, pReadData=0x%x!",
+        (unsigned int)dwStbXnvmHandle, (int)uiOffset, (int)uiSize, (unsigned int)pReadData);
+
+    if (0 == dwStbXnvmHandle){
+        NGLOG_ERROR("dwStbXnvmHandle is 0!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if (!va_nvm_legal_handle(dwStbXnvmHandle)){
+        NGLOG_ERROR("dwStbXnvmHandle is illegal handle!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if ((0 == uiSize) || ((uiSize+uiOffset) > segment_info->segment_size)){
+        NGLOG_ERROR("size is illegal!");
+        return kVA_INVALID_PARAMETER;
+    }
+        
+    if (NULL == pReadData){
+        NGLOG_ERROR("pReadData is NULL!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if (va_nvm_if_device_busy(dwStbXnvmHandle)){
+        NGLOG_ERROR("device is busy!");
+        return kVA_RESOURCE_BUSY;
+    }
+    segment_info->status = XNVM_STATUS_READING;
+
+    segment_info->read_uiOffset = uiOffset;
+    segment_info->read_uiSize = uiSize;
+    segment_info->pReadData = pReadData;
+    if (pthread_create(&va_read_t, NULL, va_nvm_read_thread, (void*)(segment_info)) != 0){
+ 	NGLOG_ERROR("create thread failure!");
+        segment_info->status = XNVM_STATUS_READ;
+	return kVA_ERROR;
+    }
+    return kVA_OK;
 }
 
-INT  VA_XNVM_Write(DWORD dwStbXnvmHandle, UINT32 uiOffset, UINT32 uiSize, BYTE* pWriteData)
+INT     VA_XNVM_Write(DWORD dwStbXnvmHandle, UINT32 uiOffset, UINT32 uiSize, BYTE* pWriteData)
 {
-  NVMSEGMENT*s=(NVMSEGMENT*)dwStbXnvmHandle;
-  INT ret, writed;
-  if(s<Segments||s>=&Segments[eSEGMENT_LAST])
-       return kVA_INVALID_PARAMETER;
-  NGLOG_DEBUG("handle=%p %s offset=0x%x size=0x%x segmentaddr:%x:%x",s,__FUNCTION__,uiOffset,uiSize,s->addr,s->size);
-  if(uiOffset+uiSize>s->size||pWriteData==NULL||uiSize ==0)
-       return kVA_INVALID_PARAMETER;
-  if(s->hdl==NULL&&s->file==NULL) return kVA_ILLEGAL_HANDLE;
-  NVMREQUEST req;
-  req.isread=0;
-  req.vahdl=dwStbXnvmHandle; 
-  req.offset=uiOffset;
-#ifndef USE_FILE
-   req.hdl=s->hdl;
-   req.offset+=s->addr;
-#else
-   req.hdl=s->file;
-#endif
-  req.size=uiSize;
-  req.buffer=pWriteData;
-  nglMsgQSend(msgq_nvm,&req,sizeof(NVMREQUEST),100);
-  return kVA_OK;
-}
-static int NVMWrite(void*hdl,UINT offset,BYTE*buf,UINT size){
-   UINT writed;
-   int ret;
-#ifndef USE_FILE
-   //ret=aui_flash_write(hdl,offset,size,&writed,buf);
-   ret=aui_flash_auto_erase_write(hdl,offset,size,&writed,buf);
-#else 
-   ret=fseek((FILE*)hdl,offset,SEEK_SET);
-   writed=fwrite(buf,1,size,(FILE*)hdl);
-   fflush((FILE*)hdl);
-#endif
-  NGLOG_DEBUG("writed=0x%x return kVA_OK  fseek=%d",writed,ret);
-  return ret==0?kVA_OK:kVA_ERROR;
+    nvm_segment_info *segment_info = (nvm_segment_info*)dwStbXnvmHandle;
+	pthread_t va_write_t;
+
+    
+    NGLOG_DEBUG("parameter: dwStbXnvmHandle=0x%x, uiOffset=%d, uiSize=%d, pWriteData=0x%x!",
+        (unsigned int)dwStbXnvmHandle, (int)uiOffset, (int)uiSize, (unsigned int)pWriteData);
+
+    if (0 == dwStbXnvmHandle){
+        NGLOG_ERROR("dwStbXnvmHandle is 0!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if (!va_nvm_legal_handle(dwStbXnvmHandle)){
+        NGLOG_ERROR("dwStbXnvmHandle is illegal handle!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if ((0 == uiSize) || ((uiSize+uiOffset) > segment_info->segment_size)){
+        NGLOG_ERROR("size is illegal!");
+        return kVA_INVALID_PARAMETER;
+    }
+        
+    if (NULL == pWriteData){
+        NGLOG_ERROR("pReadData is NULL!");
+        return kVA_INVALID_PARAMETER;
+    }
+
+    if (va_nvm_if_device_busy(dwStbXnvmHandle)){
+        NGLOG_ERROR("device is busy!");
+        return kVA_RESOURCE_BUSY;
+    }
+    segment_info->status = XNVM_STATUS_WRITING;
+
+    segment_info->write_uiOffset = uiOffset;
+    segment_info->write_uiSize = uiSize;
+    segment_info->pWriteData = pWriteData;
+    if (pthread_create(&va_write_t, NULL, va_nvm_write_thread, (void*)(segment_info)) != 0){
+          NGLOG_ERROR("create thread failure!");
+          segment_info->status = XNVM_STATUS_WRITTEN;
+	  return kVA_ERROR;
+    }  
+    return kVA_OK;
 }
 
-static int va_find_mtd_dev_num(const char *mtd_name,
-		char *mtd_dev, unsigned int max_len)
+static int va_find_mtd_dev_num(const char *mtd_name,char *mtd_dev, unsigned int max_len)
 {
-	char *buffer=NULL;
-	unsigned int len = 0;
-	int readed;
-	FILE *fp = NULL;
+        char *buffer=NULL;
+        unsigned int len = 0;
+        int readed;
+        FILE *fp = NULL;
 
-	if((fp = fopen("/proc/mtd", "r"))==NULL){
-		printf("[%s](%d) Can not open file!\n", __FUNCTION__, __LINE__);
-		return 1;
-	}
-         
+        if((fp = fopen("/proc/mtd", "r"))==NULL){
+                NGLOG_DEBUG("Can not open file /proc/mtd");
+                return 1;
+        }
+
         while((readed=getline(&buffer,&len,fp))!=-1){
              char*start=strstr(buffer,mtd_name);
              if(start!=NULL){
-                 char*p=strchr(buffer,':');printf("buffer=%p p=%p",buffer,p);
+                 char*p=strchr(buffer,':');
+                 NGLOG_DEBUG("buffer=%p p=%p",buffer,p);
                  memcpy(mtd_dev,buffer,p-buffer);
                  mtd_dev[p-buffer]=0;
                  free(buffer);
@@ -238,8 +434,7 @@ static int va_find_mtd_dev_num(const char *mtd_name,
                  return 0;
              }
         }
-	return 1;
+        fclose(fp);
+        return 1;
 }
-#endif
 
-/* End of File */

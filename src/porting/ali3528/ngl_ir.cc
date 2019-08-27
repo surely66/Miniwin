@@ -83,7 +83,7 @@ DWORD nglIrOpen(int id,const char*keymap){
     char line[256];
     
     int rc=aui_key_open(0,NULL,&ir->hdl);
-    rc= aui_key_set_ir_rep_interval(ir->hdl,300,100);//default is 600 350
+    rc= aui_key_set_ir_rep_interval(ir->hdl,100,100);//default is 600 350
     rc=aui_key_callback_register(ir->hdl,key_callback);
 #define SEP " \t,;:"
     while(fin.is_open()&&fin.getline(line,256)){

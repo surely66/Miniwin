@@ -14,10 +14,11 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
     key_index=0;
     setFlag(Attr::ATTR_FOCUSABLE);
     setFlag(Attr::ATTR_ENABLE);
+    m_editbox=nullptr;
     kbd_lines.push_back(std::vector<int>());
 }
 
-void KeyboardView::addKey(UINT code,UINT uper,USHORT w,USHORT h){
+void KeyboardView::addKey(UINT code,UINT uper,USHORT w,USHORT h,const char*txt){
     KEY k;
     k.unicode=code;
     k.upcode=uper;
@@ -25,9 +26,10 @@ void KeyboardView::addKey(UINT code,UINT uper,USHORT w,USHORT h){
     k.y=ky;
     k.width=w;
     k.height=h;
+    if(NULL!=txt)k.text=txt;
     if(KC_NONE==code){
          if(0==w){
-            ky+=h;
+            ky+=h+2;
             kbd_lines.push_back(std::vector<int>());
             kx=0;
          }else{
@@ -36,8 +38,24 @@ void KeyboardView::addKey(UINT code,UINT uper,USHORT w,USHORT h){
     }else{   
          kbd_lines.back().push_back(keys.size()); 
          keys.push_back(k);
-         kx+=w;
+         kx+=w+2;
     }
+}
+
+void KeyboardView::addNewKeyLine(UINT line_height){
+    kbd_lines.push_back(std::vector<int>());
+    kx=0;
+    if(0==line_height&&keys.size())
+        line_height=keys[0].height;
+    ky+=line_height;
+}
+
+void KeyboardView::setBuddy(EditBox*edt){
+    m_editbox=edt;
+}
+
+EditBox*KeyboardView::getBuddy(){
+    return m_editbox;
 }
 
 void KeyboardView::setKeyBgColor(UINT cl){
@@ -46,24 +64,6 @@ void KeyboardView::setKeyBgColor(UINT cl){
 
 UINT KeyboardView::getKeyBgColor(){
     return key_bg_color;
-}
-
-static void Unicode2UTF8(UINT uni,std::string&str){
-   if(uni<=0x7F){
-      str+=uni;
-   }else if(uni>=0x80&&uni<=0x7FF){
-      str+=0xC0|((uni>6)&0x1F);
-      str+=0x80|(uni&0x3F);
-   }else if(uni>=0x800&&uni<=0xFFFF){
-      str+=0xE0|(uni>>12);
-      str+=0x80|((uni>>6)&0x3F);
-      str+=0x80|(uni&0x3F);
-   }else if(uni>=0x10000){
-      str+=0xF0|((uni>>18)&0x07);
-      str+=0x80|((uni>>12)&0x3F);
-      str+=0x80|((uni>>6)&0x3F);
-      str+=0x80|(uni&0x3F);
-   }
 }
 
 void KeyboardView::setKeyIndex(UINT idx){
@@ -93,7 +93,9 @@ void KeyboardView::onDraw(GraphContext&canvas){
          KEY&k=keys[i];
          RECT r={k.x,k.y,k.width,k.height};
          std::string txt;
-         Unicode2UTF8(k.unicode,txt);
+         if(k.text.empty())
+             EditBox::Unicode2UTF8(k.unicode,txt);
+         else txt=k.text;
          canvas.draw_text(r,txt,DT_VCENTER|DT_CENTER);
     }
     canvas.fill();
@@ -102,21 +104,25 @@ void KeyboardView::onDraw(GraphContext&canvas){
 bool KeyboardView::onKeyRelease(KeyEvent&k){
     switch(k.getKeyCode()){
     case NGL_KEY_LEFT: 
-                       kcol=(kcol-1+kbd_lines[krow].size())%kbd_lines[krow].size();
-                       break;
+             kcol=(kcol-1+kbd_lines[krow].size())%kbd_lines[krow].size();
+             break;
     case NGL_KEY_RIGHT:
-                       kcol=(kcol+1)%kbd_lines[krow].size();
-                       break;
+             kcol=(kcol+1)%kbd_lines[krow].size();
+             break;
     case NGL_KEY_UP:   
-                       krow=(krow-1)%kbd_lines.size();
-                       if(kbd_lines[krow].size()<kcol)
-                           kcol=kbd_lines[krow].size()-1;
-                       break;
-    case NGL_KEY_DOWN: krow=(krow+1)%kbd_lines.size();
-                       if(kbd_lines[krow].size()<kcol)
-                           kcol=kbd_lines[krow].size()-1;      
-                       break;
+             krow=(krow-1+kbd_lines.size())%kbd_lines.size();
+             if(kbd_lines[krow].size()<kcol)
+                 kcol=kbd_lines[krow].size()-1;
+             break;
+    case NGL_KEY_DOWN: 
+             krow=(krow+1)%kbd_lines.size();
+             if(kbd_lines[krow].size()<kcol)
+                 kcol=kbd_lines[krow].size()-1;      
+             break;
     case NGL_KEY_ENTER:
+             if(m_editbox){
+                 m_editbox->sendMessage(WM_CHAR,keys[key_index].unicode,0);
+             }break; 
     default: break;
     }
     setKeyIndex(kbd_lines[krow][kcol]);

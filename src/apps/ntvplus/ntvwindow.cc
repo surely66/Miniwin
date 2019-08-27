@@ -84,7 +84,6 @@ const std::string& NTVWindow::getText()const{
     return title;
 }
 bool NTVWindow::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){
-    const char*weekday[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
     switch(msgid){
     case WM_GETSIGNAL:
         if( sig_strength && sig_quality){
@@ -98,7 +97,7 @@ bool NTVWindow::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){
         {
            NGL_TIME now;nglGetTime(&now);
            titlebar->setTime(now);
-           sendMessage(msgid,wParam,lParam,500);
+           sendMessage(msgid,wParam,lParam,995);
            return true; 
         }
     default:return Window::onMessage(msgid,wParam,lParam);

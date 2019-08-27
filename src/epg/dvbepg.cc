@@ -144,7 +144,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
                       NGLOG_VERBOSE("%d:country:%s timeoffset=%d polarity:%d",i,tms[i].country_code,tms[i].local_time_offset,tms[i].polarity);
                  }
              }
-             NGLOG_DEBUG_IF(ts.uiSec%10==0,"Recv %s Time:%d/%d/%d %02d:%02d:%02d",(tot.tableId()==TBID_TDT?"TDT":"TOT"),
+             NGLOG_DEBUG_IF(ts.uiSec%30==0,"Recv %s Time:%d/%d/%d %02d:%02d:%02d",(tot.tableId()==TBID_TDT?"TDT":"TOT"),
                  ts.uiYear,ts.uiMonth+1,ts.uiMonthDay,ts.uiHour,ts.uiMin,ts.uiSec);   
          }break;
     default:NGLOG_DEBUG("todo tbid:%x",psitbl.tableId());break;         

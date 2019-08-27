@@ -1,6 +1,8 @@
 #include<editbox.h>
+#include<keyboard.h>
 #include<ngl_ir.h>
 #include<ngl_log.h>
+#include <regex>
 
 NGL_MODULE(EDITBOX)
 
@@ -16,7 +18,7 @@ EditBox::EditBox(const std::string&txt,int w,int h):Widget(txt,w,h){
     label_alignment_=DT_LEFT|DT_VCENTER;
     edit_mode_=0;
     label_width_=0;
-    caret_pos_=0;
+    caretPos=0;
     labelBkColor=0;
     afterChanged=nullptr;
 }
@@ -26,25 +28,39 @@ void EditBox::setTextWatcher(AfterTextChanged ls){
 }
 
 void EditBox::setCaretPos(int idx){
-    caret_pos_=idx; 
+    caretPos=idx; 
     invalidate(nullptr);
 }
+
+void EditBox::setPattern(const std::string&pattern){
+    inputPattern=pattern;
+}
+
+bool EditBox::match(){
+    if(inputPattern.empty())
+       return true;
+    std::regex reg(inputPattern);
+    return std::regex_match(text_,reg);
+}
+
 const std::string& EditBox::replace(size_t start,size_t len,const std::string&txt){
     text_.replace(start,len,txt);
     invalidate(nullptr);
     return text_;
 }
+
 const std::string& EditBox::replace(size_t start,size_t len,const char*txt,size_t size){
     text_.replace(start,len,txt,size);
     invalidate(nullptr);
     return text_;
 }
+
 void EditBox::setEditMode(int mode){
     edit_mode_=mode;
 }
 
 int EditBox::getCaretPos(){
-    return caret_pos_;
+    return caretPos;
 }
 
 void EditBox::setLabelColor(int c){
@@ -70,59 +86,118 @@ const std::string&EditBox::getLabel(){
     return label_;
 }
 
+int EditBox::Unicode2UTF8(UINT uni,std::string&str){
+   if(uni<=0x7F){
+       str+=uni;
+       return 1;
+   }else if(uni>=0x80&&uni<=0x7FF){
+       str+=0xC0|((uni>6)&0x1F);
+       str+=0x80|(uni&0x3F);
+       return 2; 
+   }else if(uni>=0x800&&uni<=0xFFFF){
+       str+=0xE0|(uni>>12);
+       str+=0x80|((uni>>6)&0x3F);
+       str+=0x80|(uni&0x3F);
+       return 3;
+   }else if(uni>=0x10000){
+       str+=0xF0|((uni>>18)&0x07);
+       str+=0x80|((uni>>12)&0x3F);
+       str+=0x80|((uni>>6)&0x3F);
+       str+=0x80|(uni&0x3F);
+       return 4;
+   }
+   return 0;
+}
+
+bool EditBox::onMessage(DWORD msg,DWORD wp,ULONG lp){
+    if(msg!=WM_CHAR)
+        return Widget::onMessage(msg,wp,lp);
+    std::string txt;
+    Unicode2UTF8(wp,txt);
+    if(edit_mode_==0||caretPos>=text_.size()){
+         text_.insert(caretPos,txt);
+         caretPos++;
+    }else{
+         text_.replace(caretPos,1,txt);
+    }
+    if(nullptr!=afterChanged)
+            afterChanged(*this);
+    invalidate(nullptr);
+    return true;
+}
+
 bool EditBox::onKeyRelease(KeyEvent&evt){
     char ch;
+    bool ret=false;
+    int changed=0;
+    std::string text_old=text_;
+    INT caretpos_old=caretPos;
     switch(evt.getKeyCode()){
     case NGL_KEY_LEFT:
-        if(caret_pos_>0){
-            setCaretPos(caret_pos_-1);
+        if(caretPos>0){
+            setCaretPos(caretPos-1);
             return true;
         }break;
     case NGL_KEY_RIGHT:
-        if(caret_pos_<text_.size()){
-            setCaretPos(caret_pos_+1);
+        if(caretPos<text_.size()){
+            setCaretPos(caretPos+1);
             return true;
         }break;
     case NGL_KEY_DOWN:
-        if(caret_pos_<text_.size()){
-           ch=text_[caret_pos_];
+        if(caretPos<text_.size()){
+           ch=text_[caretPos];
            if(ch>='0'&&ch<='9'){
-              if(ch>'0')ch--;
-              else if(ch=='0')ch='9';
-              text_[caret_pos_]=ch;
-              if(nullptr!=afterChanged)afterChanged(*this);
-              invalidate(nullptr);
+               if(ch>'0')ch--;
+               else if(ch=='0')ch='9';
+               text_[caretPos]=ch;
+               changed++;
+               ret=true;
            }
-           return true;
         }break;
     case NGL_KEY_UP:
-        if(caret_pos_<text_.size()){
-           ch=text_[caret_pos_];
+        if(caretPos<text_.size()){
+           ch=text_[caretPos];
            if(ch>='0'&&ch<='9'){
                if(ch<'9')ch++;
                else if(ch=='9')ch='0';
-               text_[caret_pos_]=ch;
-               if(nullptr!=afterChanged)afterChanged(*this);
-               invalidate(nullptr);
+               text_[caretPos]=ch;
+               changed++;
+               ret=true;
            }
-           return true; 
         }break;
     case NGL_KEY_BACKSPACE:
+        if(caretPos>0){
+             text_.erase(caretPos-1,1);
+             changed++;
+             ret=true;
+        }break;
     case NGL_KEY_DEL:
+        if(caretPos<text_.size()-1){
+            text_.erase(caretPos,1);
+            changed++;
+            ret=true; 
+        }break;
     case NGL_KEY_0...NGL_KEY_9:
-        ch='0'+(evt.getKeyCode()- NGL_KEY_0);
-        if(edit_mode_==0||caret_pos_>=text_.size()){
-           text_.insert(caret_pos_,1,ch);
-           caret_pos_++;
-        }else{
-           text_[caret_pos_]=ch;
-        }
-        if(nullptr!=afterChanged)afterChanged(*this);
-        invalidate(nullptr);
+        sendMessage(WM_CHAR,'0'+(evt.getKeyCode()- NGL_KEY_0),0);
         return true;
+    case NGL_KEY_MENU:
+        {
+            Keyboard *kb=new Keyboard(320,400,640,240);
+            kb->setBuddy(this);
+        }return true;
     default:break; 
     }
-    return false;
+    if(changed){
+        if(!match()){
+             text_=text_old;
+             caretPos=caretpos_old;
+             return false;
+        }  
+        invalidate(nullptr);
+        if(nullptr!=afterChanged)
+            afterChanged(*this);
+    }
+    return ret;
 }
 
 void EditBox::onDraw(GraphContext&canvas){
@@ -159,9 +234,9 @@ void EditBox::onDraw(GraphContext&canvas){
     int caretw=getFontSize()/3;
  
 
-    if(caret_pos_>=0 && text_.length()>0){
-        std::string ss =text_.substr(0,caret_pos_);
-        std::string ss2=text_.substr(0,caret_pos_+1);
+    if(caretPos>=0 && text_.length()>0){
+        std::string ss =text_.substr(0,caretPos);
+        std::string ss2=text_.substr(0,caretPos+1);
         canvas.get_text_extents(ss,te);
         canvas.get_text_extents(ss2,te1);
         caretx=label_width_+te.width;

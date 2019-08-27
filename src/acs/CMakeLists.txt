@@ -28,7 +28,7 @@ include_directories(
 )
 target_link_libraries(acs pthread aui)
 
-link_directories(./ ./Project/ACS/Interface )
+link_directories(./)
 add_executable(acstest main.c )
 #stub_main.c )
 target_link_libraries(acstest pthread aui tvhal curl acs acs_va m )

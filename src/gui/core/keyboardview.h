@@ -4,6 +4,7 @@
 #include<view.h>
 #include<widget.h>
 #include<vector>
+#include<editbox.h>
 namespace nglui{
 
 class KeyboardView:public View{
@@ -15,11 +16,11 @@ typedef struct{
    USHORT y;
    USHORT width;
    USHORT height;
+   std::string text;
 }KEY;
 enum{
    KC_NONE,
    KC_CAPS,
-   KC_SPACE,
    KC_LEFT,
    KC_RIGHT,
    KC_INSERT,
@@ -36,12 +37,16 @@ protected:
    std::vector<KEY>keys;
    UINT key_bg_color;
    UINT key_index;
+   EditBox*m_editbox;
 public:
    KeyboardView(int w,int h);
-   void addKey(UINT code=0,UINT up=0,USHORT w=40,USHORT h=40);
+   void addKey(UINT code=0,UINT up=0,USHORT w=40,USHORT h=40,const char*txt=nullptr);
+   void addNewKeyLine(UINT line_height=0);
    void setKeyBgColor(UINT cl);
    UINT getKeyBgColor();
    void setKeyIndex(UINT idx);
+   void setBuddy(EditBox*edt);
+   EditBox*getBuddy();
    virtual void onDraw(GraphContext&canvas);
    virtual bool onKeyRelease(KeyEvent&k);
 };

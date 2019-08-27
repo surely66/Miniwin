@@ -9,6 +9,7 @@ protected:
    KeyboardView*kv;
 public:
    Keyboard(int x,int y,int w,int h);
+   void setBuddy(EditBox*buddy);
 };
 
 }//namespace

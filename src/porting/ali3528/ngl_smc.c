@@ -451,7 +451,8 @@ static void ResetProc(void*p){
         if(rc!=NGL_OK)continue;
         NGLOG_DEBUG("msg.slot=%d cmd=%p size=%d",msg.slot,msg.cmd,msg.size);
         if(msg.cmd==NULL){
-            aui_smc_reset(msg.slot,atr,&atr_len,1);
+            int rc=aui_smc_reset(msg.slot,atr,&atr_len,1);
+            NGLOG_DEBUG("aui_smc_reset(%d)=%d",msg.slot,rc);
             ResetSMC(msg.slot,atr,atr_len,(NGL_SMCRESET_NOTIFY)msg.CBK);
             CARDS[msg.slot].busy--;
         }else{
@@ -560,14 +561,14 @@ INT nglSmcReset( DWORD dwScSlot, UINT8 uiPPSNegotiationValue,NGL_SMCRESET_NOTIFY
    }
    CARDS[dwScSlot].busy++;
    CARDS[dwScSlot].pps=uiPPSNegotiationValue;
-   rc=aui_smc_reset(CARDS[dwScSlot].hdl,atr,&atr_len,1);
+   //rc=aui_smc_reset(CARDS[dwScSlot].hdl,atr,&atr_len,1);
    SMCMSG msg;
    msg.slot=dwScSlot;
    msg.cmd=NULL;
    msg.size=uiPPSNegotiationValue;
    msg.CBK=fn;
    nglMsgQSend(smc_msgq,&msg,sizeof(SMCMSG),100);
-   NGLOG_DEBUG("aui_smc_reset=%d  atr=%p atr_len=%d",rc,atr,atr_len);
+   NGLOG_DEBUG("atr=%p atr_len=%d",atr,atr_len);
    /*if(rc==0){
        CARDS[dwScSlot].state=eSMCCARD_READY;
        fn(dwScSlot,atr,atr_len,uiPPSNegotiationValue);

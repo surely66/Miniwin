@@ -66,7 +66,7 @@ public:
     WM_INVALIDATE=2,
     WM_TIMER  =3,//wParam it timerid lParam unused
     WM_CLICK  =4, //wParam is view's id
-    WM_SELCHANGE=5//wparam is view.s id lparam is selectindex
+    WM_CHAR   =5//wparam is unicode char
   };
 
 typedef std::function<void(View&v)>ClickListener;//typedef void(*ClickListener)(View&);
