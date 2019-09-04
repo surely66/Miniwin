@@ -141,9 +141,10 @@ int ChannelsWindow::loadServices(UINT favid){
      DtvGetCurrentService(&cur);
      for(size_t i=0;i<count;i++){
           SERVICELOCATOR svc;
+          char servicename[128];
           FavGetService(favid,&svc,i);
           const DVBService*info=DtvGetServiceInfo(&svc);
-          char servicename[128];
+          if(NULL==info)continue;
           info->getServiceName(servicename);
           ChannelItem*ch=new ChannelItem(servicename,&svc,info->freeCAMode); 
           INT lcn;

@@ -141,7 +141,7 @@ int DtvLoadProgramsData(const char*fname){
     do{
          BAT bat(sec,false);
          fread(sec,4,1,f);
-         if(bat.tableId()!=TBID_BAT)break;
+         if(bat.tableId()!=0xFF)break;
          fread(sec+4,bat.sectionLength()-1,1,f);
          NGLOG_DUMP("TABLE",bat,8);
          bats.push_back(bat);
@@ -168,6 +168,7 @@ int DtvSaveProgramsData(const char*fname){
         fwrite(&section_end,sizeof(int),1,f);
     }
     SaveSectionList(f,bats);
+    fwrite(&section_end,sizeof(int),1,f);
     fclose(f);
     return gStreams.size();
 }
