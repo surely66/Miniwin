@@ -67,14 +67,15 @@ int AddEITSSection(const EIT &eit,int*pchanged){
 int AddBATSection(const BAT&bat,int*pchanged){
     SECTIONLIST::iterator itr=std::find(bats.begin(),bats.end(),bat);
     bool changed=(itr==bats.end());
-    NGLOG_ERROR_IF(bat.tableId()!=TBID_BAT,"invalid tableid for %x",bat.tableId());
-    if(changed)
+    if(changed){
          bats.push_back(bat);
+         NGLOG_VERBOSE("addbat tableid %x %d.%d",bat.tableId(),bat.extTableId(),bat.sectionNo());
+    }
     if(pchanged)*pchanged=changed;
     std::sort(bats.begin(),bats.end(),[](PSITable&t1,PSITable&t2){
           return (BAT&)t1<(BAT&)t2;
     });
-    NGLOG_DEBUG_IF(changed,"rcv BAT %d",bat.extTableId()); 
+    NGLOG_VERBOSE_IF(changed,"rcv BAT %d",bat.extTableId()); 
     return bats.size();
 }
 
@@ -127,7 +128,7 @@ int DtvLoadProgramsData(const char*fname){
         do{
             PSITable psi(sec,false);
             fread(sec,4,1,f);
-            NGLOG_DUMP("TABLE",sec,4);
+            NGLOG_VERBOSE("TABLE:%x %d.%d",psi.tableId(),psi.extTableId(),psi.sectionNo());
             if(psi.tableId()==0xFF)break;
             seclen=((sec[1]&0x0F)<<8)|sec[2];
             fread(sec+4,psi.sectionLength()-1,1,f);
@@ -146,11 +147,12 @@ int DtvLoadProgramsData(const char*fname){
          BAT bat(sec,false);
          fread(sec,4,1,f);
          if(bat.tableId()==0xFF)break;
-         NGLOG_DEBUG("BAT:%d",bat.extTableId());
+         NGLOG_VERBOSE("BAT:%x %d.%d",bat.tableId(),bat.extTableId(),bat.sectionNo());
          fread(sec+4,bat.sectionLength()-1,1,f);
-         bats.push_back(bat);
+         AddBATSection(bat,NULL);
     }while(!feof(f));
     fclose(f);
+    NGLOG_DEBUG("%d streams %d bat Loaded",gStreams.size(),bats.size());
     return gStreams.size();
 }
 
@@ -380,6 +382,7 @@ INT DtvGetEvents(const SERVICELOCATOR*loc,DVBEvent*evts,int evt_size){
 INT DtvCreateGroupByBAT(){
     int count=0;
     NGLOG_DEBUG("bats.size=%d",bats.size());
+    SERVICELOCATOR *svcs=new SERVICELOCATOR[256];
     for(auto sec:bats){
         BAT b(sec);
         INT numts=0;
@@ -393,14 +396,14 @@ INT DtvCreateGroupByBAT(){
         FavAddGroupWithID(favid,name);
         count++;
         for(int i=0;i<numts;i++){
-            SERVICELOCATOR svcs[32];
             int sc=tss[i].getServices(svcs);
             numsvc+=sc;
             for(int j=0;j<sc;j++)
                  FavAddService(favid,&svcs[j]);
         }
-        NGLOG_DEBUG("bouquetid:%d has %d ts %d svc ,name:%s ",b.extTableId(),numts,numsvc,name);
+        NGLOG_VERBOSE("bouquetid[%d]:%s has %d ts %d svc ",b.extTableId(),name,numts,numsvc);
     }
+    delete []svcs;
     return count;
 }
 

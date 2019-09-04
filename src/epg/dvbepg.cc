@@ -96,6 +96,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
          if(notfound=(itr==ts->sdt.end()))
               ts->sdt.push_back(psitbl);
          else *itr=psitbl; 
+         NGLOG_DEBUG("SDT %x %d.%d",psitbl.tableId(),psitbl.extTableId(),psitbl.sectionNo());
          if(notfound)SENDMSG(MSG_SDT_RECEIVED,psitbl.extTableId(),filter);//streamid
          break;
     case TBID_BAT:
@@ -184,7 +185,7 @@ static void  SearchProc(void*p)
     match[0]=TBID_SDT;
     fltSDT=CreateFilter(PID_SDT,mask,match,1,&ts,false);
     match[0]=TBID_BAT;
-    fltBAT=CreateFilter(PID_BAT,mask,match,1,NULL,true);
+    //fltBAT=CreateFilter(PID_BAT,mask,match,1,NULL,true);
     SECTIONLIST nitsecs;//used for NIT searchtype;
     while(1){
         EPGMSG msg;

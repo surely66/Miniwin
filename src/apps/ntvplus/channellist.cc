@@ -133,25 +133,26 @@ int ChannelsWindow::loadGroups(){
 }
 
 int ChannelsWindow::loadServices(UINT favid){
+     char name[128];
      size_t count=FavGetServiceCount(favid);
      SERVICELOCATOR*svcs=new SERVICELOCATOR[count];
-     NGLOG_DEBUG("%x %d's service",favid,count);
+     FavGetGroupName(favid,name);
+     NGLOG_DEBUG("%x[%s] has %d svc",favid,name,count);
      chlst->clearAllItems();
      SERVICELOCATOR cur;
      DtvGetCurrentService(&cur);
      for(size_t i=0;i<count;i++){
           SERVICELOCATOR svc;
-          char servicename[128];
           FavGetService(favid,&svc,i);
           const DVBService*info=DtvGetServiceInfo(&svc);
           if(NULL==info)continue;
-          info->getServiceName(servicename);
-          ChannelItem*ch=new ChannelItem(servicename,&svc,info->freeCAMode); 
+          info->getServiceName(name);
+          ChannelItem*ch=new ChannelItem(name,&svc,info->freeCAMode); 
           INT lcn;
           DtvGetServiceItem(&svc,SKI_LCN,&lcn);
           ch->setValue(lcn);
           ch->isHD=ISHDVIDEO(info->serviceType);
-          NGLOG_VERBOSE("    %d:%s  %p hd=%d type=%d",i,servicename,info,ch->isHD,info->serviceType);
+          NGLOG_VERBOSE("    %d:%s  %p hd=%d type=%d",i,name,info,ch->isHD,info->serviceType);
           chlst->addItem(ch);
           if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
              chlst->setIndex(i);
