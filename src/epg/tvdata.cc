@@ -67,9 +67,13 @@ int AddEITSSection(const EIT &eit,int*pchanged){
 int AddBATSection(const BAT&bat,int*pchanged){
     SECTIONLIST::iterator itr=std::find(bats.begin(),bats.end(),bat);
     bool changed=(itr==bats.end());
+    NGLOG_ERROR_IF(bat.tableId()!=TBID_BAT,"invalid tableid for %x",bat.tableId());
     if(changed)
          bats.push_back(bat);
     if(pchanged)*pchanged=changed;
+    std::sort(bats.begin(),bats.end(),[](PSITable&t1,PSITable&t2){
+          return (BAT&)t1<(BAT&)t2;
+    });
     NGLOG_DEBUG_IF(changed,"rcv BAT %d",bat.extTableId()); 
     return bats.size();
 }
@@ -135,17 +139,17 @@ int DtvLoadProgramsData(const char*fname){
             default:NGLOG_ERROR("unknown tableid %x",sec[0]);
             }
         }while(!feof(f));
-        NGLOG_DEBUG("load ts %d.%d freq:%d pmt.size=%d",ts.netid,ts.tsid,ts.tune.u.s.frequency,ts.pmt.size());
+        NGLOG_DEBUG("load ts %d.%d freq:%d sdt.size=%d pmt.size=%d",ts.netid,ts.tsid,ts.tune.u.s.frequency,ts.sdt.size(),ts.pmt.size());
         gStreams.push_back(ts);
     }
     do{
          BAT bat(sec,false);
          fread(sec,4,1,f);
-         if(bat.tableId()!=0xFF)break;
+         if(bat.tableId()==0xFF)break;
+         NGLOG_DEBUG("BAT:%d",bat.extTableId());
          fread(sec+4,bat.sectionLength()-1,1,f);
-         NGLOG_DUMP("TABLE",bat,8);
          bats.push_back(bat);
-    }while(feof(f));
+    }while(!feof(f));
     fclose(f);
     return gStreams.size();
 }
@@ -168,6 +172,7 @@ int DtvSaveProgramsData(const char*fname){
         fwrite(&section_end,sizeof(int),1,f);
     }
     SaveSectionList(f,bats);
+    NGLOG_DEBUG("save %d streams %d bat",gStreams.size(),bats.size());
     fwrite(&section_end,sizeof(int),1,f);
     fclose(f);
     return gStreams.size();
@@ -378,7 +383,7 @@ INT DtvCreateGroupByBAT(){
     for(auto sec:bats){
         BAT b(sec);
         INT numts=0;
-        char name[64];
+        char name[64]={0};
         int numsvc=0;
         b.getName(name,NULL);
         DVBStream tss[32];
@@ -394,7 +399,7 @@ INT DtvCreateGroupByBAT(){
             for(int j=0;j<sc;j++)
                  FavAddService(favid,&svcs[j]);
         }
-        NGLOG_DEBUG("bouquetid:%x has %d ts %d svc ,name:%s ",b.extTableId(),numts,numsvc,name);
+        NGLOG_DEBUG("bouquetid:%d has %d ts %d svc ,name:%s ",b.extTableId(),numts,numsvc,name);
     }
     return count;
 }
@@ -440,7 +445,7 @@ const DVBService*DtvGetServiceInfo(const SERVICELOCATOR*svc){
 
 class LCNDATA{
 public:
-   USHORT lcn_start;
+   UINT lcn_start;
    std::unordered_map<SERVICELOCATOR,USHORT>&lcnmap;
    INT getLCN(const SERVICELOCATOR&s,USHORT*lcn){
         std::unordered_map<SERVICELOCATOR,USHORT>::const_iterator got=lcnmap.find(s);
@@ -455,12 +460,13 @@ static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
     LCNDATA *lcndata=(LCNDATA*)userdata;
     USHORT lcn;
     if(NGL_OK!=lcndata->getLCN(*loc,&lcn)){
-       service_lcn[*loc]->lcn=lcn=lcndata->lcn_start++;
-    }else{
+       if(lcndata->lcn_start!=0xFFFFFFFF)
+           service_lcn[*loc]->lcn=lcn=lcndata->lcn_start++;
+    }else {
        service_lcn[*loc]->visible=lcn&0x8000;
        service_lcn[*loc]->lcn=(lcn&=0x3FF);
     }
-    NGLOG_DEBUG("\t%d.%d.%d lcn:%d lcnmask=%x",loc->netid,loc->tsid,loc->sid,lcn,lcnmask);
+    NGLOG_VERBOSE("\t%d.%d.%d lcn:%d lcnmask=%x",loc->netid,loc->tsid,loc->sid,lcn,lcnmask);
     return 1;
 }
 
@@ -504,9 +510,10 @@ INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
             NGLOG_VERBOSE("\t%d.%d.%d-->%d visible=%d",vsvc[i].netid,vsvc[i].tsid,vsvc[i].sid,(vlcn[i]&0x3FFF)&(~lcnmask),(vlcn[i]&0x8000)!=0);
         }
     }
-    LCNDATA lcndata={lcn_start,lcnmap};
+    LCNDATA lcndata={0xFFFFFFFF,lcnmap};
     if(mode&LCN_FROM_USER)//service with lcn has been putto lcnmap,so we enum all service,add theservice without lcn to be identified from lcnstart
-         DtvEnumService(LCN_CBK,&lcndata);
+      lcndata.lcn_start=lcn_start;
+    DtvEnumService(LCN_CBK,&lcndata);
     NGLOG_DEBUG("lcnmask=%x LCN::fromBAT=%d fromUSER=%d",lcnmask,!!(mode&LCN_FROM_BAT),!!(mode&LCN_FROM_USER));
     return count;
 }

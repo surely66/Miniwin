@@ -299,8 +299,7 @@ static void  SearchProc(void*p)
                     SDT sdt(itr,false);
                     DVBService svs[32];
                     int sc=sdt.getServices(svs);
-                    NGLOG_DEBUG("recv SDT section %d services section num=%d prg.count=%d/%d secs=%d",sc,ts.sdt.size(),program_count,
-                        ts.pmt.size(),sdt.lastSectionNo()+1);
+                    NGLOG_DEBUG("recv SDT sec[%d/%d]  services:%d pmt.size=%d",sdt.sectionNo(),ts.sdt.size(),sc,ts.pmt.size());
                     for(int i=0;i<sc;i++){
                         char sname[64];
                         svs[i].getServiceName(sname);
