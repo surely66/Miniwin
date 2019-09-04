@@ -13,7 +13,7 @@ NGL_MODULE(GRAPH)
 
 static IDirectFB *directfb=NULL;
 //AUI porting has some crash roblem,but work's fine  
-//#define USE_DIRECTFB 1
+#define USE_DIRECTFB 1
 
 static int created_surface=0;
 static int destroyed_surface=0;
@@ -188,7 +188,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      if(!hwsurface)dfbsurface->MakeClient(dfbsurface);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d",dfbsurface,hwsurface);
      created_surface++;
-     dfbsurface->Clear(dfbsurface,0,0,0,hwsurface?0x00:0xFF);
+     dfbsurface->Clear(dfbsurface,0,0,0,0);
      *surface=(DWORD)dfbsurface;
      return NGL_OK;
 #else
@@ -208,7 +208,8 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
      }
      region_rect.uWidth=width; region_rect.uHeight=height;
      aui_gfx_surface_clip_rect_set(surf_handle,&region_rect,AUI_GE_CLIP_INSIDE);
-     aui_gfx_surface_fill(surf_handle,hwsurface?0:0xFF,&region_rect);
+     aui_gfx_surface_fill(surf_handle,0x00,&region_rect);
+     //aui_gfx_surface_fill(surf_handle,0xFF000000,&region_rect);
      *surface=(DWORD)surf_handle;
      aui_gfx_layer_antifliker_on_off(surf_handle,0);
      NGLOG_VERBOSE_IF(ret,"surface=%x  ishw=%d ret=%d",surf_handle,hwsurface,ret);

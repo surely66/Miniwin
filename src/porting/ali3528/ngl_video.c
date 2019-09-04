@@ -112,11 +112,8 @@ INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr)
 {
      aui_hdl hdl_av;
      NGLAV *av=&sAvPlayers[dmxid];
-     if(NULL!=av->hdl_av){
-         aui_av_stop(av->hdl_av);
-         aui_av_close(av->hdl_av);
-         NGLOG_DEBUG("stop prev Player hdl_av=%p",av->hdl_av);
-     }
+ 
+     nglAvStop(dmxid);
      av->stream_info.st_av_info.b_audio_enable = aid!=NGL_INVALID_PID;
      av->stream_info.st_av_info.b_video_enable = vid!=NGL_INVALID_PID;
      av->stream_info.st_av_info.b_pcr_enable = pcr!=NGL_INVALID_PID;
@@ -142,6 +139,15 @@ INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr)
      NGLOG_DEBUG("aui_av_start=%d video=%d/%d audio=%d/%d pcr=%d",rc,vid,vtype,aid,atype,pcr);
 }
 
+INT nglAvStop(int dmxid){
+     NGLAV *av=&sAvPlayers[dmxid];
+     if(NULL!=av->hdl_av){
+         aui_av_stop(av->hdl_av);
+         aui_av_close(av->hdl_av);
+         NGLOG_DEBUG("stop prev Player hdl_av=%p",av->hdl_av);
+     }
+     return NGL_OK;
+}
 INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
      NGLAV*av=&sAvPlayers[dmxid];
      NGLRect src={0,0,1280,720};

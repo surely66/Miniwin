@@ -1,3 +1,6 @@
+extern "C"{
+#include <va_pvr.h>
+}
 #include <windows.h>
 #include <ngl_ir.h>
 #include <appmenus.h>
@@ -6,16 +9,21 @@
 #include <satellite.h>
 #include <diseqc.h>
 #include <string>
+
 using namespace ntvplus;
+
+extern DWORD VA_PVR_Start( DWORD  dwAcsId,int eRecordType,WORD sid);
+
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
     Desktop*desktop=new Desktop();
+    DWORD pvr_hdl=0;
     app.setName("com.ntvplus.dvbs");
 
     app.setOpacity(app.getArgAsInt("alpha",255));
     app.getString("mainmenu",app.getArg("language","eng"));
 
-    desktop->setKeyListener([](int key)->bool{
+    desktop->setKeyListener([&](int key)->bool{
          printf("rcv key:%x menu=%x\r\n",key,NGL_KEY_MENU);
          switch(key){
          case NGL_KEY_MENU:CreateMainMenu();return true;
@@ -23,6 +31,13 @@ int main(int argc,const char*argv[]){
          case NGL_KEY_UP:
          case NGL_KEY_DOWN:CreateChannelPF();return true;
          case NGL_KEY_EPG: CreateTVGuide();return true;
+         case NGL_KEY_F4:
+                 VA_PVR_CloseEcmChannel(pvr_hdl);
+                 pvr_hdl=0;
+                 return true;
+         case NGL_KEY_F5:
+                 pvr_hdl=VA_PVR_Start(1,0,0);
+                 return true;
          case NGL_KEY_ESCAPE:exit(0);
          default:return false;
          }

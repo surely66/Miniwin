@@ -48,6 +48,11 @@ public:
    ~TVWindow(){
        nglAvSetVideoWindow(0,NULL,NULL);
    }
+   virtual void onDraw(GraphContext&c){
+       c.set_color(0);
+       c.draw_rect(0,0,320,240);
+       NTVWindow::onDraw(c);
+   }
    virtual void onEITS(const SERVICELOCATOR*svc)override;
    virtual bool onKeyRelease(KeyEvent&k)override;
    virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
@@ -101,7 +106,7 @@ Window*CreateTVGuide(){
     View*vv=new View(320,240);
     vv->setFlag(View::Attr::ATTR_BORDER);
     vv->setPos(40,70);
-    vv->setBgColor(0x000000);
+    vv->setBgColor(0);
     w->addChildView(vv); 
     NGLRect rcv={40,70,320,240};
     nglAvSetVideoWindow(0,NULL,&rcv);

@@ -1,8 +1,10 @@
 #ifndef __NGL_PVR_H__
 #define __NGL_PVR_H__
-
+#include<ngl_types.h>
 #define PVR_MAX_AUDIO 8
 #define PVR_MAX_NAME_LEN 512
+
+NGL_BEGIN_DECLS
 
 typedef struct{
     UINT recordMode;/*0--normal ,1--timeshifted*/
@@ -25,5 +27,7 @@ DWORD nglPvrPlayerPlay(DWORD handle);
 DWORD nglPvrPlayerStop(DWORD handle);
 DWORD nglPvrPlayerPause(DWORD handle);
 DWORD nglPvrPlayerClose(DWORD handle);
+
+NGL_END_DECLS
 
 #endif

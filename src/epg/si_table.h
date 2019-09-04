@@ -171,6 +171,7 @@ public:
 
 class CAT:public PSITable{
 public:
+     BYTE*  getDescriptors(int&len);
      USHORT getEMMPID();//find in CA_Descriptor
 };
 

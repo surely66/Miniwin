@@ -4,17 +4,21 @@
 */
 
 #include <stdio.h>
-
+extern "C"{
+#include "va_ctrl.h"
+}
+#include <dvbepg.h>
 #if 1//!defined VAOPT_DISABLE_VA_CTRL && !defined(__STB_SIMULATOR__)
 
-#include "va_ctrl.h"
 extern UINT16 g_service_id;
 INT VA_CTRL_GetProgramInformation( DWORD dwAcsId, tVA_CTRL_ProgramInformation *pProgramInfo )
 {
   //printf("%s\r\n",__FUNCTION__);
-  pProgramInfo->wNetworkId=0x500;
-  pProgramInfo->wTransportStreamId=0x1000;
-  pProgramInfo->wServiceId=g_service_id;
+  SERVICELOCATOR cur;
+  DtvGetCurrentService(&cur);
+  pProgramInfo->wNetworkId=cur.netid;
+  pProgramInfo->wTransportStreamId=cur.tsid;
+  pProgramInfo->wServiceId=cur.sid;
   return 0;
 }
 

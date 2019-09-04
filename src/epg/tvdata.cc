@@ -275,9 +275,9 @@ INT DtvGetServicePmt(const SERVICELOCATOR*sloc,BYTE*pmtbuf){
     int rc=0;
     USHORT pmtpid=0;
     STREAMDB *ts=nullptr;
-    NGLOG_DEBUG("streams.size=%d",gStreams.size());
+    if(NULL==sloc||NULL==pmtbuf)return 0;
+    NGLOG_DEBUG("%d.%d.%d streams.size=%d",sloc->netid,sloc->tsid,sloc->sid,gStreams.size());
     for(auto itr_ts:gStreams ){
-        NGLOG_DEBUG("%d.%d",itr_ts.netid,itr_ts.tsid);
         if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
              rc++;   ts=&itr_ts;
              PAT pat(itr_ts.pat.front());

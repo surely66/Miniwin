@@ -51,13 +51,14 @@ static void TunerStateProc(void*p){
          NGLOG_DEBUG_IF(rc||(sTuners[i].locked!=locked),"aui_nim_is_lock=%d locked=%d/%d",rc,locked,sTuners[i].locked);
          nglLockMutex(nim_mutex);
          for(j=0;j<MAX_LISTENERS;j++){
-              if(sCallBacks[j].tuneridx!=i&&sCallBacks[j].tuneridx!=-1)continue;
+              if(sCallBacks[j].tuneridx!=i &&sCallBacks[j].tuneridx!=-1 )continue;
               if(NULL==sCallBacks[j].Callback)continue;
               if( sTuners[i].locked!=locked )
                   sCallBacks[j].Callback(i,(locked==AUI_NIM_STATUS_LOCKED),sCallBacks[j].param);
               sCallBacks[j].locked=locked;
          }
          sTuners[i].locked=locked;
+         NGLOG_DEBUG_IF(rc||(sTuners[i].locked!=locked),"locked=%d",sTuners[i].locked);
          nglUnlockMutex(nim_mutex);
       }
    } 

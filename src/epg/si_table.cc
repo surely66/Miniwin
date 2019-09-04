@@ -141,6 +141,18 @@ USHORT PMT::ecmPid(){
     return pid;
 }
 
+BYTE*CAT::getDescriptors(int&len){
+    len=sectionLength()-9;
+    return data+8;
+}
+USHORT CAT::getEMMPID(){
+    USHORT pid=0x1FFF;
+    Descriptors des(data+8,sectionLength()-9);
+    BYTE*p=des.findDescriptor(TAG_CA);
+    if(p)pid=(p[4]&0x1F)<<8|p[5];
+    return pid;
+}
+
 static void GetExtESInfo(ELEMENTSTREAM*es){
     BYTE*pd=es->findDescriptor(TAG_ISO639_LANGUAGE);
     memset(es->iso639lan,0,3);

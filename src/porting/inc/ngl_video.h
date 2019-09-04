@@ -351,6 +351,7 @@ typedef struct{
 
 INT nglAvInit();
 INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr);
+INT nglAvStop(int dmx);
 INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect);
 INT nglAvSetVolume(int dmxid,int vol);
 

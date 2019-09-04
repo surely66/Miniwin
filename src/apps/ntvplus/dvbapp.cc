@@ -7,6 +7,7 @@
 #include<preferences.h>
 #include<ngl_disp.h>
 
+extern void StartACS();
 NGL_MODULE(DVBAPP)
 namespace nglui{
 
@@ -25,7 +26,7 @@ DVBApp::DVBApp(int argc,const char**argv)
     NGLOG_DEBUG("DVBApp::DVBApp resolution=%d",res);
     setOpacity(200);//getArgAsInt("alpha",255));    
     nglDispSetResolution(res);
-    
+    StartACS();    
 }
 
 }//namespace

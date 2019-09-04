@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <ngl_os.h>
 #include <ngl_dmx.h>
+#include <ngl_tuner.h>
 #define MAX_PROGRAM 32
 
 class DMX:public testing::Test{
@@ -12,6 +13,16 @@ class DMX:public testing::Test{
    unsigned int program_count;
    unsigned short pmtpids[MAX_PROGRAM+MAX_PROGRAM];
    virtual void SetUp(){
+      NGLTunerParam tp;//TRANSPONDER tp;
+      tp.delivery_type=DELIVERY_S;
+      tp.u.s.tpid=4;
+      tp.u.s.symbol_rate=27500;//27500;//26040;
+      tp.u.s.polar=NGL_NIM_POLAR_HORIZONTAL;// NGL_NIM_POLAR_HORIZONTAL NGL_NIM_POLAR_VERTICAL;
+      //tp.u.s.frequency=11600*1000;//
+      tp.u.s.frequency=10750*1000;
+      nglTunerInit();
+      //nglTunerSetLNB(0,1);    nglTunerSet22K(0,1);
+      nglTunerLock(0,&tp);
       nglDmxInit();
       flt=0;
       data=(BYTE*)nglMalloc(4096);

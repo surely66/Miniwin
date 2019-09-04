@@ -108,19 +108,19 @@ bool TPManagerWindow::onKeyRelease(KeyEvent&k){
           NTVWindow::onKeyRelease(k);
           SetEditorMode(satlst->hasFlag(Attr::ATTR_FOCUSED));
           return true;
-    case KEY_RED:   
+    case KEY_RED://new sat | tp   
            if(satmd)CreateSatEditorWindow(nullptr);
            else CreateTPEditorWindow(nullptr);//getSatellite());
            return satmd;
-    case KEY_GREEN: 
+    case KEY_GREEN://new tp 
            if(satmd)
                CreateTPEditorWindow(nullptr);//getTransponder());
            return true;
-    case KEY_YELLOW:
+    case KEY_YELLOW://modify sat | tp
            if(satmd)CreateSatEditorWindow(getSatellite());
            else CreateTPEditorWindow(getTransponder());
            return true;
-    case KEY_BLUE:
+    case KEY_BLUE://delete sat | tp
            if(satmd){
                RemoveSatellite(satlst->getIndex());
                satlst->removeItem(satlst->getIndex());

@@ -172,8 +172,8 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
         total_height+=extents.height;
         lines.push_back(line);
     }
-    rectangle(rect.x,rect.y,rect.width,rect.height);
-    clip(); 
+    //rectangle(rect.x,rect.y,rect.width,rect.height);
+    //clip(); 
     if((text_alignment&DT_MULTILINE)==0){
         TextExtents te;
         get_text_extents(text,te);
@@ -210,7 +210,7 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
             show_text(l);
         }
     }
-    reset_clip();
+    //reset_clip();
 }
 
 void GraphContext::draw_text(int x,int y,const std::string& text){

@@ -26,6 +26,7 @@ static struct option app_options[]={
    {"language",required_argument,0,0},
    {0,0,0,0}
 };
+
 App::App(int argc,const char*argv[]){
     struct stat pakstat;
     int option_index,c;
@@ -48,6 +49,7 @@ App::App(int argc,const char*argv[]){
     }while(c>=0);
     setOpacity(getArgAsInt("alpha",255));
 }
+
 App&App::getInstance(){
     return *mInst;
 }
@@ -63,6 +65,7 @@ bool App::hasArg(const std::string&key){
     auto itr=args.find(key);
     return itr==args.end();
 }
+
 void App::setArg(const std::string&key,const std::string&value){
     args[key]=value;
 }
@@ -73,6 +76,7 @@ int App::getArgAsInt(const std::string&key,int def){
         return def;
     return std::stol(args[key]);
 }
+
 void App::setOpacity(unsigned char alpha){
     nglSurfaceSetOpacity(0,alpha);
 }

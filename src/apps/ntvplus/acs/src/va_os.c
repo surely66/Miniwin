@@ -191,7 +191,7 @@ INT VA_OS_Getc(UINT32 uiDuration)
     if(index>=sizeof(cmdbuffer))index=0;
     if(c=='\r'||c=='\n'){
         cmdbuffer[index]=0;
-        ProcessCommand(cmdbuffer);bzero(cmdbuffer,sizeof(cmdbuffer));index=0;
+        //ProcessCommand(cmdbuffer);bzero(cmdbuffer,sizeof(cmdbuffer));index=0;
     }else index++;
     return c;//return getchar();
 }

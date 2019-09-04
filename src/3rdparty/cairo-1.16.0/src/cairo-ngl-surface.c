@@ -58,6 +58,7 @@ slim_hidden_proto(cairo_ngl_surface_create);
 typedef struct _cairo_ngl_surface {
     cairo_image_surface_t image;
     DWORD  nglsurface;
+    DWORD userdata;
 } cairo_ngl_surface_t;
 
 static cairo_content_t
@@ -184,6 +185,62 @@ _cairo_ngl_surface_flush (void *abstract_surface,
 }
 
 
+BOOL _op_is_supported(cairo_operator_t op){
+    return op==CAIRO_OPERATOR_OVER;
+}
+
+static cairo_bool_t fill_box (cairo_box_t *box, void *data){
+    cairo_ngl_surface_t *ngs = (cairo_ngl_surface_t *)data;
+    cairo_rectangle_int_t rb;
+    _cairo_box_round_to_rectangle(box,(cairo_rectangle_int_t*)&rb);
+    NGLOG_DEBUG("rect=%d,%d-%d,%d color=%X",rb.x,rb.y,rb.width,rb.height,ngs->userdata);
+    nglFillRect(ngs->nglsurface,(NGLRect*)&rb,ngs->userdata);
+    return 1;
+}
+static cairo_int_status_t
+_cairo_ngl_surface_fill (void *abstract_surface,
+                        cairo_operator_t op,
+                        const cairo_pattern_t *source,
+                        const cairo_path_fixed_t *path,
+                        cairo_fill_rule_t fill_rule,
+                        double tolerance,
+                        cairo_antialias_t antialias,
+                        const cairo_clip_t *clip)
+{
+    int i;
+    const char *opstr[] = { "CLEAR","SOURCE","OVER","IN","OUT","ATOP","DEST","DEST_OVER","DEST_IN","DEST_OUT","DEST_ATOP", "XOR","ADD", "SATURATE"  };
+    cairo_ngl_surface_t *ngs = (cairo_ngl_surface_t *) abstract_surface;
+
+    NGLOG_VERBOSE("q[%p] fill op:%s \n", abstract_surface,opstr[op]);
+    goto fallback;
+    if ( _op_is_supported (op) && source->type == CAIRO_PATTERN_TYPE_SOLID){
+        cairo_color_t*c = &((cairo_solid_pattern_t*)source)->color;
+        UINT color=(c->alpha_short>>8)<<24|(c->red_short>>8)<<16|(c->green_short>>8)<<8|(c->blue_short>>8);
+         
+        cairo_boxes_t boxes;
+        _cairo_boxes_init_with_clip (&boxes,clip);
+        cairo_int_status_t status=_cairo_path_fixed_fill_rectilinear_to_boxes (path,fill_rule, antialias,&boxes);
+        ngs->userdata=color;
+        if (likely (status == CAIRO_INT_STATUS_SUCCESS)){
+            _cairo_boxes_for_each_box(&boxes,fill_box,ngs);   
+        }
+        _cairo_boxes_fini (&boxes);
+        return CAIRO_INT_STATUS_SUCCESS;
+
+    }else  if(source->type == CAIRO_PATTERN_TYPE_SURFACE){
+         cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*)source;
+         cairo_surface_t *surface = spattern->surface;
+         cairo_image_surface_t*isurf;
+         void*image_extra;
+         _cairo_surface_acquire_source_image (surface, &isurf, &image_extra);  
+         _cairo_surface_release_source_image(surface,isurf,image_extra);
+         printf("op=%d size=%dx%d\r\n",op,cairo_image_surface_get_width(surface),cairo_image_surface_get_height(surface)); 
+         return CAIRO_INT_STATUS_SUCCESS;
+    }
+fallback:
+    return _cairo_surface_fallback_fill (abstract_surface, op, source, path, fill_rule, tolerance, antialias, clip);
+}
+
 static cairo_surface_backend_t
 _cairo_ngl_surface_backend = {
     CAIRO_SURFACE_TYPE_NGL, /*type*/
@@ -212,7 +269,7 @@ _cairo_ngl_surface_backend = {
     _cairo_surface_fallback_paint,
     _cairo_surface_fallback_mask,
     _cairo_surface_fallback_stroke,
-    _cairo_surface_fallback_fill,
+    _cairo_ngl_surface_fill,
     NULL, /* fill-stroke */
     _cairo_surface_fallback_glyphs,
 };
