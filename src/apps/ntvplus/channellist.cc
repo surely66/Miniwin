@@ -157,6 +157,9 @@ int ChannelsWindow::loadServices(UINT favid){
           if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
              chlst->setIndex(i);
      }
+     chlst->sort([](const ListView::ListItem&a,const ListView::ListItem&b)->int{
+                            return a.getValue()-b.getValue()<0;
+                       },false);
      delete svcs;
 }
 
