@@ -293,15 +293,20 @@ static void  SearchProc(void*p)
              break;
         case MSG_SDT_RECEIVED:
              if(STATE_PSI_GETTING==state){
-                SDT sdt(ts.sdt.back(),false);
-                DVBService svs[32];
-                program_count=sdt.getServices(svs);
-                NGLOG_DEBUG("recv SDT section %d services section num=%d prg.count=%d/%d secs=%d",program_count,ts.sdt.size(),program_count,ts.pmt.size(),sdt.lastSectionNo()+1);
-                for(int i=0;i<program_count;i++){
-                    char sname[64];
-                    svs[i].getServiceName(sname);
-                    NGLOG_VERBOSE("\tSDTService id=0x%04x type=0x%02x camode=%d %s",svs[i].service_id,svs[i].serviceType,svs[i].freeCAMode,sname);
-                }
+                program_count=0;
+                SDT sdt(ts.sdt.back());
+                for(auto itr:ts.sdt){
+                    SDT sdt(itr,false);
+                    DVBService svs[32];
+                    int sc=sdt.getServices(svs);
+                    NGLOG_DEBUG("recv SDT section %d services section num=%d prg.count=%d/%d secs=%d",sc,ts.sdt.size(),program_count,
+                        ts.pmt.size(),sdt.lastSectionNo()+1);
+                    for(int i=0;i<sc;i++){
+                        char sname[64];
+                        svs[i].getServiceName(sname);
+                        NGLOG_VERBOSE("\tSDTService id=0x%04x type=0x%02x camode=%d %s",svs[i].service_id,svs[i].serviceType,svs[i].freeCAMode,sname);
+                    }program_count+=sc;
+                } 
                 if(ts.sdt.size()==sdt.lastSectionNo()+1)
                     nglStopSectionFilter(msg.param2);
                 if(ts.pmt.size()==program_count&&(ts.sdt.size()==sdt.lastSectionNo()+1)){

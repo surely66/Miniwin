@@ -121,13 +121,13 @@ int DtvLoadProgramsData(const char*fname){
         fread(&ts.tsid,sizeof(USHORT),1,f);
         fread(&ts.tune,sizeof(NGLTunerParam),1,f);
         do{
+            PSITable psi(sec,false);
             fread(sec,4,1,f);
             NGLOG_DUMP("TABLE",sec,4);
-            if(sec[0]==0xFF)break;
+            if(psi.tableId()==0xFF)break;
             seclen=((sec[1]&0x0F)<<8)|sec[2];
-            fread(sec+4,seclen-1,1,f);
-            PSITable psi(sec);
-            switch(sec[0]){
+            fread(sec+4,psi.sectionLength()-1,1,f);
+            switch(psi.tableId()){
             case TBID_PAT:ts.pat.push_back(psi);break;
             case TBID_PMT:ts.pmt.push_back(psi);break;
             case TBID_SDT:
@@ -139,10 +139,11 @@ int DtvLoadProgramsData(const char*fname){
         gStreams.push_back(ts);
     }
     do{
+         BAT bat(sec,false);
          fread(sec,4,1,f);
-         seclen=((sec[1]&0x0F)<<8)|sec[2];
-         if(sec[0]!=TBID_BAT)break;
-         BAT bat(sec);
+         if(bat.tableId()!=TBID_BAT)break;
+         fread(sec+4,bat.sectionLength()-1,1,f);
+         NGLOG_DUMP("TABLE",bat,8);
          bats.push_back(bat);
     }while(feof(f));
     fclose(f);
@@ -224,7 +225,7 @@ INT DtvEnumTSService(const STREAMDB&ts,DTV_SERVICE_CBK cbk,void*userdata){
             for(int i=0;i<cnt;i++){
                 svcs[i].getServiceName(sname);
                 loc.sid=svcs[i].service_id;
-                NGLOG_VERBOSE("%d.%d.%d : %s",loc.netid,loc.tsid,loc.sid,sname);
+                NGLOG_VERBOSE("%d.%d.%d  %s",loc.netid,loc.tsid,loc.sid,sname);
                 rc+=(0!=cbk(&loc,svcs+i,userdata));
             }
         }
@@ -371,11 +372,13 @@ INT DtvGetEvents(const SERVICELOCATOR*loc,DVBEvent*evts,int evt_size){
 
 
 INT DtvCreateGroupByBAT(){
-    int count;
+    int count=0;
+    NGLOG_DEBUG("bats.size=%d",bats.size());
     for(auto sec:bats){
         BAT b(sec);
-        INT numts;
+        INT numts=0;
         char name[64];
+        int numsvc=0;
         b.getName(name,NULL);
         DVBStream tss[32];
         numts=b.getStreams(tss,false);
@@ -386,9 +389,11 @@ INT DtvCreateGroupByBAT(){
         for(int i=0;i<numts;i++){
             SERVICELOCATOR svcs[32];
             int sc=tss[i].getServices(svcs);
+            numsvc+=sc;
             for(int j=0;j<sc;j++)
                  FavAddService(favid,&svcs[j]);
         }
+        NGLOG_DEBUG("bouquetid:%x has %d ts %d svc ,name:%s ",b.extTableId(),numts,numsvc,name);
     }
     return count;
 }
@@ -452,8 +457,9 @@ static INT LCN_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
        service_lcn[*loc]->lcn=lcn=lcndata->lcn_start++;
     }else{
        service_lcn[*loc]->visible=lcn&0x8000;
-       service_lcn[*loc]->lcn=(lcn&0x3FFF)&lcnmask;
+       service_lcn[*loc]->lcn=(lcn&=0x3FF);
     }
+    NGLOG_DEBUG("\t%d.%d.%d lcn:%d lcnmask=%x",loc->netid,loc->tsid,loc->sid,lcn,lcnmask);
     return 1;
 }
 
@@ -476,7 +482,7 @@ INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
                  for(int i=0;i<num;i++){
                      vsvc.push_back(svcs[i]);
                      vlcn.push_back(lcns[i]);
-                     lcnmask&=lcns[i];
+                     lcnmask&=(0x7FFF&lcns[i]);
                  }
                  b.matchServices(vsvc.data(),vsvc.size());
             }else{//Nordig V2
@@ -486,7 +492,7 @@ INT DtvInitLCN(LCNMODE mode,USHORT lcn_start){
                     for(int i=0;i<num;i++){
                         vsvc.push_back(svcs[i]);
                         vlcn.push_back(lcns[i]);
-                        lcnmask&=lcns[i];
+                        lcnmask&=(0x7FFF&lcns[i]);
                     }
                 }
             }
@@ -517,15 +523,13 @@ INT DtvGetServiceByLCN(USHORT lcn,SERVICELOCATOR*loc){
 static INT GRP_CBK(const SERVICELOCATOR*loc,const DVBService*s,void*userdata){
     FavAddService(FAV_GROUP_ALL,loc);
     service_lcn[*loc]=new ServiceData(*s);
-    switch(s->serviceType){
-    case SVC_VIDEO:
+    if(ISVIDEO(s->serviceType)){
          FavAddService(FAV_GROUP_AV,loc);
          FavAddService(FAV_GROUP_VIDEO,loc);
-         break;
-    case SVC_AUDIO:
+    }
+    if(ISAUDIO(s->serviceType)){
          FavAddService(FAV_GROUP_AV,loc);
          FavAddService(FAV_GROUP_AUDIO,loc);
-         break; 
     }
     return 1;
 }

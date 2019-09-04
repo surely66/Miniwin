@@ -16,6 +16,8 @@ typedef void(*DTV_ADVANCE_CBK)(USHORT netid,USHORT tsid,std::vector<PSITable>&pa
 #define MSG_SERVICE_CHANGE 0x3151
 #define MSG_EPG_PF         0x3152 
 #define MSG_EPG_SCHEDULE   0x3153
+#define MSG_BAT_CHANGE     0x3154
+
 typedef void (*DTV_NOTIFY)(UINT msgtype,const SERVICELOCATOR*svc,void*userdata);
 
 typedef struct{
