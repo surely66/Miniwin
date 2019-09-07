@@ -58,7 +58,7 @@ TEST_F(EPGTest,BAT){
    DWORD flt=nglAllocateSectionFilter(1,PID_BAT,FilterCBK,NULL,NGL_DMX_SECTION);
    mask[0]=0xFF;
    match[0]=TBID_BAT;
-   nglSetSectionFilterParameters(flt,1,mask,match);
+   nglSetSectionFilterParameters(flt,mask,match,1);
    nglStartSectionFilter(flt);
    nglSleep(10000);
    DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
@@ -69,7 +69,7 @@ TEST_F(EPGTest,NIT){
    DWORD flt=nglAllocateSectionFilter(1,PID_NIT,FilterCBK,NULL,NGL_DMX_SECTION);
    mask[0]=0xFF;
    match[0]=TBID_NIT;
-   nglSetSectionFilterParameters(flt,1,mask,match);
+   nglSetSectionFilterParameters(flt,mask,match,1);
    nglStartSectionFilter(flt);
    nglSleep(10000);
 }

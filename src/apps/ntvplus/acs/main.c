@@ -146,7 +146,7 @@ static void*ACSProc(void*p){
     ret = VA_CTRL_Init(&param);
     NGLOG_DEBUG("VA_CTRL_Init=%d",ret);
     NGLOG_DEBUG("VA_CTRL_Start...");
-    VA_CTRL_OpenAcsInstance(0,acsMode);
+    for(int i=0;i<3;i++)VA_CTRL_OpenAcsInstance(i,i);
     CreateFilter(1,1);
     CreateFilter(0,0);
     VA_CTRL_Start();

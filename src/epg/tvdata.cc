@@ -273,7 +273,7 @@ static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
     params[0]=(void*)hevt;
     params[1]=buffer;
     DWORD flt=nglAllocateSectionFilter(0,pid,PMT_CBK,params,NGL_DMX_SECTION);
-    nglSetSectionFilterParameters(flt,5,mask,match);
+    nglSetSectionFilterParameters(flt,mask,match,5);
     nglStartSectionFilter(flt);
     int rc=nglWaitEvent(hevt,5000);
     nglFreeSectionFilter(flt);

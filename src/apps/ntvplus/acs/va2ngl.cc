@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include<stdarg.h>
 extern "C"{
 #include <va_types.h>
 #include <va_ctrl.h>
@@ -21,12 +22,12 @@ DWORD VA_DSCR_Init();
 #include <ngl_tuner.h>
 #include <ngl_pvr.h>
 #include <dvbepg.h>
-
 NGL_MODULE(VA2NGL)
-
+static DWORD CreateFilter(int pid,int num,...);
 static BYTE CATSection[1024];
 static INT SectionCBK(DWORD dwVaFilterHandle,UINT32 uiBufferLength,BYTE *pBuffer, void *pUserData)
 {
+    NGLOG_DEBUG("RCV %02X",pBuffer[0]);
     if(1==pBuffer[0]){
         if(memcmp(pBuffer,CATSection,8)){
             NGLOG_DEBUG("CAT Updated SectionCBK filter=0x%x tbid=%x",dwVaFilterHandle,pBuffer[0] );
@@ -35,16 +36,7 @@ static INT SectionCBK(DWORD dwVaFilterHandle,UINT32 uiBufferLength,BYTE *pBuffer
         }
     }
 }
-static DWORD CreateFilter(int pid,int tbid){
-    DWORD  hFilter;
-    BYTE mask[8],value[8];
-    mask[0]=0xFF;value[0]=tbid;
-    hFilter=VA_DMX_AllocateSectionFilter(0,0,pid,SectionCBK);
-    VA_DMX_SetSectionFilterParameters(hFilter,1,mask,value,eVA_DMX_Continuous);
-    VA_DMX_StartSectionFilter(hFilter);
-    return hFilter;
-}
-
+static DWORD filter_pat,filter_sdt,filter_eit;
 static void*ACSProc(void*p){
     int i,ret;
     tVA_CTRL_ConfigurationParameters param;
@@ -61,13 +53,41 @@ static void*ACSProc(void*p){
     NGLOG_DEBUG("VA_CTRL_Start...");
     for(i=0;i<3;i++)
         VA_CTRL_OpenAcsInstance(i,(tVA_CTRL_AcsMode)i);
-    CreateFilter(1,1);
+    CreateFilter(1,1,1);
+    filter_pat=CreateFilter(0,1,0);//pat
+    filter_sdt=CreateFilter(0x11,1,0x42);
+    filter_eit=CreateFilter(0x12,1,0x4E);
+
     VA_CTRL_Start();
     NGLOG_DEBUG("VA_CTRL_Start...end");
 }
 
 static SERVICELOCATOR lastplayed;
 static WORD lastpids[32];
+static DWORD CreateFilter(int pid,int num,...){
+    va_list ap;
+    DWORD  hFilter;
+    BYTE mask[8],value[8];
+    int i,idx;
+    char buffer[64];
+    memset(mask,0,sizeof(mask));
+    memset(buffer,0,sizeof(buffer));
+    va_start(ap,num);
+    for(i=0,idx=0;i<num;i++){
+        mask[idx]=0xFF;
+        value[idx]=(BYTE)va_arg(ap,int);
+        sprintf(buffer+i*3,"%02x,",value[idx]);
+        if(i==0)idx+=2;else idx++;//skip section length field
+    }
+    va_end(ap);
+    if(num>1)num+=2;
+    printf("filter pid=%d %d pattern:%s",pid,num,buffer);
+    hFilter=VA_DMX_AllocateSectionFilter(0,0,pid,SectionCBK);
+    VA_DMX_SetSectionFilterParameters(hFilter,num,mask,value,(tVA_DMX_NotificationMode)1);//0-onshort ,1-eVA_DMX_Continuous);
+    VA_DMX_StartSectionFilter(hFilter);
+    return hFilter;
+}
+
 static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,void*userdata){
     BYTE buffer[1024];
     int i,ne,rc;

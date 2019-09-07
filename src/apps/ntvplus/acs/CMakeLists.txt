@@ -29,12 +29,12 @@ include_directories(
 )
 target_link_libraries(acs pthread aui tvhal dvbepg curl acs_va m)
 
-#add_executable(acstest main.c )
+add_executable(acstest main.c )
 #stub_main.c )
-#target_link_libraries(acstest pthread aui tvhal curl acs acs_va m )
-#target_link_libraries(acstest pthread tvhal  acs)
+target_link_libraries(acstest pthread aui tvhal curl acs acs_va m )
+target_link_libraries(acstest pthread tvhal  acs)
 
 install (TARGETS acs  DESTINATION lib)
 install (TARGETS acs_static  DESTINATION lib)
-#install (TARGETS acstest  DESTINATION bin)
+install (TARGETS acstest  DESTINATION bin)
 

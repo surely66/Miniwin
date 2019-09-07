@@ -6,7 +6,7 @@
 #include "va_init.h"
 
 
-
+#if 0
 INT VA_INIT_InitializeAcs(
     const tVA_INIT_ConfigurationParameters *pParameters)
 {
@@ -21,4 +21,5 @@ INT VA_INIT_StopAcs(void)
 {
     printf("%s\r\n",__FUNCTION__);
 }
+#endif
 /* End of File */

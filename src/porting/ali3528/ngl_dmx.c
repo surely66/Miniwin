@@ -27,20 +27,20 @@ typedef struct {
   aui_hdl channel;
   aui_attr_dmx_channel attr;
   int num_started;
-  int started;
 }DMXCHANNEL;
 
 #define TSBUF_SIZE 188*7
 typedef struct{
+  WORD pid;
   DMXCHANNEL*ch;
   aui_hdl hfilter;
   aui_attr_dmx_filter attr;
   NGL_DMX_FilterNotify CallBack;
   void*userdata; 
   int started;
-  BYTE mask[MASK_LEN+2];
-  BYTE value[MASK_LEN+2];
-  BYTE reverse[MASK_LEN+2];
+  BYTE mask[MASK_LEN];
+  BYTE value[MASK_LEN];
+  BYTE reverse[MASK_LEN];
   BYTE*tsBuffer;
 }NGLDMXFILTER;
 static NGLMutex mtx_dmx=0;
@@ -48,10 +48,16 @@ static DMXCHANNEL Channels[MAX_CHANNEL];
 static NGLDMXFILTER  Filters[MAX_FILTER];
 static DMXCHANNEL*GetChannel(int pid){
   int i;
-  for(i=0;i<MAX_CHANNEL;i++){
-     if(Channels[i].pid==pid)
-         return Channels+i;
-  }
+  for(i=0;i<MAX_CHANNEL;i++)
+    if((Channels[i].pid==pid)&& (Channels[i].num_filt>0) )
+      return Channels+i;
+  return NULL;
+}
+static DMXCHANNEL*GetFreeChannel(){
+  int i;
+  for(i=0;i<MAX_CHANNEL;i++)
+    if(0==Channels[i].num_filt)
+      return Channels+i;
   return NULL;
 }
 #define CHECKFILTER(flt) {if((flt<Filters)||(flt>=&Filters[MAX_FILTER]))return NGL_INVALID_PARA;}
@@ -62,6 +68,16 @@ static NGLDMXFILTER*GetFilter(aui_hdl hdl){
           return Filters+i;
    }
    return NULL;
+}
+
+static UINT GetCountByPid(WORD pid){
+   UINT i;
+   UINT count=0;
+   for(i=0;i<MAX_FILTER;i++){
+       if(Filters[i].hfilter&&(Filters[i].pid==pid||pid>=0x1FFF))
+           count++;
+   }
+   return count;
 }
 
 static long AuiSectionCB(aui_hdl filter_handle,unsigned char *section_data,unsigned long len,void *pv_usr_data, void *pv_reserved)
@@ -133,13 +149,6 @@ DWORD nglDmxInit(){
     aui_dmx_init(NULL,NULL);
     aui_log_priority_set(AUI_MODULE_DMX,AUI_LOG_PRIO_ERR);
     nglCreateMutex(&mtx_dmx);
-    
-    for(i=0;i<MAX_CHANNEL;i++){
-        Channels[i].dmx=NULL;
-        Channels[i].channel=NULL;
-        Channels[i].pid=UNUSED_PID;
-        Channels[i].num_filt=0;
-    }
 #define MAX_TSI_DEVICE 4 
 #define MAX_TSI_CNT 4
     struct aui_tsi_config tsi_cfg[MAX_TSI_DEVICE];/* If use MAX_TSI_CNT, array bounds will happen */
@@ -187,6 +196,8 @@ DWORD nglDmxInit(){
     attr_tsi.ul_init_param = AUI_TSI_IN_CONF_ENABLE |AUI_TSI_IN_CONF_VALID_SIG_POL |AUI_TSI_IN_CONF_SYNC_SIG_POL;
     aui_tsi_src_init(tsi_hdl,AUI_TSI_INPUT_TSG,&attr_tsi);
     aui_tsi_route_cfg(tsi_hdl,AUI_TSI_INPUT_TSG,AUI_TSI_CHANNEL_1,AUI_TSI_OUTPUT_DMX_1);
+   memset(Channels,0,sizeof(Channels));
+   memset(Filters,0,sizeof(Filters));
     nglCreateThread(&thid,0,4096,TSInjectProc,tsg_hdl);
 #endif
    return 0;
@@ -206,8 +217,9 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
        return 0;
     nglLockMutex(mtx_dmx);
     DMXCHANNEL*ch=GetChannel(wPid);
+    NGLOG_DEBUG("TOTAL FILTER=%d pid %d'sfilter=%d ch=%p",GetCountByPid(0xFFFF),wPid,GetCountByPid(wPid),ch);
     if(ch==NULL){
-        ch=GetChannel(UNUSED_PID);
+     ch=GetFreeChannel();
         ch->pid=wPid;
         ch->num_filt=0;
         if(AUI_RTN_SUCCESS!=aui_find_dev_by_idx(AUI_MODULE_DMX, dmx_id, &ch->dmx)){
@@ -218,15 +230,16 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
         bzero(&ch->attr,sizeof(aui_attr_dmx_channel));
         ch->attr.us_pid = wPid;
         ch->attr.dmx_data_type =dmxtype2aui[dmxtype];
-        rc=aui_dmx_channel_open(ch->dmx, &ch->attr, &ch->channel);
+        int rc=aui_dmx_channel_open(ch->dmx, &ch->attr, &ch->channel);
         NGLOG_VERBOSE("aui_dmx_channel_open=%d channel=%p",rc,ch->channel);
-    };
+  }
     NGLDMXFILTER*flt=GetFilter(NULL);
-    flt->ch=ch;
-    NGLOG_VERBOSE("dmx:%d pid:%d flt=%p ch=%p ch.channel=%p",dmx_id,wPid,flt,ch,(ch?ch->channel:NULL));
+  flt->ch=ch;
+  flt->pid=wPid;
     bzero(&flt->attr,sizeof(flt->attr));
     flt->attr.puc_mask=flt->mask;
     flt->attr.puc_val=flt->value;
+	flt->attr.uc_continue_capture_flag=1;//default is continuous
     switch(dmxtype){
     case NGL_DMX_SECTION:flt->attr.p_fun_sectionCB=AuiSectionCB;break;
     case NGL_DMX_PES:flt->attr.callback=AuiPesCBK;             break;
@@ -234,13 +247,13 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
                      flt->attr.p_fun_data_up_wtCB =AuiRecvData; 
                      flt->tsBuffer=(BYTE*)malloc(TSBUF_SIZE);break;
     }
-    CHECKDMX(aui_dmx_filter_open(ch->channel,&flt->attr,&flt->hfilter));
+  int rc=aui_dmx_filter_open(ch->channel,&flt->attr,&flt->hfilter);
     /*if(NGL_DMX_SECTION!=dmxtype){
         aui_dmx_reg_data_call_back(flt->hfilter, AuiBufReq,AuiPesEsCB);
     }else
         CHECKDMX(aui_dmx_reg_sect_call_back(flt->hfilter,AuiSectionCB));*/
 
-    NGLOG_VERBOSE("dmxid=%d dmx=%p filter=%p pid=%x flthandle=%p ch=%p/%p",dmx_id,ch->dmx,flt,wPid,flt->hfilter,ch,ch->channel);
+  NGLOG_DEBUG("aui_dmx_filter_open=%d filter=%p nghdl=%p ch=%p/%p dmxtype=%d",rc,flt,flt->hfilter,ch,ch->channel,dmxtype);
     ch->num_filt++;
     flt->CallBack=cbk;
     flt->userdata=userdata;
@@ -264,7 +277,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
       CHECKDMX(aui_dmx_filter_close(&(flt->hfilter)));
       if(flt->ch->num_filt==0){
            int rc=aui_dmx_channel_close(&flt->ch->channel);
-           NGLOG_VERBOSE("aui_dmx_channel_close=%d",rc);
+           NGLOG_DEBUG("aui_dmx_channel_close=%d pid=%d",rc,flt->ch->pid);
       }
       flt->ch=NULL;
   }else{
@@ -276,21 +289,31 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
   return NGL_OK;
 }
 
-INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle,UINT uiLength, BYTE *pValue, BYTE *pMask)
+INT nglSetSectionFilterOneshot(DWORD dwStbFilterHandle,BOOL onshort){
+    NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
+    CHECKFILTER(flt);
+    flt->attr.uc_continue_capture_flag=!onshort; 
+    return NGL_OK;
+}
+INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pValue,UINT uiLength)
 {
+  int rc;
   BYTE reverse[16];
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
-  if(uiLength==0||pValue==NULL||pMask==0)
+  if(uiLength>0&&(pValue==NULL||pMask==0))
       return NGL_INVALID_PARA;
   bzero(reverse,sizeof(reverse));
-  memcpy(flt->mask,pMask,uiLength);
-  memcpy(flt->value,pValue,uiLength);
-  
+  memset(flt->mask,0,sizeof(flt->mask));
+  memset(flt->value,0,sizeof(flt->value));
+  if(uiLength>0&&pMask&&pValue){
+      memcpy(flt->mask,pMask,uiLength);
+      memcpy(flt->value,pValue,uiLength);
+  }
   flt->attr.ul_mask_val_len=uiLength;
   flt->attr.uc_crc_check=0;
-  flt->attr.uc_continue_capture_flag=1;//(eNotificationMode==eNGL_DMX_Continuous);
-  CHECKDMX(aui_dmx_filter_mask_val_cfg(flt->hfilter,pMask,pValue,reverse,uiLength,0,1));
+  rc=aui_dmx_filter_mask_val_cfg(flt->hfilter,pMask,pValue,reverse,uiLength,flt->attr.uc_crc_check,flt->attr.uc_continue_capture_flag);
+  NGLOG_VERBOSE("filter=%p hdl=%p setparam=%d",flt,flt->hfilter,rc);
   return NGL_OK;
 }
 
@@ -298,11 +321,11 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
+  NGLOG_DEBUG("flt=%p/%p/%p  started=%d/%d",flt,flt->ch,flt->hfilter,flt->started,flt->ch->num_started);
   nglLockMutex(mtx_dmx);
   if(flt->started==0){
-     if(flt->ch->started==0){
+     if(flt->ch->num_started==0){
          CHECKDMX(aui_dmx_channel_start(flt->ch->channel,&flt->ch->attr));
-         flt->ch->started++;
      }
      CHECKDMX(aui_dmx_filter_start(flt->hfilter,&flt->attr));
      flt->started++;
@@ -321,8 +344,8 @@ INT nglStopSectionFilter(DWORD  dwStbFilterHandle)
   nglLockMutex(mtx_dmx);
   if(flt->started){
      CHECKDMX(aui_dmx_filter_stop(flt->hfilter,&flt->attr));
-     aui_dmx_reg_data_call_back(flt->hfilter,NULL,NULL);
-     aui_dmx_reg_sect_call_back(flt->hfilter,NULL);
+     //aui_dmx_reg_data_call_back(flt->hfilter,NULL,NULL);
+     //aui_dmx_reg_sect_call_back(flt->hfilter,NULL);
      flt->started--;
      flt->ch->num_started--;
      if(flt->ch->num_started==0){

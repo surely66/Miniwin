@@ -56,8 +56,7 @@ typedef struct{
 }EPGMSG;
 
 static std::vector<NGLTunerParam>schFrequencies;
-static DWORD fltEIT;
-static DWORD fltTDT;
+static DWORD fltEIT, fltTDT, fltBAT;
 static DWORD msgQ=0;
 static void NotifyServiceArrived(STREAMDB&ts,SEARCHNOTIFY*notify);
 extern void DtvNotify(UINT,const SERVICELOCATOR*);
@@ -67,70 +66,68 @@ static void SENDMSG(DWORD id,DWORD p1,DWORD p2){
 }
 
 static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
-    PSITable psitbl(Buffer);
+    PSITable tbl(Buffer);
     STREAMDB*ts=(STREAMDB*)UserData;
     SECTIONLIST::iterator itr;
-    BYTE mask[8],match[8];
     int notfound,changed;
-    switch(psitbl.tableId()){
+    switch(tbl.tableId()){
     case TBID_PAT://PAT;
-         ts->tsid=psitbl.extTableId();
-         itr=std::find(ts->pat.begin(),ts->pat.end(),psitbl);
+         ts->tsid=tbl.extTableId();
+         itr=std::find(ts->pat.begin(),ts->pat.end(),tbl);
          if(notfound=(itr==ts->pat.end()))
-              ts->pat.push_back(psitbl);
-         NGLOG_VERBOSE("tbid=%02x exttbid=%x section cnt=%d",psitbl.tableId(),psitbl.extTableId(),ts->pat.size());
-         SENDMSG(MSG_PAT_RECEIVED,psitbl.extTableId(),filter);
+              ts->pat.push_back(tbl);
+         NGLOG_VERBOSE("tbid=%02x exttbid=%x section cnt=%d",tbl.tableId(),tbl.extTableId(),ts->pat.size());
+         SENDMSG(MSG_PAT_RECEIVED,tbl.extTableId(),filter);
          break;
     case TBID_CAT:break;//CAT;
     case TBID_PMT://PMT;
-         itr=std::find(ts->pmt.begin(),ts->pmt.end(),psitbl);
+         itr=std::find(ts->pmt.begin(),ts->pmt.end(),tbl);
          if(notfound=(itr==ts->pmt.end()))
-             ts->pmt.push_back(psitbl);
-         NGLOG_VERBOSE_IF(notfound,"\t*serviceid=%d section cnt=%d filt=%x pid=%d found=%d",psitbl.extTableId(),ts->pmt.size(),filter,
-              nglGetFilterPid(filter),!notfound);
-         if(notfound)SENDMSG(MSG_PMT_RECEIVED,(ts->pmt.size()<<16|psitbl.extTableId()),filter);//program_number
+             ts->pmt.push_back(tbl);
+         //NGLOG_VERBOSE_IF(notfound,"\t*serviceid=%d section cnt=%d filt=%x pid=%d found=%d",psitbl.extTableId(),
+         //     ts->pmt.size(),filter, nglGetFilterPid(filter),!notfound);
+         if(notfound)SENDMSG(MSG_PMT_RECEIVED,(ts->pmt.size()<<16|tbl.extTableId()),filter);//program_number
          break;
     case TBID_SDT://SDT
     case TBID_SDT_OTHER://SDT
-         itr=find(ts->sdt.begin(),ts->sdt.end(),psitbl);
+         itr=find(ts->sdt.begin(),ts->sdt.end(),tbl);
          if(notfound=(itr==ts->sdt.end()))
-              ts->sdt.push_back(psitbl);
-         else *itr=psitbl; 
-         NGLOG_DEBUG("SDT %x %d.%d",psitbl.tableId(),psitbl.extTableId(),psitbl.sectionNo());
-         if(notfound)SENDMSG(MSG_SDT_RECEIVED,psitbl.extTableId(),filter);//streamid
+              ts->sdt.push_back(tbl);
+         else *itr=tbl;
+         if(notfound)SENDMSG(MSG_SDT_RECEIVED,tbl.extTableId(),filter);//streamid
          break;
     case TBID_BAT:
-         AddBATSection((BAT&)psitbl,&changed);
+         AddBATSection((BAT&)tbl,&changed);
          break;
     case TBID_NIT:
     case TBID_NIT_OTHER:{NGLOG_DEBUG("===RCV NIT===");
              SECTIONLIST*nitsecs=(SECTIONLIST*)UserData;
-             itr=std::find(nitsecs->begin(),nitsecs->end(),psitbl);
-             if(itr==nitsecs->end())nitsecs->push_back(psitbl);
+             itr=std::find(nitsecs->begin(),nitsecs->end(),tbl);
+             if(itr==nitsecs->end())nitsecs->push_back(tbl);
                  SENDMSG(MSG_NIT_RECEIVED,0,filter);
          }break;
     case TBID_EITPF:
     case TBID_EITPF_OTHER:
          {
-             EIT eit(psitbl,false);
+             EIT eit(tbl,false);
              SERVICELOCATOR loc=eit;
              AddEITPFSection(eit,&changed);
              if(changed&&(eit.tableId()==TBID_EITPF)){
-                  NGLOG_DEBUG("%d.%d.%d pf update",loc.netid,loc.tsid,loc.sid);
+                  //NGLOG_DEBUG("%d.%d.%d pf update",loc.netid,loc.tsid,loc.sid);
                   DtvNotify(MSG_EPG_PF,&loc);
              }
          }break;
     case TBID_EITS...TBID_EITS_LAST:
     case TBID_EITS_OTHER...TBID_EITS_OTHER_LAST:
          {
-             EIT eit(psitbl,false);
+             EIT eit(tbl,false);
              SERVICELOCATOR loc=eit;
              AddEITSSection(eit,&changed);
              if(changed && ((eit.tableId()&0x50)==0x50))DtvNotify(MSG_EPG_SCHEDULE,&loc);
          }break;
     case TBID_TDT:
     case TBID_TOT:{
-             TOT tot(psitbl);
+             TOT tot(tbl);
              NGL_TIME tc;
              NGL_TM ts;
              INT mjd,utc;
@@ -148,13 +145,13 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
              NGLOG_DEBUG_IF(ts.uiSec%30==0,"Recv %s Time:%d/%d/%d %02d:%02d:%02d",(tot.tableId()==TBID_TDT?"TDT":"TOT"),
                  ts.uiYear,ts.uiMonth+1,ts.uiMonthDay,ts.uiHour,ts.uiMin,ts.uiSec);   
          }break;
-    default:NGLOG_DEBUG("todo tbid:%x",psitbl.tableId());break;         
+    default:NGLOG_DEBUG("todo tbid:%x",tbl.tableId());break;         
     }
 }
 
 static DWORD CreateFilter(USHORT pid,BYTE*mask,BYTE*match,int masklen,void*param,bool start=true){
     DWORD flt=nglAllocateSectionFilter(0,pid,SectionCBK,param,NGL_DMX_SECTION);
-    nglSetSectionFilterParameters(flt,masklen,mask,match);
+    nglSetSectionFilterParameters(flt,mask,match,masklen);
     if(start)nglStartSectionFilter(flt);
     return flt;
 }
@@ -176,7 +173,7 @@ static void  SearchProc(void*p)
     INT tunningIndex=0;
     INT searchByNIT=0;
     INT state=STATE_IDLE;
-    DWORD fltPAT,fltSDT,fltBAT;
+    DWORD fltPAT,fltSDT;
     struct timeval timeStart,timeEnd;//PSI/SI StartEnd time of TP search
     std::vector<DWORD>pmtfilters;
     SEARCHNOTIFY*notify=nullptr;
@@ -184,14 +181,11 @@ static void  SearchProc(void*p)
     fltPAT=CreateFilter(PID_PAT,mask,match,1,&ts,false);
     match[0]=TBID_SDT;
     fltSDT=CreateFilter(PID_SDT,mask,match,1,&ts,false);
-    match[0]=TBID_BAT;
-    //fltBAT=CreateFilter(PID_BAT,mask,match,1,NULL,true);
     SECTIONLIST nitsecs;//used for NIT searchtype;
     while(1){
         EPGMSG msg;
         memset(&msg,0,sizeof(msg));
         int rc=nglMsgQReceive(msgQ,&msg,sizeof(EPGMSG),1500);
-        NGLOG_VERBOSE_IF(rc==NGL_OK,">>RECV MSG=%s p1=0x%x p2=0x%x state=%d ",MSGNAME[msg.msgid],msg.param1,msg.param2,state);
         if(STATE_PSI_GETTING==state){
             gettimeofday(&timeEnd,NULL);//nglGetTime(&timeEnd);
             long tpms=(timeEnd.tv_sec-timeStart.tv_sec)*1000+(timeEnd.tv_usec-timeStart.tv_usec)/1000;
@@ -202,7 +196,8 @@ static void  SearchProc(void*p)
         }
         if( ((state==STATE_IDLE) && (msg.msgid!=MSG_START_SEARCH)) )continue;
         switch(msg.msgid){
-        case MSG_START_SEARCH:
+        case MSG_START_SEARCH: 
+             NGLOG_VERBOSE("MSG_START_SEARCH");
              searchByNIT=(msg.param1==0);
              notify=(SEARCHNOTIFY*)msg.param2;
              tunningIndex=searchByNIT?-1:0;
@@ -210,6 +205,7 @@ static void  SearchProc(void*p)
              state=STATE_STARTED;
              break;
         case MSG_TUNNING: //recv frequency request,the first tunning use param1=0,othercase param1!=0
+             NGLOG_VERBOSE("MSG_TUNNING");
              state=STATE_TUNNING;
              tunningIndex=msg.param1;
              NGLOG_DEBUG("MSG_TUNNING freq[%d/%d]=%d",tunningIndex,schFrequencies.size(),schFrequencies[tunningIndex].u.c.frequency);
@@ -221,6 +217,7 @@ static void  SearchProc(void*p)
              }
              break;
         case MSG_LOCK://lock status
+             NGLOG_VERBOSE("MSG_LOCK");
              if(state!=STATE_IDLE){
                  if(msg.param1){//if frequency is locked
                      NGLOG_DEBUG("recv MSG_LOCK searchByNIT=%d",searchByNIT);
@@ -235,6 +232,7 @@ static void  SearchProc(void*p)
              }
              break;
         case MSG_SEARCH_TP :
+             NGLOG_VERBOSE("MSG_SEARCH_TP"); 
              ts.reset();
              ts.tune=schFrequencies[tunningIndex];
              nglStartSectionFilter(fltPAT);
@@ -246,6 +244,7 @@ static void  SearchProc(void*p)
              gettimeofday(&timeStart,NULL);//nglGetTime(&timeStart);
              break;
         case MSG_FINISHED_TP:
+             NGLOG_VERBOSE("MSG_FINISHED_TP");
              std::sort(ts.pmt.begin(),ts.pmt.end(),[](PSITable&t1,PSITable&t2){return t1<t2;});//TableCompare);
              if(ts.sdt.size()){
                  SDT sdt(ts.sdt.back());
@@ -260,14 +259,15 @@ static void  SearchProc(void*p)
              SENDMSG( ( (tunningIndex<schFrequencies.size() )?MSG_TUNNING:MSG_SEARCH_FINISHED ) ,tunningIndex,0);
              break;
         case MSG_SEARCH_FINISHED:
+             NGLOG_DEBUG("SEARCH FINISHED!");
              tunningIndex=0;state=STATE_IDLE;
-             state=STATE_IDLE;NGLOG_DEBUG("SEARCH FINISHED!");
+             state=STATE_IDLE;
              if(notify&&notify->FINISHTP)
                  notify->FINISHTP(nullptr,schFrequencies.size(),schFrequencies.size(),notify->userdata);
              memset(notify,0,sizeof(SEARCHNOTIFY));
              break;
         case MSG_PAT_RECEIVED:
-             { 
+             {  NGLOG_VERBOSE("MSG_PAT_RECEIVED"); 
                 PAT pat(ts.pat.back(),false);
                 MpegProgramMap maps[64];
                 program_count=pat.getPrograms(maps,0);//dont care nit pid
@@ -278,23 +278,30 @@ static void  SearchProc(void*p)
                     mask[4]=0xFF;  match[4]=maps[i].program_number&0xFF;
                     DWORD flt=CreateFilter(maps[i].pmt_pid,mask,match,5,&ts,true);
                     pmtfilters.push_back(flt);
-                    NGLOG_VERBOSE("\tPATService[%02d] id=%04x pmtpid=0x%04x flt=%x",i,maps[i].program_number,maps[i].pmt_pid,flt);
+                    //NGLOG_VERBOSE("\tPATService[%02d] id=%04x pmtpid=0x%04x flt=%x",i,maps[i].program_number,maps[i].pmt_pid,flt);
                 }
              }
              break;
         case MSG_PMT_RECEIVED:
-             if(STATE_PSI_GETTING==state){
-                if( (ts.pmt.size()==program_count) && ts.sdt.size()){
-                    SENDMSG(MSG_FINISHED_TP,program_count,0);//todo only call once per ts
+             {   
+                NGLOG_VERBOSE("RECV MSG_PMT_RECEIVED pmt.size=%d/%d state=%d",ts.pmt.size(),program_count,state);
+                nglFreeSectionFilter(msg.param2);
+                if( ts.pmt.size()==program_count){
                     for(auto f:pmtfilters)nglFreeSectionFilter(f);
                     pmtfilters.clear();
-                    state=STATE_PSI_GETTED;
-                }nglFreeSectionFilter(msg.param2);
+                    if(ts.sdt.size()){
+                         SDT sdt(ts.sdt.back());
+                         if( ts.sdt.size()==sdt.lastSectionNo()+1){
+                             state=STATE_PSI_GETTED;
+                             SENDMSG(MSG_FINISHED_TP,program_count,0);//todo only call once per ts
+                         }
+                    }
+                }
              }
              break;
         case MSG_SDT_RECEIVED:
              if(STATE_PSI_GETTING==state){
-                program_count=0;
+                int totalsvc=0;
                 SDT sdt(ts.sdt.back());
                 for(auto itr:ts.sdt){
                     SDT sdt(itr,false);
@@ -305,11 +312,12 @@ static void  SearchProc(void*p)
                         char sname[64];
                         svs[i].getServiceName(sname);
                         NGLOG_VERBOSE("\tSDTService id=0x%04x type=0x%02x camode=%d %s",svs[i].service_id,svs[i].serviceType,svs[i].freeCAMode,sname);
-                    }program_count+=sc;
-                } 
+                    }totalsvc+=sc;
+                }NGLOG_VERBOSE("sdt.size=%d sdt.svc.count=%d state=%d",ts.sdt.size(),totalsvc,state);
                 if(ts.sdt.size()==sdt.lastSectionNo()+1)
                     nglStopSectionFilter(msg.param2);
-                if(ts.pmt.size()==program_count&&(ts.sdt.size()==sdt.lastSectionNo()+1)){
+                if(ts.pmt.size()==totalsvc&&(ts.sdt.size()==sdt.lastSectionNo()+1)){
+                    program_count=totalsvc;
                     SENDMSG(MSG_FINISHED_TP,program_count,0);//todo only call once per ts
                     state=STATE_PSI_GETTED;
                 }
@@ -352,10 +360,15 @@ int DtvEpgInit(){
     nglTunerInit();
     nglAvInit();
     msgQ=nglMsgQCreate(10,sizeof(EPGMSG));
+
     mask=0xC0;match=0x4E;
     fltEIT=CreateFilter(PID_EIT,&mask,&match,1,(void*)fltEIT,true);
+
     mask=0xFE;  match=TBID_TDT;
     fltTDT=CreateFilter(PID_TDT,&mask,&match,1,(void*)fltTDT,true);
+
+    mask=0xFF;  match=TBID_BAT;
+    fltBAT=CreateFilter(PID_BAT,&mask,&match,1,NULL,true);
     nglCreateThread(&thid,0,4096,SearchProc,NULL);
     nglTunerRegisteCBK(0,TunningCBK,NULL);
 }

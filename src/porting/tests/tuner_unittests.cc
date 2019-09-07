@@ -37,7 +37,7 @@ class TUNER:public testing::Test{
    DWORD createFilter(){
       flt=nglAllocateSectionFilter(0,0/*patpid*/,SectionCBK,(void*)eventHandle,NGL_DMX_SECTION);
       mask[0]=0xFF;value[0]=0x00;//for PAT
-      nglSetSectionFilterParameters(flt,1,mask,value); 
+      nglSetSectionFilterParameters(flt,mask,value,1); 
       nglStartSectionFilter(flt);
       return flt;
    }

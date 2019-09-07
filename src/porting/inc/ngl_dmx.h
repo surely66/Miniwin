@@ -225,7 +225,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle );
 
     For related information refer to: @ref VA_DMX_StartSectionFilter and @ref VA_DMX_StopSectionFilter.
 */
-INT nglSetSectionFilterParameters(DWORD dwStbFilterHandle, UINT uiLength, BYTE *pValue, BYTE *pMask);
+INT nglSetSectionFilterParameters(DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pValue, UINT uiLength);
 
 /**
     This function starts a given filtering.

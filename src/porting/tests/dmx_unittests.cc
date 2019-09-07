@@ -95,7 +95,7 @@ TEST_F(DMX,SetFilterParam_1){
    BYTE mask[8],value[8];
    flt=nglAllocateSectionFilter(0,0x10,SectionCBK,NULL,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_TRUE(0==nglStopSectionFilter(flt));
    nglFreeSectionFilter(flt);
 }
@@ -104,12 +104,12 @@ TEST_F(DMX,SetFilterParam_Error_1){
    BYTE mask[8],value[8];
    flt=nglAllocateSectionFilter(0,0x10,SectionCBK,NULL,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,0,NULL,NULL));
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,1,NULL,NULL));
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,1,mask,NULL));
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,0,mask,value));
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,0,NULL,value));
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,0,NULL,value));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,NULL,NULL,0));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,NULL,NULL,1));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,mask,NULL,1));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,mask,value,0));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,NULL,value,0));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,NULL,value,0));
    ASSERT_TRUE(0==nglStopSectionFilter(flt));
    nglFreeSectionFilter(flt);
 }
@@ -118,7 +118,7 @@ TEST_F(DMX,SetFilterParam_Error_2){
    BYTE mask[8],value[8];
    flt=nglAllocateSectionFilter(0,0x10,SectionCBK,NULL,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
-   ASSERT_NE(0,nglSetSectionFilterParameters(flt,9,mask,value));
+   ASSERT_NE(0,nglSetSectionFilterParameters(flt,mask,value,9));
    nglFreeSectionFilter(flt);
 }
 
@@ -138,7 +138,7 @@ TEST_F(DMX,Filter_Section_1){
    flt=nglAllocateSectionFilter(0,0x00,FilterCBK,params,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
    mask[0]=0xFF;value[0]=0x00;//for PAT
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    ASSERT_EQ(data[0],0);
@@ -154,7 +154,7 @@ TEST_F(DMX,Filter_TS_1){
    flt=nglAllocateSectionFilter(0,0x00,FilterCBK,params,NGL_DMX_TS);
    ASSERT_FALSE(0==flt);
    mask[0]=0xFF;value[0]=0x00;//for PAT
-   //ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   //ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    ASSERT_EQ(data[0],0x47);
@@ -170,7 +170,7 @@ TEST_F(DMX,Filter_Section_DMX_1){
    flt=nglAllocateSectionFilter(1,0x00,FilterCBK,params,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
    mask[0]=0xFF;value[0]=0x00;//for PAT
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    ASSERT_EQ(data[0],0);
@@ -187,7 +187,7 @@ TEST_F(DMX,Filter_Data_2){
      flt=nglAllocateSectionFilter(0,0x11,FilterCBK,params,NGL_DMX_SECTION);
      ASSERT_FALSE(0==flt);
      mask[0]=0xFF;value[0]=0x42;//for SDT
-     ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+     ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
      ASSERT_EQ(0,nglStartSectionFilter(flt));
      ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
      ASSERT_EQ(data[0],0x42);
@@ -204,7 +204,7 @@ TEST_F(DMX,Filter_Data_PAT_PMT){
    flt=nglAllocateSectionFilter(0,0,FilterCBK,params,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
    mask[0]=0xFF;value[0]=0x0;//for PAT
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    ASSERT_EQ(data[0],0x00);
@@ -228,7 +228,7 @@ TEST_F(DMX,Filter_Data_PAT_PMT){
 #endif 
        printf("masklen=%d \r\n",masklen);
        flt=nglAllocateSectionFilter(0,pmtpids[i*2+1],FilterCBK,params,NGL_DMX_SECTION);
-       nglSetSectionFilterParameters(flt,masklen,mask,value);
+       nglSetSectionFilterParameters(flt,mask,value,masklen);
        nglStartSectionFilter(flt);
        ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
        ASSERT_EQ(data[0],2);
@@ -246,7 +246,7 @@ TEST_F(DMX,Filter_Data_DMX1_2){
    flt=nglAllocateSectionFilter(1,0x11,FilterCBK,params,NGL_DMX_SECTION);
    ASSERT_FALSE(0==flt);
    mask[0]=0xFF;value[0]=0x42;//for SDT
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,1,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,1));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    ASSERT_EQ(data[0],0x42);
@@ -265,7 +265,7 @@ TEST_F(DMX,Filter_Data_DMX1_3){
    mask[1]=mask[2]=0x00;
    mask[3]=0xFF;value[3]=0x04;//program_number=0x401
    mask[4]=0xFF;value[4]=0x01;
-   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,3,mask,value));
+   ASSERT_EQ(0,nglSetSectionFilterParameters(flt,mask,value,3));
    ASSERT_EQ(0,nglStartSectionFilter(flt));
    ASSERT_TRUE(0==nglWaitEvent(eventHandle,2000));
    printf("exttableid=0x%02x%02x\r\n",data[3],data[4]);
