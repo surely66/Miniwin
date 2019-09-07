@@ -3,6 +3,7 @@
   PURPOSE: This file is a stub for linking tests.
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include "ngl_dmx.h"
 #include <aui_dmx.h> 
 #include <aui_tsg.h>
@@ -219,7 +220,7 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
     DMXCHANNEL*ch=GetChannel(wPid);
     NGLOG_DEBUG("TOTAL FILTER=%d pid %d'sfilter=%d ch=%p",GetCountByPid(0xFFFF),wPid,GetCountByPid(wPid),ch);
     if(ch==NULL){
-     ch=GetFreeChannel();
+        ch=GetFreeChannel();
         ch->pid=wPid;
         ch->num_filt=0;
         if(AUI_RTN_SUCCESS!=aui_find_dev_by_idx(AUI_MODULE_DMX, dmx_id, &ch->dmx)){
@@ -232,10 +233,10 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
         ch->attr.dmx_data_type =dmxtype2aui[dmxtype];
         int rc=aui_dmx_channel_open(ch->dmx, &ch->attr, &ch->channel);
         NGLOG_VERBOSE("aui_dmx_channel_open=%d channel=%p",rc,ch->channel);
-  }
+    }
     NGLDMXFILTER*flt=GetFilter(NULL);
-  flt->ch=ch;
-  flt->pid=wPid;
+    flt->ch=ch;
+    flt->pid=wPid;
     bzero(&flt->attr,sizeof(flt->attr));
     flt->attr.puc_mask=flt->mask;
     flt->attr.puc_val=flt->value;
@@ -247,13 +248,9 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
                      flt->attr.p_fun_data_up_wtCB =AuiRecvData; 
                      flt->tsBuffer=(BYTE*)malloc(TSBUF_SIZE);break;
     }
-  int rc=aui_dmx_filter_open(ch->channel,&flt->attr,&flt->hfilter);
-    /*if(NGL_DMX_SECTION!=dmxtype){
-        aui_dmx_reg_data_call_back(flt->hfilter, AuiBufReq,AuiPesEsCB);
-    }else
-        CHECKDMX(aui_dmx_reg_sect_call_back(flt->hfilter,AuiSectionCB));*/
+    rc=aui_dmx_filter_open(ch->channel,&flt->attr,&flt->hfilter);
 
-  NGLOG_DEBUG("aui_dmx_filter_open=%d filter=%p nghdl=%p ch=%p/%p dmxtype=%d",rc,flt,flt->hfilter,ch,ch->channel,dmxtype);
+    NGLOG_DEBUG("aui_dmx_filter_open=%d filter=%p nghdl=%p ch=%p/%p dmxtype=%d",rc,flt,flt->hfilter,ch,ch->channel,dmxtype);
     ch->num_filt++;
     flt->CallBack=cbk;
     flt->userdata=userdata;

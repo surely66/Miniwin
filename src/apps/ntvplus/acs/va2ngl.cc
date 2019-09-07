@@ -27,7 +27,6 @@ static DWORD CreateFilter(int pid,int num,...);
 static BYTE CATSection[1024];
 static INT SectionCBK(DWORD dwVaFilterHandle,UINT32 uiBufferLength,BYTE *pBuffer, void *pUserData)
 {
-    NGLOG_DEBUG("RCV %02X",pBuffer[0]);
     if(1==pBuffer[0]){
         if(memcmp(pBuffer,CATSection,8)){
             NGLOG_DEBUG("CAT Updated SectionCBK filter=0x%x tbid=%x",dwVaFilterHandle,pBuffer[0] );

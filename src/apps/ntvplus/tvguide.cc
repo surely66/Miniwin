@@ -59,6 +59,7 @@ public:
 };
 
 void TVWindow::onEITS(const SERVICELOCATOR*svc){
+    NGLOG_VERBOSE("EITS %d.%d.%d",svc->netid,svc->tsid,svc->sid);
     for(int i=0;i<lv->getItemCount();i++){
         TVChannel*ch=(TVChannel*)lv->getItem(i);
         if(ch->svc==*svc){

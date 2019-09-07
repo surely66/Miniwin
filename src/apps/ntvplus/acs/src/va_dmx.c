@@ -35,33 +35,6 @@ typedef struct{
 
 DMXFILTER  Filters[MAX_FILTER];
 
-static UINT CRC32_Table[256];
-
-static int InitCRC32(){
-    #define CRC32_POLYNOMIAL 0x04C11DB7
-    for (int i = 0; i< 256; i++){
-        unsigned int coef32 = i << 24;
-        for (int j=0; j<8; j++) {
-            if (coef32 & 0x80000000)
-                coef32 = ((coef32 << 1) ^ CRC32_POLYNOMIAL);
-            else
-                coef32 <<= 1;
-        }
-        CRC32_Table[i] = coef32;
-    }
-}
-
-UINT GetCRC32(const BYTE*buffer, size_t size){
-    unsigned int crc32 = 0xFFFFFFFF;
-    unsigned int cntByte;
-    if(CRC32_Table[2]==0)
-       InitCRC32();
-    for (cntByte = 0; cntByte < size; cntByte++){
-        crc32 = (crc32 << 8 ) ^ CRC32_Table[((crc32 >> 24) ^ *buffer++) & 0xFF];
-    }
-    return crc32;
-}
-
 static void NGLSectionCB(DWORD filter_handle,const BYTE *data,UINT len,void*userdata)
 {
     DMXFILTER*flt=(DMXFILTER*)userdata;
@@ -81,7 +54,6 @@ void VA_DMX_Init(){
    if(sDMX_INITED!=0)
       return;
    nglDmxInit();
-   InitCRC32();
    memset(Filters,0,sizeof(Filters));
    NGLOG_DEBUG("MAX_FILTER=%d",MAX_FILTER);
    sDMX_INITED++;
