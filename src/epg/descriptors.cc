@@ -124,7 +124,7 @@ int ShortEventNameDescriptor::getName(char*name,char*desc){
     if(desc)desc[0]=0;
     if(p){
         int nmlen=p[5];
-        ToUtf8((const char*)(p+6),nmlen,name); name[nmlen]=0;
+        ToUtf8((const char*)(p+6),nmlen,name); 
         int dlen=p[6+nmlen];
         ToUtf8((const char*)(p+7+nmlen),dlen,desc);
         return nmlen<<16|dlen;

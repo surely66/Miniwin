@@ -79,6 +79,7 @@ int App::getArgAsInt(const std::string&key,int def){
 
 void App::setOpacity(unsigned char alpha){
     nglSurfaceSetOpacity(0,alpha);
+    NGLOG_DEBUG("alpha=%d",alpha);
 }
 
 ResourceManager*App::getResourceManager(){

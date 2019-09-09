@@ -102,6 +102,7 @@ static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,void*userdata){
     lastplayed=*svc;
 
     VA_CTRL_SwitchOffProgram(0);
+    VA_CTRL_SwitchOffProgram(1);
     NGLOG_DUMP("PMT",buffer,8);
     VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
     VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);

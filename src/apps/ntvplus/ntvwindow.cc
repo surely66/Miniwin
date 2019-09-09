@@ -53,8 +53,8 @@ static void EPG_CBK(UINT msgtype,const SERVICELOCATOR*svc,void*userdata){
 }
 
 void NTVWindow::onEITPF(const SERVICELOCATOR*svc){
-    DVBEvent p,f;
-    DtvGetPFEvent(svc,&p,&f);
+    DVBEvent pf[2];
+    DtvGetPFEvent(svc,pf);
 }
 
 void NTVWindow::onEITS(const SERVICELOCATOR*svc){

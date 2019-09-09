@@ -323,17 +323,19 @@ INT DtvGetServicePidInfo(const SERVICELOCATOR*sloc,ELEMENTSTREAM*es,USHORT*pcr){
     return 0;
 }
 
-INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*p,DVBEvent*f){
+INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*p){
     int rc=0;
+    int flags[3]={0,1,3};
     for(auto itr:epgpf){
         EIT eit(itr);
         if(sloc->netid==eit.getNetId()&&sloc->tsid==eit.getStreamId()&&sloc->sid==eit.getServiceId()){
-            if(eit.sectionNo()==0 && eit.getEvents(p,true)==0){
-               rc|=1;
+            int cnt=eit.getEvents(p,true);
+            if(eit.sectionNo()==0){
+               rc|=flags[cnt];
             }
-            if(eit.sectionNo()==1 && eit.getEvents(f,true)==1){
+            if(eit.sectionNo()==1){
                rc|=2;
-            }
+            }p+=cnt;
         }
     }
     return rc;

@@ -10,6 +10,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/porting
    ${CMAKE_SOURCE_DIR}/include/cairo
    ${CMAKE_SOURCE_DIR}/include/epg
+   ${CMAKE_SOURCE_DIR}/src/3rdparty/breakpad/src
 )
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
@@ -23,7 +24,7 @@ endif()
 link_directories(acs)
 
 add_executable(ntvplus ${SRCS_NTV_PLUS} ntvplus.pak)
-target_link_libraries(ntvplus gui dvbepg acs)
+target_link_libraries(ntvplus gui dvbepg acs breakpad_client)
 
 
 message("CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")

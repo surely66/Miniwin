@@ -47,18 +47,18 @@ public:
 };
 void ChannelBar::getEvents(){
     SERVICELOCATOR loc;
-    DVBEvent pe,fe,*p=nullptr;
+    DVBEvent pf[2],*p=nullptr;
     char name[256],desc[256];
     ChannelItem*itm=(ChannelItem*)chlst->getItem(chlst->getIndex());
     if(itm) loc=itm->svc;
     else DtvGetCurrentService(&loc);
-    int rc=DtvGetPFEvent(&loc,&pe,&fe);
+    int rc=DtvGetPFEvent(&loc,pf);
     if( (rc&1) && present ){
          time_t now=time(NULL);
-         media_progress->setProgress((now-pe.start_time)*100/pe.duration);
-         p=&pe;
+         p=pf;
+         media_progress->setProgress((now-pf->start_time)*100/pf->duration);
     }
-    if( (rc&2) &&(present==false) ) p=&fe;
+    if( (rc&2) &&(present==false) ) p=pf+1;
     if(p){ 
         p->getShortName(name,desc);
         event_name->setText(name);

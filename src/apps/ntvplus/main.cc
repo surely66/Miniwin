@@ -22,7 +22,6 @@ int main(int argc,const char*argv[]){
 
     app.setOpacity(app.getArgAsInt("alpha",255));
     app.getString("mainmenu",app.getArg("language","eng"));
-
     desktop->setKeyListener([&](int key)->bool{
          printf("rcv key:%x menu=%x\r\n",key,NGL_KEY_MENU);
          switch(key){

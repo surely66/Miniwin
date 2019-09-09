@@ -81,20 +81,20 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
 
     setMessageListener([](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
         if(msg==1000){
-             DVBEvent p,f;
+             DVBEvent pf[2];
              NGLOG_DEBUG("Get Event P/F to ui");
              char name[256],des[256];
              ListView*lv=(ListView*)v.findViewById(IDC_CHANNELS);
              int idx=lv->getIndex();
              if(idx<0)return false;
              ChannelItem*itm=(ChannelItem*)lv->getItem(idx);
-             int rc=DtvGetPFEvent(&itm->svc,&p,&f);
+             int rc=DtvGetPFEvent(&itm->svc,pf);
              NGLOG_DEBUG("DtvGetPFEvent=%d",rc); 
              TextField*tvp=(TextField*)v.findViewById(IDC_EVENTP);
              TextField*tvf=(TextField*)v.findViewById(IDC_EVENTF);
                        
-             if(rc&1){p.getShortName(name,des);tvp->setText(name);}
-             if(rc&2){f.getShortName(name,des);tvf->setText(name);}           
+             if(rc&1){pf[0].getShortName(name,des);tvp->setText(name);}
+             if(rc&2){pf[1].getShortName(name,des);tvf->setText(name);}           
         }
     });    
 }

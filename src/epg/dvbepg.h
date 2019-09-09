@@ -53,7 +53,7 @@ INT DtvPlay(SERVICELOCATOR*loc,const char*lan);
 INT DtvTuneByService(const SERVICELOCATOR*loc);
 INT DtvGetTPByService(const SERVICELOCATOR*loc,TRANSPONDER*tp);
 
-INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*p,DVBEvent*f);
+INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*pf);
 INT DtvGetEvents(const SERVICELOCATOR*sloc,DVBEvent*evts,int evt_size);
 NGL_END_DECLS
 
