@@ -10,7 +10,7 @@ typedef struct ServiceLocator{
    USHORT tpid; //for satellite tp
    bool operator==(const ServiceLocator&b)const{return netid==b.netid && tsid==b.tsid && sid==b.sid;}
    ServiceLocator&operator=(const ServiceLocator &b){
-      netid=b.netid;tsid=b.tsid;sid=b.sid;
+      netid=b.netid;tsid=b.tsid;sid=b.sid;tpid=b.tpid;
    }
 }SERVICELOCATOR;
 
@@ -33,6 +33,12 @@ public:
    operator const BYTE*(){return descriptors;}
 };
 
+class CADescriptor:Descriptors{
+public:
+    CADescriptor(const BYTE*pd,int len,bool deep=false):Descriptors(pd,len,deep){}
+    USHORT getCAID(){return descriptors[2]<<8|descriptors[3];}
+    USHORT getPID(){return ((descriptors[4]&0x1F)<<8)|descriptors[5];}
+};
 class NameDescriptor:public Descriptors{
 public:
     NameDescriptor(const BYTE*pd,int len,bool deep=false):Descriptors(pd,len,deep){}

@@ -14,19 +14,37 @@ extern "C"{
 #include <dvbepg.h>
 NGL_MODULE(ACSPVR)
 #define TAG_CA_DESCRIPTOR 9
-
-#if 1//defined (VAOPT_ENABLE_PVR)
-
-//VAOPT_ENABLE_PVR not defined
+#define MAX_PVR 8
+#define MAX_ECM 8
+typedef struct{
+   WORD ecmpid;
+   DWORD ecmhandler;
+   FILE*ecmfile;
+}ECMPVR;
 typedef struct{
    tVA_PVR_RecordType recordType;//ePERSISTENT, eTIMESHIFT 
-   WORD ecmPid;
-   FILE*file;
+   WORD num_ecm;
+   WORD ecm_opened;
+   ECMPVR ecms[MAX_ECM];
    DWORD nglpvr;
-}PVR;
-#define MAX_PVR 8
+}PVR,SVCPVR;
 static PVR sPvrs[MAX_PVR];
 
+static PVR*GetPVRByECMPID(WORD pid){
+   for(int i=0;i<MAX_PVR;i++){
+       PVR*p=sPvrs+i;
+       for(int j=0;j<p->num_ecm;j++){
+           if(p->ecms[j].ecmpid==pid)return p;
+       }
+   }
+   return NULL;
+}
+static ECMPVR*GetECMPVR(PVR*pvr,WORD pid){
+   for(int i=0;i<pvr->num_ecm;i++)
+      if(pvr->ecms[i].ecmpid==pid)
+         return pvr->ecms+i;
+   return NULL;
+}
 static int ETYPE2AUI(int tp){
    switch(tp){
    case 1:
@@ -36,9 +54,10 @@ static int ETYPE2AUI(int tp){
    }
 }
 
-INT GetPvrParamByEcmPID(NGLPVR_RECORD_PARAM*param,WORD ecmpid){
+
+INT GetPvrParamByEcmPID(NGLPVR_RECORD_PARAM*param){
     int i,audidx,rc;
-    WORD pcr;
+    WORD pcr,num_ecm=0,ecmpids[16]; 
     BYTE pmtbuffer[1024];
     SERVICELOCATOR cur;    
     ELEMENTSTREAM es[16];
@@ -47,8 +66,11 @@ INT GetPvrParamByEcmPID(NGLPVR_RECORD_PARAM*param,WORD ecmpid){
     PMT pmt(pmtbuffer,false);
     rc=pmt.getElements(es,false);
     memset(param,0,sizeof(NGLPVR_RECORD_PARAM));
+    if(pmt.ecmPid()!=0x1FFF)ecmpids[num_ecm++]=pmt.ecmPid();
     param->pcr_pid=pmt.pcrPid();
     for(i=0,audidx=0;i<rc;i++){
+        BYTE*p=es[i].findDescriptor(TAG_CA);
+        if(p)ecmpids[num_ecm++]=((p[4]&0x1F)<<8)|p[5];
         switch(es[i].stream_type){
         case 1:
         case 2: param->video_pid=es[i].pid;
@@ -60,7 +82,8 @@ INT GetPvrParamByEcmPID(NGLPVR_RECORD_PARAM*param,WORD ecmpid){
                 break;
         }
     }
-    return (rc>0)?NGL_OK:NGL_ERROR;
+    memcpy(param->ecm_pids,ecmpids,num_ecm*sizeof(USHORT));
+    return num_ecm;
 }
 
 DWORD VA_PVR_Start( DWORD  dwAcsId,int eRecordType,WORD sid){
@@ -86,31 +109,42 @@ DWORD VA_PVR_OpenEcmChannel ( DWORD  dwAcsId,tVA_PVR_RecordType eRecordType,WORD
         return kVA_ILLEGAL_HANDLE;
     if(eRecordType!=ePERSISTENT&&eRecordType!=eTIMESHIFT)
         return kVA_ILLEGAL_HANDLE;
-    
-    for(i=0;i<MAX_PVR;i++){
-        if(sPvrs[i].ecmPid==0){
-            pvr=sPvrs+i;
-            pvr->ecmPid=wEcmChannelPid;
-            pvr->recordType=eRecordType;
-            break;
+    if((pvr=GetPVRByECMPID(wEcmChannelPid))==NULL){
+        for(i=0;i<MAX_PVR;i++){
+            if(sPvrs[i].ecm_opened==0){
+                pvr=sPvrs+i;
+                break;
+            }
         }
-    }
-    tVA_OS_Time tnow;
-    tVA_OS_Tm tm;
-    VA_OS_GetTime(&tnow);
-    VA_OS_TimeToTm(&tnow,&tm);
-    sprintf(fname,"PVR_%d-%d-%d_%02d%02d%02d_%d",1900+tm.uiYear,tm.uiMonth,tm.uiMonthDay,tm.uiHour,tm.uiMin,tm.uiSec,indexed++);
-    NGLPVR_RECORD_PARAM param;
-    memset(&param,0,sizeof(NGLPVR_RECORD_PARAM));
-    if(NGL_OK!=GetPvrParamByEcmPID(&param,wEcmChannelPid)){
-         NGLOG_ERROR("invalid ECMPID 0x%x/%d",wEcmChannelPid,wEcmChannelPid);
-         return kVA_ILLEGAL_HANDLE;
-    }
-    pvr->nglpvr=nglPvrRecordOpen(fname,&param);
-    if(pvr->nglpvr!=0){
-        param.recordMode=eRecordType;
-        NGLOG_DEBUG("pvr=%p acsid=%d eRecordType=%d wEcmChannelPid=%d nglhandle=%p",pvr,dwAcsId,eRecordType,wEcmChannelPid,pvr->nglpvr);
-        return (DWORD)pvr;
+    
+        tVA_OS_Time tnow;
+        tVA_OS_Tm tm;
+        VA_OS_GetTime(&tnow);
+        VA_OS_TimeToTm(&tnow,&tm);
+        sprintf(fname,"VA,PVR-%d,%d-%d-%d,%02d,%02d.trp",tm.uiHour,tm.uiYear,tm.uiMonth,tm.uiMonthDay,tm.uiMin,tm.uiSec);
+        NGLPVR_RECORD_PARAM param;
+        memset(&param,0,sizeof(NGLPVR_RECORD_PARAM));
+        pvr->num_ecm=GetPvrParamByEcmPID(&param);
+        if(0==pvr->num_ecm){
+             NGLOG_ERROR("invalid ECMPID 0x%x/%d",wEcmChannelPid,wEcmChannelPid);
+             return kVA_ILLEGAL_HANDLE;
+        }
+        for(int i=0;i<pvr->num_ecm;i++)
+            pvr->ecms[i].ecmpid=param.ecm_pids[i];
+        pvr->nglpvr=nglPvrRecordOpen(fname,&param);
+        if(pvr->nglpvr!=0){
+            param.recordMode=eRecordType;
+            pvr->ecm_opened++;
+            NGLOG_DEBUG("pvr=%p acsid=%d eRecordType=%d wEcmChannelPid=%d nglhandle=%p",pvr,dwAcsId,eRecordType,wEcmChannelPid,pvr->nglpvr);
+            return wEcmChannelPid;
+        }
+    }else{
+        for(int i=0;i<pvr->num_ecm;i++){
+           if(pvr->ecms[i].ecmpid==wEcmChannelPid){
+               pvr->ecm_opened++;
+               return wEcmChannelPid;
+           }
+        }
     }
     return  kVA_ILLEGAL_HANDLE;
 }
@@ -118,16 +152,29 @@ DWORD VA_PVR_OpenEcmChannel ( DWORD  dwAcsId,tVA_PVR_RecordType eRecordType,WORD
 
 INT VA_PVR_CloseEcmChannel ( DWORD   dwStbEcmChannelHandle )
 {
-    PVR*pvr=(PVR*)dwStbEcmChannelHandle;
+    PVR*pvr=(PVR*)GetPVRByECMPID(dwStbEcmChannelHandle);
     if(pvr<sPvrs||pvr>=&sPvrs[MAX_PVR]){
         return kVA_INVALID_PARAMETER;
     }
     if(0==pvr->nglpvr){
         return kVA_INVALID_PARAMETER;
     }
+    ECMPVR*ecm=GetECMPVR(pvr,dwStbEcmChannelHandle);
+    if(ecm){
+        if(ecm->ecmfile){
+            fclose(ecm->ecmfile);
+            ecm->ecmfile=NULL;
+        }
+        ecm->ecmpid=0;
+        pvr->ecm_opened--;
+    }
     NGLOG_DEBUG(" pvr=%p nglhandle=%p",pvr,pvr->nglpvr);
-    nglPvrRecordClose(pvr->nglpvr);
-    pvr->nglpvr=0;
+    if(0>= pvr->ecm_opened){
+        nglPvrRecordClose(pvr->nglpvr);
+        pvr->nglpvr=0;
+        pvr->ecm_opened=0;
+        pvr->num_ecm=0;
+    }
     return 0;
 }
 
@@ -138,8 +185,8 @@ INT VA_PVR_RecordEcm (  DWORD        dwStbEcmChannelHandle,
                         BYTE *       pEcm,
                         void *       pUserData )
 {
-    PVR*pvr=(PVR*)dwStbEcmChannelHandle;
-    char path[512];
+    PVR*pvr=(PVR*)GetPVRByECMPID(dwStbEcmChannelHandle);
+    char path[512],pvrpath[256];
 
     NGLOG_DEBUG("pvr=%p pEcm=%p uiEcmLength=%d",pvr,pEcm,uiEcmLength);
     
@@ -147,12 +194,14 @@ INT VA_PVR_RecordEcm (  DWORD        dwStbEcmChannelHandle,
         return kVA_INVALID_PARAMETER;
 
     NGLOG_DUMP("==ECMData",pEcm,uiEcmLength/8);
-    nglGetPvrPath(pvr->nglpvr,path);
-    strcat(path,"/acs_ecm.dat");
-    pvr->file=fopen(path,"wb");
-    NGLOG_DEBUG("path=%s file=%p",path,pvr->file);
-    fwrite(pEcm,1,uiEcmLength,pvr->file);
-    fclose(pvr->file);
+    ECMPVR*ecm=GetECMPVR(pvr,dwStbEcmChannelHandle);
+    nglGetPvrPath(pvr->nglpvr,pvrpath);
+    sprintf(path,"%s/acs_ecm_%d.dat",pvrpath,dwStbEcmChannelHandle);
+    if(NULL==ecm->ecmfile)ecm->ecmfile=fopen(path,"wb");
+    NGLOG_DEBUG("ecmpath=%s ecm=%p file=%p",path,ecm,ecm->ecmfile);
+    if(ecm->ecmfile){
+        fwrite(pEcm,1,uiEcmLength,ecm->ecmfile);
+    }
     return NGL_OK;
 }
 
@@ -187,11 +236,10 @@ INT VA_PVR_ReadMetadata (   DWORD    dwAcsId,
             uiMetadataLength,kVA_PVR_METADATA_MAX_SIZE,kVA_SETUP_NBMAX_ACS);
     if((dwAcsId>= kVA_SETUP_NBMAX_ACS)||(kVA_PVR_METADATA_MAX_SIZE<uiMetadataLength)||(0==uiMetadataLength|| NULL==pMetadata))
         return kVA_INVALID_PARAMETER;
-    //fread(pMetadata,1,uiMetadataLength,pvr->file);
     sprintf(path,"/tmp/meta%d.dat",dwAcsId);
     FILE*f=fopen(path,"rb");
     if(f){
-        fread(pMetadata,1,uiMetadataLength,f);
+        fread(pMetadata,1,uiMetadataLength,f);    
         fclose(f);
     }
     NGLOG_DEBUG("metapath=%s file=%p",path,f);
@@ -200,5 +248,4 @@ INT VA_PVR_ReadMetadata (   DWORD    dwAcsId,
 }
 
 
-#endif
 /* End of File */

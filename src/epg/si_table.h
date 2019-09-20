@@ -43,6 +43,8 @@ enum{
    TBID_TOT=0x73,
    TBID_AIT=0x74,
    TBID_MPE=0x78,//MPE-FEC Section ETSI EN 301 192
+// TBID_ECM=0x80,0x81
+// TBID_EMM=0x82-0x8F
 };
 enum{//300468 page 77
    SVC_VIDEO=1,

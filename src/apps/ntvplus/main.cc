@@ -12,8 +12,6 @@ extern "C"{
 
 using namespace ntvplus;
 
-extern DWORD VA_PVR_Start( DWORD  dwAcsId,int eRecordType,WORD sid);
-
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
     Desktop*desktop=new Desktop();
@@ -31,11 +29,8 @@ int main(int argc,const char*argv[]){
          case NGL_KEY_DOWN:CreateChannelPF();return true;
          case NGL_KEY_EPG: CreateTVGuide();return true;
          case NGL_KEY_F4:
-                 VA_PVR_CloseEcmChannel(pvr_hdl);
-                 pvr_hdl=0;
                  return true;
          case NGL_KEY_F5:
-                 pvr_hdl=VA_PVR_Start(1,0,0);
                  return true;
          case NGL_KEY_ESCAPE:exit(0);
          default:return false;

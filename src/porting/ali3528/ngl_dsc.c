@@ -74,6 +74,7 @@ DWORD nglDscOpen(UINT16 pid)
 
     dsc->hdl=NULL;
     dsc->pid=pid;
+    dsc->schip_flag=0;
     dsc->attr.pus_pids=&dsc->pid;
     dsc->attr.ul_pid_cnt=1;
     NGLOG_DEBUG("\t %s dsc=%p pid=%d",__FUNCTION__,dsc,pid);
@@ -89,8 +90,10 @@ DWORD nglDscClose(DWORD dwDescrambleID )
          dsc->pid=0;
          aui_dsc_close(dsc->hdl);
          aui_kl_close(dsc->hdl_kl);
+         dsc->hdl_kl=NULL;
          dsc->hdl=NULL;
     }
+    return NGL_OK;
 }
 static char*AuiAlgo(int algo)
 {
@@ -224,11 +227,12 @@ DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyL
          const BYTE  *pEvenKey,UINT32 uiEvenKeyLength)
 {
     int ret;
+    BYTE*pk;
     NGLDSC*dsc=(NGLDSC*)dwStbDescrHandle;
     //NGLOG_DUMP("ODD",pOddKey,uiOddKeyLength);
     //NGLOG_DUMP("EVEN",pEvenKey,uiEvenKeyLength);
     CHECK(dsc);
-    NGLOG_DEBUG("dsc=%p dsc->hdl=%p OddKey=%p/%d EvenKey=%p/%d",dsc,dsc->hdl,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength);
+    NGLOG_DEBUG("dsc=%p dsc->hdl=%p OddKey=%p/%d EvenKey=%p/%d schip_flag=%d",dsc,dsc->hdl,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength,dsc->schip_flag);
     
 
     if(NULL==pOddKey)uiOddKeyLength=0;
@@ -243,7 +247,18 @@ DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyL
     switch(dsc->attr.uc_algo){
     case AUI_DSC_ALGO_CSA:dsc->attr.ul_key_len=8*8;
             if(uiOddKeyLength>8||uiEvenKeyLength>8){ NGLOG_ERROR("CSA.NGL_INVALID_PARA");return NGL_INVALID_PARA;}
-            dsc->attr.puc_iv_ctr=NULL;break;
+            dsc->attr.puc_iv_ctr=NULL;
+            if(pOddKey){
+                pk=(BYTE*)pOddKey;
+                pk[3]=pk[0]+pk[1]+pk[2];
+                pk[7]=pk[4]+pk[5]+pk[6];
+            }
+            if(pEvenKey){
+                pk=(BYTE*)pEvenKey;
+                pk[3]=pk[0]+pk[1]+pk[2];
+                pk[7]=pk[4]+pk[5]+pk[6];
+            }
+            break;
     case AUI_DSC_ALGO_AES:dsc->attr.ul_key_len=16*8;
             if(uiOddKeyLength>16||uiEvenKeyLength>16){NGLOG_ERROR("AES.NGL_INVALID_PARA");return NGL_INVALID_PARA;}
             dsc->attr.puc_iv_ctr=dsc->iv;

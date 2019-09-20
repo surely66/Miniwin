@@ -4,8 +4,9 @@
 #include <va_os.h>
 #include <net/if.h>
 #include <errno.h>
-#define TRACE(a)
-
+#include <ngl_types.h>
+#include <ngl_log.h>
+NGL_MODULE(VAHTTP)
 typedef struct _sVA_HTTP_Request
 {
     CURL                    * curl;
@@ -20,7 +21,7 @@ typedef struct _sVA_HTTP_Request
 static tVA_HTTP_NetworkStateNotifyFn g_pfVA_HTTP_NetworkStateNotify = NULL;
 static size_t _WriteMemoryCbk(void *contents, size_t size, size_t nmemb, void *userp);
 static void * _VA_HTTP_RequestThread(void * param);
-
+#define TRACE(x) NGLOG_DEBUG(x)
 struct ethtool_value 
 {
     __uint32_t cmd;
@@ -45,27 +46,36 @@ static int detect_eth_cable(char *ifname){
     err = ioctl(fd, 0x8946, &ifr);
     return(edata.data==1 ? 1:0);
 }
+
+static INT lastState=-1;
 static INT CheckETH(DWORD data){
-    static INT lastState=-1;
     int isUP=detect_eth_cable("eth0");
     if( (isUP!=lastState) && g_pfVA_HTTP_NetworkStateNotify){
+        NGLOG_DEBUG("CheckETH isUp=%d",isUP);
         g_pfVA_HTTP_NetworkStateNotify(isUP);
-        printf("CheckETH isUp=%d\r\n",isUP);
     }
     lastState=isUP;
 }
+
+void CURL_Init(){
+    static int CURL_INITED=0;
+    if(0==CURL_INITED){
+        NGLOG_DEBUG("===========CURL_Init===============");
+        CURL_INITED++;
+        curl_global_init(CURL_GLOBAL_ALL);
+        VA_OS_StartPeriodicCall(1000,CheckETH,0);
+    }
+}
 BOOL VA_HTTP_Init(tVA_HTTP_NetworkStateNotifyFn pfVA_HTTP_NetworkStateNotify)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     g_pfVA_HTTP_NetworkStateNotify = pfVA_HTTP_NetworkStateNotify;
-    curl_global_init(CURL_GLOBAL_ALL);
-    VA_OS_StartPeriodicCall(1000,CheckETH,0);
-    return TRUE;
+    return lastState==1;
 }
 
 void VA_HTTP_Terminate(void)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     g_pfVA_HTTP_NetworkStateNotify = NULL;
     //g_VA_HTTP_NetworkIsUp          = TRUE;
     curl_global_cleanup();
@@ -73,7 +83,7 @@ void VA_HTTP_Terminate(void)
 
 tVA_HTTP_HANDLE VA_HTTP_CreateRequest(void)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = NULL;
     CURL * curl;
     curl = curl_easy_init();
@@ -97,7 +107,7 @@ tVA_HTTP_HANDLE VA_HTTP_CreateRequest(void)
 
 INT VA_HTTP_DeleteRequest(tVA_HTTP_HANDLE hHttpHandle)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (request == NULL)
         return kVA_HTTP_INVALID_HANDLE;
@@ -138,6 +148,7 @@ INT VA_HTTP_DoRequest(tVA_HTTP_HANDLE hHttpHandle, const char * szUri,
 {
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     pthread_t thread;
+    NGLOG_VERBOSE("uri=%s",szUri);
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
     if (!szUri || !pfVA_HTTP_ReceiveNotifyCbk)
@@ -207,7 +218,7 @@ static void * _VA_HTTP_RequestThread(void * param)
 
 INT VA_HTTP_SetHeader(tVA_HTTP_HANDLE hHttpHandle, const char * szHeader)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("Header=%s",szHeader);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!szHeader)
         return kVA_HTTP_INVALID_PARAMETER;
@@ -219,7 +230,7 @@ INT VA_HTTP_SetHeader(tVA_HTTP_HANDLE hHttpHandle, const char * szHeader)
 
 INT VA_HTTP_ResetHeaders(tVA_HTTP_HANDLE hHttpHandle)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -231,7 +242,7 @@ INT VA_HTTP_ResetHeaders(tVA_HTTP_HANDLE hHttpHandle)
 
 INT VA_HTTP_SetCookiePersistence(tVA_HTTP_HANDLE hHttpHandle)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -242,7 +253,7 @@ INT VA_HTTP_SetCookiePersistence(tVA_HTTP_HANDLE hHttpHandle)
 
 INT VA_HTTP_SetCookieList(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_StrList *pCookieList)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -266,7 +277,7 @@ INT VA_HTTP_SetCookieList(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_StrList *pCookie
 
 INT VA_HTTP_SetMethod(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_RequestMethod eMethod)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request) return kVA_HTTP_INVALID_HANDLE;
     switch(eMethod)
@@ -280,7 +291,7 @@ INT VA_HTTP_SetMethod(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_RequestMethod eMetho
 
 INT VA_HTTP_SetPostData(tVA_HTTP_HANDLE hHttpHandle, const BYTE * pData, UINT32 uiLength, BOOL bCopyData)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
    tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request) return kVA_HTTP_INVALID_HANDLE;
     if (!pData != !uiLength) return kVA_HTTP_INVALID_PARAMETER;
@@ -298,7 +309,7 @@ INT VA_HTTP_SetPostData(tVA_HTTP_HANDLE hHttpHandle, const BYTE * pData, UINT32 
 
 INT VA_HTTP_SetTimeout(tVA_HTTP_HANDLE hHttpHandle, UINT32 uiNbSeconds)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -308,7 +319,7 @@ INT VA_HTTP_SetTimeout(tVA_HTTP_HANDLE hHttpHandle, UINT32 uiNbSeconds)
 
 INT VA_HTTP_SetTcpKeepAlive(tVA_HTTP_HANDLE hHttpHandle, UINT32 uiNbSeconds)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -326,7 +337,7 @@ INT VA_HTTP_SetTcpKeepAlive(tVA_HTTP_HANDLE hHttpHandle, UINT32 uiNbSeconds)
 
 INT VA_HTTP_GetResponseData(tVA_HTTP_HANDLE hHttpHandle, BYTE ** ppData, UINT32 * pLength)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request) return kVA_HTTP_INVALID_HANDLE;
     if (!ppData || !pLength) return kVA_HTTP_INVALID_PARAMETER;
@@ -344,7 +355,7 @@ INT VA_HTTP_GetResponseData(tVA_HTTP_HANDLE hHttpHandle, BYTE ** ppData, UINT32 
 
 INT VA_HTTP_ReleaseBuffer(void * pBuffer)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     if (!pBuffer)
         return kVA_HTTP_INVALID_PARAMETER;
     free(pBuffer);
@@ -353,7 +364,7 @@ INT VA_HTTP_ReleaseBuffer(void * pBuffer)
 
 INT VA_HTTP_GetResponseCode(tVA_HTTP_HANDLE hHttpHandle, UINT32 * pCode)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -365,7 +376,7 @@ INT VA_HTTP_GetResponseCode(tVA_HTTP_HANDLE hHttpHandle, UINT32 * pCode)
 
 INT VA_HTTP_GetCookieList(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_StrList **ppCookieList)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     tVA_HTTP_Request * request = (tVA_HTTP_Request *)hHttpHandle;
     if (!request)
         return kVA_HTTP_INVALID_HANDLE;
@@ -378,7 +389,7 @@ INT VA_HTTP_GetCookieList(tVA_HTTP_HANDLE hHttpHandle, tVA_HTTP_StrList **ppCook
 
 INT VA_HTTP_ReleaseStrList(tVA_HTTP_StrList * pList)
 {
-    printf("%s\r\n",__FUNCTION__);
+    NGLOG_VERBOSE("%s",__FUNCTION__);
     if (!pList)
         return kVA_HTTP_INVALID_PARAMETER;
     curl_slist_free_all((struct curl_slist *)pList);

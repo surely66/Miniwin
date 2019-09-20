@@ -12,12 +12,27 @@ NGL_MODULE(PVR)
 static unsigned char*pvr_buffer=NULL;
 static opened_pvr=0;
 typedef struct{
+    PVR_CALLBACK cbk;
+    void*data;
+}CBKDATA;
+
+#define MAX_NOTIFIER 4 
+typedef struct{
    aui_hdl hdl;
    char path[256];
+   CBKDATA Notifiers[MAX_NOTIFIER];
 }NGLPVR;
-#define MAX_PVR 8
+#define MAX_PVR 2
 static NGLPVR PVRS[MAX_PVR];
 static NGLPVR PLAYERS[MAX_PVR];
+static void NOTIFY(NGLPVR*pvr,UINT evt){
+   int i;
+   for(i=0;i<MAX_NOTIFIER;i++){
+       if(pvr->Notifiers[i].cbk){
+             pvr->Notifiers[i].cbk(pvr,evt,pvr->Notifiers[i].data);
+       }
+   }
+}
 DWORD nglPvrInit(){
     unsigned int pvr_buffer_len = 20*1024*1024;
     if(NULL!=pvr_buffer){//already inited
@@ -37,7 +52,7 @@ DWORD nglPvrInit(){
     param.ac3_decode_support = 1;
     param.continuous_tms_en = 0;
     param.debug_level   = AUI_PVR_DEBUG_ALL;
-    STRCPY(param.dvr_path_prefix,"NGLDVR/");
+    STRCPY(param.dvr_path_prefix,"ALIDVRS2/");
     STRCPY(param.info_file_name,"info.dvr");	
     STRCPY(param.info_file_name_new,"info3.dvr");
     STRCPY(param.ts_file_format,"dvr");	
@@ -59,7 +74,7 @@ DWORD nglPvrInit(){
 
     aui_pvr_disk_attach_info dap;
     memset(&dap, 0, sizeof(aui_pvr_disk_attach_info));
-    strcpy(dap.mount_name,"/mnt/nfs");//"/mnt/usb/sda1");
+    strcpy(dap.mount_name,"/mnt/usb/sda1");
     dap.disk_mode=0;//USB MODE 1-IDE MODE
     dap.disk_usage = AUI_PVR_REC_AND_TMS_DISK;
     dap.sync = 1;
@@ -77,17 +92,17 @@ static void ali_aui_pvr_callback(aui_hdl handle, unsigned int msg_type, unsigned
     aui_pvr_rec_item_info rec_info;
     NGLOG_VERBOSE("handle=%p msg_type=%d msg_code=%x %s",handle,msg_type,msg_code,pvr->path);
     switch(msg_type){
-    case AUI_EVNT_PVR_END_DATAEND:
-    case AUI_EVNT_PVR_END_DISKFULL:
-    case AUI_EVNT_PVR_END_TMS:
-    case AUI_EVNT_PVR_END_REVS:
-    case AUI_EVNT_PVR_END_WRITEFAIL:
-    case AUI_EVNT_PVR_END_READFAIL:
-    case AUI_EVNT_PVR_TMS_OVERLAP:
-    case AUI_EVNT_PVR_STATUS_UPDATE:/*13*/ break;
+    case AUI_EVNT_PVR_END_DATAEND: break;
+    case AUI_EVNT_PVR_END_DISKFULL:NOTIFY(pvr,NGL_PVR_DISKFULL);break;
+    case AUI_EVNT_PVR_END_TMS:     
+    case AUI_EVNT_PVR_END_REVS:     break;
+    case AUI_EVNT_PVR_END_WRITEFAIL:NOTIFY(pvr,NGL_PVR_WRITE_FAIL);break;
+    case AUI_EVNT_PVR_END_READFAIL :NOTIFY(pvr,NGL_PVR_READ_FAIL);break;
+    case AUI_EVNT_PVR_TMS_OVERLAP:  break;
+    case AUI_EVNT_PVR_STATUS_UPDATE:/*13*/NOTIFY(pvr,NGL_PVR_UPDATE); break;
     case AUI_EVNT_PVR_STATUS_FILE_CHG:
-    case AUI_EVNT_PVR_STATUS_PID_CHG:
-    case AUI_EVNT_PVR_SPEED_LOW:
+    case AUI_EVNT_PVR_STATUS_PID_CHG:break;
+    case AUI_EVNT_PVR_SPEED_LOW:  NOTIFY(pvr,NGL_PVR_SPEED_LOW);break;
     case AUI_EVNT_PVR_STATUS_CHN_CHG:
     case AUI_EVNT_PVR_MSG_REC_START:/*18*/
     case AUI_EVNT_PVR_MSG_REC_STOP:
@@ -105,14 +120,22 @@ static void ali_aui_pvr_callback(aui_hdl handle, unsigned int msg_type, unsigned
 static unsigned short ali_pvr_get_ts_dsc_handle_callback(unsigned short program_id,aui_hdl *p_dsc_handler){
     aui_hdl hdl;
     if (aui_find_dev_by_idx(AUI_MODULE_DSC,0, &hdl)) {
-        AUI_PRINTF("aui_find_dev_by_idx fault\n");
+        NGLOG_DEBUG("aui_find_dev_by_idx fault");
         return -1;
     }
     *p_dsc_handler = hdl;
     return 0;
 }
+static int ali_pvr_open_csa_sub_device(){
+    aui_hdl hdl;
+    if (aui_find_dev_by_idx(AUI_MODULE_DSC,0, &hdl)) { //Don't need open a unused DSC.
+        NGLOG_DEBUG("cannot find dsc device, ready to open it");
+        return 1;
+    }
+    NGLOG_DEBUG("find the used CSA device");
+    return 0;
+}
 
-static char lastPVR[512];
 
 DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
     unsigned int rc, i = 0;
@@ -155,21 +178,34 @@ DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
            NGLOG_DEBUG("audiopid[%d]=%d type=%d",idx,param->audio_pids[i],param->audio_types[i]);
            st_arp.pid_info.audio_count++;
         }
+        idx=st_arp.pid_info.ecm_pid_count;
+        if((param->ecm_pids[idx]!=NGL_INVALID_PID)&&(param->ecm_pids[i]!=0)){
+            st_arp.pid_info.ecm_pids[idx]=param->ecm_pids[i];
+            st_arp.pid_info.ecm_pid_count++;
+        }
     }
-
-    st_arp.ca_mode=0;//0--free 1 ca scrambled
-    st_arp.rec_type = AUI_PVR_REC_TYPE_TS;    
-    switch(st_arp.dmx_id){//param->encrypt){
+    st_arp.pid_info.pmt_pid=param->pmt_pid;
+    st_arp.ca_mode=st_arp.pid_info.ecm_pid_count?1:0;//0--free 1 ca scrambled
+    st_arp.rec_type = AUI_PVR_REC_TYPE_TS; 
+    switch(param->encrypt){
     case 0:
          st_arp.is_reencrypt = 0;
          st_arp.rec_special_mode = AUI_PVR_NONE;
          st_arp.is_scrambled = 0;
          break;
-    case 1:
+    case 4:
+         st_arp.is_reencrypt = 0;
+	 st_arp.rec_special_mode = AUI_PVR_NONE;//AUI_RSM_GEN_CA_MULTI_RE_ENCRYPTION;
+	 st_arp.is_scrambled = 1;
+         break;
+    case 6:
          st_arp.is_reencrypt = 1;
-	 st_arp.rec_special_mode = AUI_RSM_GEN_CA_MULTI_RE_ENCRYPTION;
+	 st_arp.rec_special_mode = AUI_PVR_VMX_MULTI_RE_ENCRYPTION;;
 	 st_arp.is_scrambled = 0;
-         //ali_pvr_open_csa_sub_device();
+         break;
+    }
+    if(param->encrypt==4){
+         ali_pvr_open_csa_sub_device();
          //init_pvr_encrypt_mode(AUI_PVR_VMX_MULTI_RE_ENCRYPTION);
          config.special_mode = st_arp.rec_special_mode;
    	 aui_ca_pvr_init_ext(&config);
@@ -177,8 +213,8 @@ DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
          ca_pvr_callback.fp_pure_data_callback = NULL;
  	 ca_pvr_callback.fp_ts_callback = ali_pvr_get_ts_dsc_handle_callback;
 	 aui_ca_register_callback(&ca_pvr_callback);
-         break;
     }
+
     if(NULL==record_path){
         char fname[64];
         NGL_TIME tnow;
@@ -186,13 +222,13 @@ DWORD nglPvrRecordOpen(const char*record_path,const NGLPVR_RECORD_PARAM*param){
         nglGetTime(&tnow);
         nglTimeToTm(&tnow,&tmn);
         sprintf(fname,"PVR_%d-%d-%d_%02d%02d%02d",1900+tmn.uiYear,tmn.uiMonth,tmn.uiMonthDay,tmn.uiHour,tmn.uiMin,tmn.uiSec);
-        strcpy(st_arp.folder_name,fname);      
+        strcpy(st_arp.folder_name,fname);
+        record_path=st_arp.folder_name;      
     }else{
         NGLOG_INFO("record_path=%s",record_path);
         strcpy(st_arp.folder_name,record_path);
         NGLOG_INFO("st_arp.folder_name=%s",st_arp.folder_name);
     }
-    strcpy(lastPVR,st_arp.folder_name);
     rc=aui_pvr_rec_open(&st_arp,&aui_pvr_handler);
     if( (0==rc) && NULL!=pvr ){ 
         pvr->hdl=aui_pvr_handler;
@@ -215,6 +251,19 @@ DWORD nglPvrRecordPause(DWORD handler){
     return NGL_OK;
 }
 
+DWORD nglPvrRecordRegisterCallBack(DWORD handler,PVR_CALLBACK cbk,void*data){
+    int i;
+    NGLPVR*pvr=(NGLPVR*)handler;
+    if(pvr<PVRS||pvr>=&PVRS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
+    for(i=0;i<MAX_NOTIFIER;i++){
+         if(pvr->Notifiers[i].cbk==NULL){
+              pvr->Notifiers[i].cbk=cbk;
+              pvr->Notifiers[i].data=data;
+              break;
+         }
+    }
+}
+
 DWORD nglPvrRecordResume(DWORD handler){
     UINT duration;
     NGLPVR*pvr=(NGLPVR*)handler;
@@ -231,8 +280,10 @@ DWORD nglPvrRecordClose(DWORD handler){
     if(pvr<PVRS||pvr>=&PVRS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
 
     rc= aui_pvr_rec_close(pvr->hdl,1);
+    --opened_pvr;
+    NGLOG_DEBUG("aui_pvr_rec_close=%d hdl=%p/%p opened_pvr=%d",rc,pvr,pvr->hdl,opened_pvr);
     pvr->hdl=NULL;
-    opened_pvr--;
+    memset(pvr->Notifiers,0,sizeof(pvr->Notifiers));
     NGLOG_DEBUG("aui_pvr_rec_close %p=%d opened_pvr=%d",handler,rc,opened_pvr);
     return (AUI_RTN_SUCCESS==rc)?NGL_OK:NGL_ERROR;
 }
@@ -241,7 +292,7 @@ void nglGetPvrPath(DWORD handler,char*path){
     NGLPVR*pvr=(NGLPVR*)handler;
     if(pvr<PVRS||pvr>=&PVRS[MAX_PVR])return NGL_ERROR;
     NGLOG_DEBUG("handle=%p",handler);
-    strcpy(path,"/mnt/nfs/NGLDVR/");
+    strcpy(path,"/mnt/usb/sda1/ALIDVRS2/");
     strcat(path,pvr->path);
 }
 
@@ -264,13 +315,12 @@ DWORD nglPvrPlayerOpen(const char*pvrpath){
     nglPvrInit();
     nglAvStop(0);
     if(NULL==pvrpath){
-        strcpy(st_app.path,"/mnt/nfs/NGLDVR/");
-        strcat(st_app.path,lastPVR);
+        strcpy(st_app.path,"/mnt/usb/sda1/ALIDVRS2/");
     }else
         strcpy(st_app.path,pvrpath);//"/mnt/uda1/ALIDVRS2/[TS]2013-11-01-13-32-30");
     st_app.preview_mode =0;
     st_app.speed  = AUI_PVR_PLAY_SPEED_1X;
-    st_app.start_mode = 4;
+    st_app.start_mode = AUI_P_OPEN_FROM_HEAD;
     st_app.start_pos =0 ;
     st_app.start_time =0;
     st_app.state = AUI_PVR_PLAY_STATE_PLAY;
@@ -289,8 +339,16 @@ DWORD nglPvrPlayerOpen(const char*pvrpath){
 DWORD nglPvrPlayerPlay(DWORD handle){
     NGLPVR*pvr=(NGLPVR*)handle;
     if(pvr<PLAYERS||pvr>=&PLAYERS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
-    int ret=aui_pvr_ply_state_change((aui_hdl)handle,AUI_PVR_PLAY_STATE_PLAY,0); 
+    int ret=aui_pvr_ply_state_change(pvr->hdl,AUI_PVR_PLAY_STATE_PLAY,0); 
     NGLOG_DEBUG("aui_pvr_ply_state_change=%d handle=%p",ret,handle);
+    return ret==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
+}
+
+DWORD nglPvrPlayerGetTime(DWORD handle,DWORD*duration){
+    int ret;
+    NGLPVR*pvr=(NGLPVR*)handle;
+    if(pvr<PLAYERS||pvr>=&PLAYERS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
+    ret=aui_pvr_get(pvr->hdl,AUI_PVR_ITEM_DURATION,duration,0,0);
     return ret==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
 }
 
@@ -307,6 +365,13 @@ DWORD nglPvrPlayerPause(DWORD handle){
     if(pvr<PLAYERS||pvr>=&PLAYERS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
     int ret=aui_pvr_ply_state_change(pvr->hdl,AUI_PVR_PLAY_STATE_PAUSE,0);
     NGLOG_DEBUG("aui_pvr_play_state_chage=%d handle=%p",ret,handle);
+    return ret==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
+}
+
+DWORD nglPvrPlayerResume(DWORD handle){
+    NGLPVR*pvr=(NGLPVR*)handle;
+    if(pvr<PLAYERS||pvr>=&PLAYERS[MAX_PVR]||NULL==pvr->hdl)return NGL_INVALID_PARA;
+    int ret=aui_pvr_ply_state_change(pvr->hdl,AUI_PVR_PLAY_STATE_PLAY,0);
     return ret==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
 }
 

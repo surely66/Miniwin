@@ -151,10 +151,10 @@ INT VA_DMX_StartSectionFilter(DWORD  dwStbFilterHandle)
   DMXFILTER*flt=(DMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
   NGLOG_VERBOSE("flt=%p vahdl=%p/%p",flt,flt->vaHandle,flt->handle);
-  if((flt->handle==0)||(flt->vaHandle==kVA_ILLEGAL_HANDLE)){NGLOG_DEBUG("return -1");
-      return kVA_INVALID_PARAMETER;}
-  if(!(flt->state&FILTER_SETTED)){NGLOG_DEBUG("%x",kVA_SET_FILTER_PARAMETERS_FIRST);
-      return kVA_SET_FILTER_PARAMETERS_FIRST;}
+  if((flt->handle==0)||(flt->vaHandle==kVA_ILLEGAL_HANDLE))
+      return kVA_INVALID_PARAMETER;
+  if(!(flt->state&FILTER_SETTED))
+      return kVA_SET_FILTER_PARAMETERS_FIRST;
   if(flt->state&FILTER_STARTED)
       return kVA_OK;
   flt->state|=FILTER_STARTED;

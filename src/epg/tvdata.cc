@@ -140,7 +140,8 @@ int DtvLoadProgramsData(const char*fname){
             default:NGLOG_ERROR("unknown tableid %x",sec[0]);
             }
         }while(!feof(f));
-        NGLOG_DEBUG("load ts %d.%d freq:%d sdt.size=%d pmt.size=%d",ts.netid,ts.tsid,ts.tune.u.s.frequency,ts.sdt.size(),ts.pmt.size());
+        NGLOG_DEBUG("load ts %d.%d deliverytype=%d tpid=%d freq:%d sdt.size=%d pmt.size=%d",ts.netid,ts.tsid,
+             ts.tune.delivery_type,ts.tune.u.s.tpid,ts.tune.u.s.frequency,ts.sdt.size(),ts.pmt.size());
         gStreams.push_back(ts);
     }
     do{
@@ -180,12 +181,14 @@ int DtvSaveProgramsData(const char*fname){
     return gStreams.size();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+#define ISDVBS(x) (((x)==DELIVERY_S)||((x)==DELIVERY_S2))
 INT DtvGetTPByService(const SERVICELOCATOR*loc,TRANSPONDER*tp){
     memset(tp,0,sizeof(NGLTunerParam));
     for(auto t:gStreams){
-         if(t.netid==loc->netid&&t.tsid==loc->tsid){
+         if( (t.netid==loc->netid) &&(t.tsid==loc->tsid) &&
+            ((ISDVBS(t.tune.delivery_type)&&(t.tune.u.s.tpid==loc->tpid))||!ISDVBS(t.tune.delivery_type))){
              *tp=t.tune;
+             NGLOG_DEBUG("%d.%d.%d.%d freq=%d tpid=%d type=%d",loc->netid,loc->tsid,loc->sid,loc->tpid,tp->u.s.frequency,tp->delivery_type,tp->u.s.tpid);
              return NGL_OK;
          }
     }
@@ -228,18 +231,20 @@ INT DtvEnumTSService(const STREAMDB&ts,DTV_SERVICE_CBK cbk,void*userdata){
             DVBService svcs[32];
             loc.netid=sdt.getNetId();
             loc.tsid=sdt.getStreamId();
+            loc.tpid=ISDVBS(ts.tune.delivery_type)?ts.tune.u.s.tpid:0xFFFF;
             int cnt=sdt.getServices(svcs,false);
             NGLOG_VERBOSE("service count=%d",cnt);
             for(int i=0;i<cnt;i++){
                 svcs[i].getServiceName(sname);
                 loc.sid=svcs[i].service_id;
-                NGLOG_VERBOSE("%d.%d.%d  %s",loc.netid,loc.tsid,loc.sid,sname);
+                NGLOG_VERBOSE("%d.%d.%d.%d  %s",loc.netid,loc.tsid,loc.sid,loc.tpid,sname);
                 rc+=(0!=cbk(&loc,svcs+i,userdata));
             }
         }
     }else if( ts.pat.size() && ts.pmt.size() ){
         PAT pat(ts.pat.front());
         loc.tsid=pat.getStreamId();
+        loc.tpid=ISDVBS(ts.tune.delivery_type)?ts.tune.u.s.tpid:0xFFFF;
         for(auto itr_pmt:ts.pmt){
             PMT pmt(itr_pmt);
             loc.sid=pmt.getProgramNumber();

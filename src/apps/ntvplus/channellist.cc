@@ -152,7 +152,7 @@ int ChannelsWindow::loadServices(UINT favid){
           DtvGetServiceItem(&svc,SKI_LCN,&lcn);
           ch->setValue(lcn);
           ch->isHD=ISHDVIDEO(info->serviceType);
-          NGLOG_VERBOSE("    %d:%s  %p hd=%d type=%d",i,name,info,ch->isHD,info->serviceType);
+          NGLOG_VERBOSE("    %d %d.%d.%d.%d:%s  %p hd=%d type=%d",i,svc.netid,svc.tsid,svc.sid,svc.tpid,name,info,ch->isHD,info->serviceType);
           chlst->addItem(ch);
           if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
              chlst->setIndex(i);

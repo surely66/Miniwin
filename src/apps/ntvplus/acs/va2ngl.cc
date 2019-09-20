@@ -35,7 +35,6 @@ static INT SectionCBK(DWORD dwVaFilterHandle,UINT32 uiBufferLength,BYTE *pBuffer
         }
     }
 }
-static DWORD filter_pat,filter_sdt,filter_eit;
 static void*ACSProc(void*p){
     int i,ret;
     tVA_CTRL_ConfigurationParameters param;
@@ -53,9 +52,6 @@ static void*ACSProc(void*p){
     for(i=0;i<3;i++)
         VA_CTRL_OpenAcsInstance(i,(tVA_CTRL_AcsMode)i);
     CreateFilter(1,1,1);
-    filter_pat=CreateFilter(0,1,0);//pat
-    filter_sdt=CreateFilter(0x11,1,0x42);
-    filter_eit=CreateFilter(0x12,1,0x4E);
 
     VA_CTRL_Start();
     NGLOG_DEBUG("VA_CTRL_Start...end");
@@ -104,15 +100,16 @@ static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,void*userdata){
     VA_CTRL_SwitchOffProgram(0);
     VA_CTRL_SwitchOffProgram(1);
     NGLOG_DUMP("PMT",buffer,8);
+    for(i=0;i<32&&lastpids[i]!=0;i++){
+        VA_CTRL_RemoveStream(lastpids[i]);
+    }
     VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
     VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
-    for(i=0;i<32&&lastpids[i]!=0;i++)
-        VA_CTRL_RemoveStream(lastpids[i]);
     ne=pmt.getElements(es,false);
     memset(lastpids,0,sizeof(lastpids));
     NGLOG_DEBUG("DtvGetServicePmt=%d PLAY %d.%d.%d pmtlen=%d  %d elements",rc,svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),ne);
     for(i=0;i<ne;i++){
-        NGLOG_VERBOSE("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
+        NGLOG_DEBUG("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
         VA_CTRL_AddStream(0,es[i].pid,es[i].pid,NULL);
         VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
         lastpids[i]=es[i].pid;

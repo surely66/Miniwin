@@ -37,9 +37,8 @@ DVBApp::DVBApp(int argc,const char**argv)
     setOpacity(200);//getArgAsInt("alpha",255));    
     nglDispSetResolution(res);
     StartACS();    
-    google_breakpad::MinidumpDescriptor descriptor("/tmp");
-    eh=new google_breakpad::ExceptionHandler(descriptor, NULL, DumpCallback,
-                                       NULL, true, -1);
+    //google_breakpad::MinidumpDescriptor descriptor("/tmp");
+    //eh=new google_breakpad::ExceptionHandler(descriptor, NULL, DumpCallback,NULL, true, -1);
 }
 
 }//namespace

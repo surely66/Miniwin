@@ -16,69 +16,66 @@
 NGL_MODULE(ACSOS)
 
 //typedef pthread_mutex_t tVA_OS_Mutex;
-#define SET_SEMFLAG(x,v) (*(UINT32*)(((BYTE*)x)+sizeof(sem_t)))=v
-#define GET_SEMFLAG(x)   *(UINT32*)(((BYTE*)x)+sizeof(sem_t))
-
-#define SEM_INITED  0xFFFFFFFE
-#define SEM_DELETED 0xFFFFFFFF
 INT VA_OS_InitializeSemaphore(tVA_OS_Semaphore * const pSemaphore, UINT32 uiValue )
 {
   NGLOG_VERBOSE("%s: pSemaphore=%p\r\n",__FUNCTION__,pSemaphore);
-  if(pSemaphore){
-      sem_init((sem_t*)pSemaphore,0,uiValue);
-      SET_SEMFLAG(pSemaphore,SEM_INITED);
+  if(pSemaphore!=NULL){
+      sem_t *sem=malloc(sizeof(sem_t));
+      if(0!=sem_init(sem,1,uiValue))
+          return kVA_INVALID_PARAMETER;//SET_SEMFLAG(pSemaphore,SEM_INITED);
+      else{ 
+          *pSemaphore[0] = sem;
+		  return kVA_OK;
+      }
   }
-  return pSemaphore?kVA_OK:kVA_INVALID_PARAMETER;
+  return kVA_INVALID_PARAMETER;
 }
 
 INT VA_OS_DeleteSemaphore(tVA_OS_Semaphore * const pSemaphore)
 {
   NGLOG_VERBOSE("%s: pSemaphore=%p  \r\n",__FUNCTION__,pSemaphore);
-  if(pSemaphore){
+  if(pSemaphore!=NULL &&(*pSemaphore[0]!=0)){
       int ret;
-      if(GET_SEMFLAG(pSemaphore)==SEM_INITED){
-         ret=sem_destroy((sem_t*)pSemaphore);
-         SET_SEMFLAG(pSemaphore,SEM_DELETED);
-         return ret==0?kVA_OK:kVA_INVALID_PARAMETER;
-      }
-      return kVA_INVALID_PARAMETER;
-  }
-  return pSemaphore?kVA_OK:kVA_INVALID_PARAMETER;
+      sem_t*sem=*pSemaphore[0];
+	  if(0!=sem_destroy(sem))
+          return kVA_INVALID_PARAMETER;
+      else{
+	      *pSemaphore[0]=0;
+		  return kVA_OK;
+	  } 
+  }else
+   return kVA_INVALID_PARAMETER;
+
 }
 #define VA_INVALID_DURATION 0x87654321
 INT VA_OS_AcquireSemaphore(tVA_OS_Semaphore * const pSemaphore, UINT32 uiDuration )
 {
-  struct timespec to;
-  clock_gettime(CLOCK_REALTIME, &to);
-  to.tv_sec+=uiDuration/1000;
-  to.tv_nsec+=(uiDuration%1000)*1000000;
   //NGLOG_VERBOSE("%s: pSemaphore=%p duration=0x%x\r\n",__FUNCTION__,pSemaphore,uiDuration);
-  if(pSemaphore!=NULL){
-      int ret;
-      if(VA_INVALID_DURATION==uiDuration)
-            return kVA_INVALID_PARAMETER;
-      if(GET_SEMFLAG(pSemaphore)==SEM_INITED){
-            ret=sem_timedwait((sem_t*)pSemaphore,&to);
-            if(GET_SEMFLAG(pSemaphore)==SEM_DELETED)
-                 return kVA_OK;
-            return ret==0?kVA_OK:kVA_INVALID_PARAMETER;
-      }
-      return kVA_INVALID_PARAMETER;
+  if((pSemaphore!=NULL)&&(*pSemaphore[0]!=0)){
+      sem_t*sem=*pSemaphore[0];
+      if(kVA_OS_WAIT_FOREVER==uiDuration){
+          if(sem!=0xFFFFFFFF){
+              return (0==sem_wait(sem))?kVA_OK:kVA_INVALID_PARAMETER;
+          }else
+              return kVA_INVALID_PARAMETER;
+	  }else{
+	       return kVA_INVALID_PARAMETER;
+	  } 
+	  return kVA_INVALID_PARAMETER;
   }
-  return pSemaphore?kVA_OK:kVA_INVALID_PARAMETER;
+  return kVA_INVALID_PARAMETER;
 }
 
 
 INT VA_OS_ReleaseSemaphore(tVA_OS_Semaphore * const pSemaphore )
 {
-  sem_t sem;
   //NGLOG_VERBOSE("%s: pSemaphore=%p\r\n",__FUNCTION__,pSemaphore);
-  if(pSemaphore){
-      if(GET_SEMFLAG(pSemaphore)==SEM_INITED)
-          return sem_post((sem_t*)pSemaphore)==0?kVA_OK:kVA_INVALID_PARAMETER;
-      return kVA_INVALID_PARAMETER;
+  if((pSemaphore!=NULL)&&(*pSemaphore[0]!=0)){
+      sem_t*sem=*pSemaphore[0];
+      if(0!=sem_post(sem))return kVA_INVALID_PARAMETER;
+      else return kVA_OK;
   }
-  return pSemaphore?kVA_OK:kVA_INVALID_PARAMETER;
+  return kVA_INVALID_PARAMETER;
 }
 
  VA_OS_InitializeMutex(tVA_OS_Mutex * const pMutex)

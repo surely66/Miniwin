@@ -185,7 +185,7 @@ int PVRWindow::loadSchedules(const std::string path){
 Window*CreatePVRWindow(){
     PVRWindow*w=new PVRWindow(0,0,1280,720);
     w->setText("TV Records");
-    w->loadPVR("/mnt/usb/sda1/NGLDVR");
+    w->loadPVR("/mnt/usb/sda1/ALIDVRS2");
     w->show();
     return w;
 }

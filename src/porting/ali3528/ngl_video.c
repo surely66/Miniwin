@@ -8,7 +8,7 @@
 #include <ngl_log.h>
 #include <ngl_disp.h>
 #include <ngl_snd.h>
-
+#include <string.h>
 NGL_MODULE(AV)
 
 typedef struct{

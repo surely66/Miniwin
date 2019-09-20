@@ -93,9 +93,8 @@ INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration )
   pthread_mutex_unlock(&s->mtx);
   return NGL_OK;
 #else
-  aui_os_sem_wait((aui_hdl)pSemaphore,uiDuration)==AUI_RTN_SUCCESS;
+  return aui_os_sem_wait((aui_hdl)pSemaphore,uiDuration)==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
 #endif
-  return 0;
 }
 
 
