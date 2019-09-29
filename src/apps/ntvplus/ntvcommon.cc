@@ -50,9 +50,10 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     canvas.set_font_size(50);
     canvas.move_to(xx,0);
     canvas.line_to(xx,getHeight());
+    canvas.rectangle(rect.x,rect.y,rect.width,rect.height);
     canvas.stroke();
     rect.x=xx+8;
-    canvas.draw_text(rect,title); 
+    canvas.draw_text(rect,title,DT_LEFT|DT_VCENTER); 
 
     time_t tnow=time(NULL); 
     struct tm tmnow;

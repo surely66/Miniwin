@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
+#include <stdarg.h>
 #include <ngl_types.h>
 #include <ngl_os.h>
 #include <ngl_dmx.h>
@@ -149,8 +150,21 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
     }
 }
 
-static DWORD CreateFilter(USHORT pid,BYTE*mask,BYTE*match,int masklen,void*param,bool start=true){
-    DWORD flt=nglAllocateSectionFilter(0,pid,SectionCBK,param,NGL_DMX_SECTION);
+static DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...){
+    DWORD flt=nglAllocateSectionFilter(0,pid,cbk,param,NGL_DMX_SECTION);
+    BYTE mask[16],match[16];
+    va_list ap;
+    int i,idx;
+    va_start(ap,start);
+    bzero(mask,sizeof(mask));
+    bzero(match,sizeof(match));
+    for(i=0,idx=0;i<masklen;i++){
+        int v=va_arg(ap,int);
+        mask[idx]=(v>>8)&0xFF;
+        match[idx]=v&0xFF;
+        idx+=((i==0)*2+1);
+    }
+    if(masklen>1)masklen+=2;
     nglSetSectionFilterParameters(flt,mask,match,masklen);
     if(start)nglStartSectionFilter(flt);
     return flt;
@@ -168,7 +182,6 @@ static void TunningCBK(INT tuneridx,INT lockedState,void*param){
 static void  SearchProc(void*p)
 {
     STREAMDB ts;
-    BYTE mask[8]={0xFF},match[8];
     INT program_count=0;
     INT tunningIndex=0;
     INT searchByNIT=0;
@@ -177,10 +190,8 @@ static void  SearchProc(void*p)
     struct timeval timeStart,timeEnd;//PSI/SI StartEnd time of TP search
     std::vector<DWORD>pmtfilters;
     SEARCHNOTIFY*notify=nullptr;
-    match[0]=TBID_PAT;
-    fltPAT=CreateFilter(PID_PAT,mask,match,1,&ts,false);
-    match[0]=TBID_SDT;
-    fltSDT=CreateFilter(PID_SDT,mask,match,1,&ts,false);
+    fltPAT=CreateFilter(PID_PAT,SectionCBK,&ts,false,1,(0xFF00|TBID_PAT));
+    fltSDT=CreateFilter(PID_SDT,SectionCBK,&ts,false,1,(0xFF00|TBID_SDT));
     SECTIONLIST nitsecs;//used for NIT searchtype;
     while(1){
         EPGMSG msg;
@@ -222,8 +233,7 @@ static void  SearchProc(void*p)
                  if(msg.param1){//if frequency is locked
                      NGLOG_DEBUG("recv MSG_LOCK searchByNIT=%d",searchByNIT);
                      if(nitsecs.size()==0&&searchByNIT){
-                         mask[0]=0xFF;match[0]=TBID_NIT;
-                         CreateFilter(PID_NIT,mask,match,1,&nitsecs,true);
+                         CreateFilter(PID_NIT,SectionCBK,&nitsecs,true,1,(0xFF00|TBID_NIT));
                      }else
                          SENDMSG(MSG_SEARCH_TP,0,0);
                  }else{//tuning failed;
@@ -273,10 +283,7 @@ static void  SearchProc(void*p)
                 program_count=pat.getPrograms(maps,0);//dont care nit pid
                 nglStopSectionFilter(msg.param2);
                 for(int i=0;(program_count!=pmtfilters.size())&&(i<program_count);i++){
-                    mask[0]=0xFF;  match[0]=0x02;mask[1]=mask[2]=0;
-                    mask[3]=0xFF;  match[3]=maps[i].program_number>>8;
-                    mask[4]=0xFF;  match[4]=maps[i].program_number&0xFF;
-                    DWORD flt=CreateFilter(maps[i].pmt_pid,mask,match,5,&ts,true);
+                    DWORD flt=CreateFilter(maps[i].pmt_pid,SectionCBK,&ts,true,3,(0xFF00|TBID_PMT),0xFF00|(maps[i].program_number>>8),0xFF00|(maps[i].program_number&0xFF));
                     pmtfilters.push_back(flt);
                     //NGLOG_VERBOSE("\tPATService[%02d] id=%04x pmtpid=0x%04x flt=%x",i,maps[i].program_number,maps[i].pmt_pid,flt);
                 }
@@ -351,8 +358,6 @@ static void  SearchProc(void*p)
 }
 
 int DtvEpgInit(){
-    BYTE mask;
-    BYTE match;
     DWORD thid;
     if(0!=msgQ)
        return 0;
@@ -361,14 +366,11 @@ int DtvEpgInit(){
     nglAvInit();
     msgQ=nglMsgQCreate(10,sizeof(EPGMSG));
 
-    mask=0xC0;match=0x4E;
-    fltEIT=CreateFilter(PID_EIT,&mask,&match,1,(void*)fltEIT,true);
+    fltEIT=CreateFilter(PID_EIT,SectionCBK,(void*)fltEIT,true,1,0xC04E);
 
-    mask=0xFE;  match=TBID_TDT;
-    fltTDT=CreateFilter(PID_TDT,&mask,&match,1,(void*)fltTDT,true);
+    fltTDT=CreateFilter(PID_TDT,SectionCBK,(void*)fltTDT,true,1,(0xFE00|TBID_TDT));
 
-    mask=0xFF;  match=TBID_BAT;
-    fltBAT=CreateFilter(PID_BAT,&mask,&match,1,NULL,true);
+    fltBAT=CreateFilter(PID_BAT,SectionCBK,NULL,true,1,(0xFF00|TBID_BAT));
     nglCreateThread(&thid,0,4096,SearchProc,NULL);
     nglTunerRegisteCBK(0,TunningCBK,NULL);
 }

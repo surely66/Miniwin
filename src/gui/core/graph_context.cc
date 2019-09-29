@@ -139,7 +139,7 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
      set_wordbreaks_utf8((const utf8_t*)text.c_str(),text.length(),"eng",brks);
      const char*ptxt=text.c_str();
      const char*pword=ptxt;
-     TextExtents extents;
+     TextExtents extents,te;
      std::vector<std::string>lines;
      std::string line;
      double x,y;
@@ -175,21 +175,22 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
     //rectangle(rect.x,rect.y,rect.width,rect.height);
     //clip(); 
     if((text_alignment&DT_MULTILINE)==0){
-        TextExtents te;
         get_text_extents(text,te);
         y=rect.y;
         switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.y;break;
-        case DT_VCENTER:y=rect.y+(rect.height-te.height)/2;break;
-        case DT_BOTTOM:y=rect.y+rect.height-te.height;break;
+        case DT_TOP:y=rect.y-te.y_bearing;break;
+        case DT_VCENTER:y=rect.y+(rect.height-te.height)/2-te.y_bearing;break;
+        case DT_BOTTOM:y=rect.y+rect.height-te.height-te.y_bearing;break;
         }
         switch(text_alignment&0x0F){
         case DT_LEFT:x=rect.x;break;
-        case DT_CENTER:x=rect.x+(rect.width-te.width)/2;break;
-        case DT_RIGHT:x=rect.x+rect.width-te.width;break;
+        case DT_CENTER:x=rect.x+(rect.width-te.x_advance)/2;break;
+        case DT_RIGHT:x=rect.x+rect.width-te.x_advance;break;
         }
-        move_to(x-te.x_bearing,y-te.y_bearing);
+        move_to(x+te.x_bearing,y);
         show_text(text);
+        NGLOG_VERBOSE("%s Rect(%d,%d,%d,%d) drawpos=%.3f,%.3f width=%.3f height=%.3f advance=%.3f/%.3f bearing=%.3f/%.3f  alignment=0x%02x",text,
+           rect.x,rect.y,rect.width,rect.height,x+te.x_bearing,y,te.width,te.height,te.x_advance,te.y_advance,te.x_bearing,te.y_bearing,text_alignment);
     }else {
         y=rect.y;
         switch(text_alignment&0xF0){
@@ -197,17 +198,16 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
         case DT_VCENTER:y=rect.y+(rect.height-total_height)/2;break;
         case DT_BOTTOM:y=rect.y+rect.height-total_height;break;
         }
-        for(auto l:lines){
-            TextExtents te;
-            get_text_extents(l,te);
+        for(auto line:lines){
+            get_text_extents(line,te);
             switch(text_alignment&0x0F){
             case DT_LEFT:x=rect.x;break;
-            case DT_CENTER:x=rect.x+(rect.width-te.width)/2;break;
-            case DT_RIGHT:x=rect.x+rect.width-te.width;break;
+            case DT_CENTER:x=rect.x+(rect.width-te.x_advance)/2;break;
+            case DT_RIGHT:x=rect.x+rect.width-te.x_advance;break;
             }
-            move_to(x-te.x_bearing,y-te.y_bearing);
+            move_to(x+te.x_bearing,y-te.y_bearing);
             y+=te.height;
-            show_text(l);
+            show_text(line);
         }
     }
     //reset_clip();

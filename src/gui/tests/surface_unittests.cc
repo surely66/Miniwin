@@ -56,6 +56,33 @@ TEST_F(CONTEXT,SURFACE_CREATE_1){
    nglSleep(2000);
 }
 
+TEST_F(CONTEXT,TEXT_ALIGNMENT){
+    RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(1080,720));
+    const char*horz[]={"LEFT","CENTER","RIGHT"};
+    const char*vert[]={"TOP","VCENTER","BOTTOM"};
+    char alignment[64];
+    RECT rect={100,100,800,120};
+    ctx->set_font_size(40);
+    for(int h=0;h<=2;h++){
+        for(int v=0;v<=2;v++){
+           ctx->set_color(0xFFFFFFFF);
+           ctx->rectangle(0,0,1080,720);
+           ctx->fill();
+           sprintf(alignment,"%s_%s",horz[h],vert[v]);
+           printf("test %s\r\n",alignment);
+           ctx->set_color(0xFFFF0000);
+           ctx->draw_text(20,20,alignment);
+           ctx->draw_rect(rect);
+           ctx->set_color(0xFF00FF00);
+           ctx->draw_text(rect,"A chrown fox jump over the lazy dog",(v<<4)|h);
+           ctx->flip();
+           strcat(alignment,".png");
+           ctx->dump2png(alignment);
+           nglSleep(500);
+        } 
+    }
+    nglSleep(2000);
+}
 TEST_F(CONTEXT,Bitmap){
     RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(800,600));
     RefPtr<BasicBitmap>bmp(BasicBitmap::LoadBmp("Im_win_bodyright_l.bmp",BasicBitmap::A8R8G8B8));

@@ -22,6 +22,8 @@ typedef struct{
    NGLCipherMode cipherMode;
    int key_len;
 }NGLDSC;
+
+NGLSCHIP_ContentKey*pContentKey=NULL;
 #define NUM_DSCS 8
 static NGLDSC nglDSCS[NUM_DSCS];
 static NGLCipherMode sCipherMode=eCM_INACTIVE;
@@ -217,11 +219,231 @@ DWORD nglDscSetParameters(DWORD dwStbStreamHandle,const NGLDSC_Param *param )
     case eDSC_ALGO_DVB_CSA3_FULLY_ENHANCED_MODE:     dsc->attr.uc_algo = AUI_DSC_ALGO_AES;break;
     default:break;
     }
-    dsc->algo=param->algo;
+	if(dsc->algo!=param->algo){
+		aui_dsc_close(dsc->hdl);
+		dsc->hdl=NULL;
+		NGLOG_DEBUG("algo changed from %s->%s",PRINTALGO(dsc->algo),PRINTALGO(param->algo));
+		dsc->algo=param->algo;
+	}
     OpenHDL(dsc);
     return NGL_OK;
 }
+#if 1 
+#define MAX_KEY_SIZE 16
+static INT VA_DSCR_SCHIP_SetHostKeys(DWORD dwStbDescrHandle,
+	UINT16 uiOddKeyLength, const BYTE  *pOddKey,
+	UINT16 uiEvenKeyLength, const BYTE  *pEvenKey )
+{
+	aui_attr_dsc dsc_attr;
+	unsigned char key_buffer[MAX_KEY_SIZE * 2] = {0};
+        NGLDSC*dsc=(NGLDSC*)dwStbDescrHandle;	
+	
+	memcpy(key_buffer, pOddKey, uiOddKeyLength);	
+	memcpy(key_buffer + uiOddKeyLength, pEvenKey, uiEvenKeyLength);	
 
+	dsc_attr.puc_key = key_buffer;
+	dsc_attr.en_residue = AUI_DSC_RESIDUE_BLOCK_IS_AS_ATSC;
+	if (dsc->algo == eDSC_ALGO_AES_128_CBC) {
+		dsc_attr.uc_mode = AUI_DSC_WORK_MODE_IS_CBC;
+		dsc_attr.puc_iv_ctr = dsc->iv;
+	}else{
+		dsc_attr.csa_version = AUI_DSC_CSA2;
+		if(uiEvenKeyLength > MAX_KEY_SIZE/2 || uiOddKeyLength > MAX_KEY_SIZE/2)
+			return NGL_INVALID_PARA;
+	}
+	
+	if(uiEvenKeyLength)
+		dsc_attr.ul_key_len = uiEvenKeyLength * 8;
+	if(uiOddKeyLength)
+		dsc_attr.ul_key_len = uiOddKeyLength * 8;
+
+	dsc_attr.en_en_de_crypt = AUI_DSC_DECRYPT;
+	dsc_attr.ul_key_pattern = AUI_DSC_KEY_PATTERN_ODD_EVEN; /*Odd & Even Keys are provided*/
+	dsc_attr.dsc_key_type = AUI_DSC_HOST_KEY_SRAM;
+	dsc_attr.en_parity = AUI_DSC_PARITY_MODE_AUTO_PARITY_MODE0;	/*The parity is detected from TS packet header*/
+
+	dsc_attr.ul_pid_cnt = 1;
+	dsc_attr.pus_pids = (unsigned short *)(&(dsc->pid));
+
+
+	if(dsc->hdl){
+		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
+			NGLOG_DEBUG("va_dscr set key fail\n");
+			goto err1;
+		}
+	}else{
+		/*default using CSA algo, for TEST_CASE_3*/
+		aui_hdl hdl;
+
+		dsc_attr.uc_dev_idx = 0;
+		dsc_attr.dsc_data_type = AUI_DSC_DATA_TS;
+		dsc_attr.uc_algo = AUI_DSC_ALGO_CSA;
+		dsc_attr.csa_version = AUI_DSC_CSA2;
+		if(aui_dsc_open(&dsc_attr, &hdl)){
+			NGLOG_ERROR("dsc open fail");
+			return NGL_INVALID_PARA;
+		}else{
+			dsc->hdl = hdl;
+			dsc->algo = eDSC_ALGO_DVB_CSA;
+		}
+
+		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
+			NGLOG_ERROR("va_dscr set key fail");
+			goto err1;
+		}
+	}
+	return NGL_OK;
+
+err1:
+	if(aui_dsc_close(dsc->hdl)){
+		NGLOG_ERROR("dsc close fail");
+		return NGL_ERROR;
+	}
+	return NGL_ERROR;
+}
+
+DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyLength,
+		const BYTE  *pEvenKey,UINT32 uiEvenKeyLength){
+	NGLDSC*dsc=(NGLDSC*)dwStbDescrHandle;
+	aui_attr_dsc dsc_attr;
+	aui_attr_kl kl_attr;
+	aui_hdl kl_hdl;
+	struct aui_cfg_kl cfg;
+	unsigned char key_buffer[MAX_KEY_SIZE * 3] = {0};
+
+	aui_cfg_kl cfg_kl;
+	aui_kl_key_source_attr key_source;
+	aui_kl_key_source_attr data_source;
+
+	memcpy(key_buffer, dsc->pk, MAX_KEY_SIZE);
+	memcpy(key_buffer + MAX_KEY_SIZE, pOddKey, uiOddKeyLength);
+	memcpy(key_buffer + MAX_KEY_SIZE + uiOddKeyLength, pEvenKey, uiEvenKeyLength);
+	NGLOG_DUMP("PK & CW:", key_buffer, MAX_KEY_SIZE + 2 * uiOddKeyLength);
+	NGLOG_DEBUG("Setup 1 eChipsetMode: %d", pContentKey->eChipsetMode);
+
+	if(pContentKey->eChipsetMode != dsc->cipherMode){
+		NGLOG_DEBUG("%s (%d)\n", __FUNCTION__, __LINE__);
+		if(VA_DSCR_SCHIP_SetHostKeys(dwStbDescrHandle, uiOddKeyLength, pOddKey, uiEvenKeyLength, pEvenKey)){
+			NGLOG_ERROR("va_dscr_schip_sethostkeys error!\n");
+			return NGL_ERROR;
+		}
+		return NGL_OK;
+	}
+
+	kl_attr.uc_dev_idx = (dsc-nglDSCS);
+	kl_attr.en_level = AUI_KL_KEY_TWO_LEVEL;
+	kl_attr.en_root_key_idx = AUI_KL_ROOT_KEY_0_0;	/*0x4d*/
+	kl_attr.en_key_ladder_type = AUI_KL_TYPE_ALI;
+	
+	if(uiOddKeyLength == MAX_KEY_SIZE){
+		NGLOG_DEBUG("FPA 128");
+		kl_attr.en_key_pattern = AUI_KL_OUTPUT_KEY_PATTERN_128_ODD_EVEN;
+	}else{
+		NGLOG_DEBUG("FPA 64");
+		kl_attr.en_key_pattern = AUI_KL_OUTPUT_KEY_PATTERN_64_ODD_EVEN;
+	}
+
+	if(!dsc->hdl_kl){
+		if(aui_kl_open(&kl_attr, &kl_hdl)){
+			NGLOG_ERROR("aui_kl_open fail");
+			return NGL_ERROR;
+		}
+		dsc->hdl_kl = kl_hdl;
+	}else{
+		// Just need to keep generating key
+		kl_hdl = dsc->hdl_kl;
+		unsigned long key_dst_pos;
+		cfg.run_level_mode = AUI_KL_RUN_LEVEL_MODE_LEVEL_ALL;
+		cfg.en_kl_algo = AUI_KL_ALGO_TDES;
+		cfg.en_crypt_mode = AUI_KL_DECRYPT;
+		cfg.en_cw_key_attr = AUI_KL_CW_KEY_ODD_EVEN;	/*It is used for TS mode*/
+		memcpy(cfg.ac_key_val, key_buffer, MAX_KEY_SIZE + 2 * uiOddKeyLength);
+		if(aui_kl_gen_key_by_cfg(kl_hdl, &cfg, &key_dst_pos)){	/*just generate key*/
+			NGLOG_ERROR("aui_kl_gen_key_by_cfg fail");
+			goto err2;
+		}
+		NGLOG_DEBUG("1 key_dst_pos: %d", key_dst_pos);
+
+		return NGL_OK;
+	}
+
+	unsigned long key_dst_pos;
+	cfg.run_level_mode = AUI_KL_RUN_LEVEL_MODE_LEVEL_ALL;
+	cfg.en_kl_algo = AUI_KL_ALGO_TDES;
+	cfg.en_crypt_mode = AUI_KL_DECRYPT;
+	cfg.en_cw_key_attr = AUI_KL_CW_KEY_ODD_EVEN;	/*It is used for TS mode*/
+	memcpy(cfg.ac_key_val, key_buffer, MAX_KEY_SIZE + 2 * uiOddKeyLength);
+	if(aui_kl_gen_key_by_cfg(kl_hdl, &cfg, &key_dst_pos)){
+		NGLOG_ERROR("aui_kl_gen_key_by_cfg fail");
+		goto err2;
+	}
+
+	NGLOG_DEBUG("2 key_dst_pos: %d", key_dst_pos);
+
+	// set KL position to dsc
+	dsc_attr.ul_key_pos = key_dst_pos;
+	NGLOG_DEBUG("3 key_dst_pos: %d\n", key_dst_pos);
+	dsc_attr.en_residue = AUI_DSC_RESIDUE_BLOCK_IS_AS_ATSC;
+
+	if (dsc->algo == eDSC_ALGO_AES_128_CBC){//eSCRAMBLING_ALGO_AES_128_CBC) {
+		NGLOG_DEBUG("eSCRAMBLING_ALGO_AES_128_CBC");
+		dsc_attr.uc_mode = AUI_DSC_WORK_MODE_IS_CBC;
+		dsc_attr.puc_iv_ctr = dsc->iv;
+	} else{
+		NGLOG_DEBUG("eSCRAMBLING_ALGO_DVB_CSA");
+		dsc_attr.csa_version = AUI_DSC_CSA2;
+		if(uiEvenKeyLength > MAX_KEY_SIZE/2 || uiOddKeyLength > MAX_KEY_SIZE/2)
+			return NGL_INVALID_PARA;
+	}
+
+	dsc_attr.ul_key_len = uiEvenKeyLength * 8;
+	dsc_attr.en_en_de_crypt = AUI_DSC_DECRYPT;
+	dsc_attr.ul_key_pattern = AUI_DSC_KEY_PATTERN_ODD_EVEN; /*Odd & Even Keys are provided*/
+	dsc_attr.dsc_key_type = AUI_DSC_CONTENT_KEY_KL;
+	dsc_attr.en_parity = AUI_DSC_PARITY_MODE_AUTO_PARITY_MODE0;	/*The parity is detected from TS packet header*/
+	dsc_attr.ul_pid_cnt = 1;
+	dsc_attr.pus_pids = (unsigned short *)(&(dsc->pid));
+
+	if(dsc->hdl) {
+		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
+			NGLOG_DEBUG("va_dscr set key fail");
+			goto err1;
+		}
+	}else{
+		/*default using CSA algo, for TEST_CASE_3*/
+		aui_hdl hdl;
+		dsc_attr.uc_dev_idx = 0;
+		dsc_attr.dsc_data_type = AUI_DSC_DATA_TS;
+		dsc_attr.uc_algo = AUI_DSC_ALGO_CSA;
+		dsc_attr.csa_version = AUI_DSC_CSA2;
+		if(aui_dsc_open(&dsc_attr, &hdl)){
+			NGLOG_ERROR("dsc open fail");
+			return NGL_INVALID_PARA;
+		}else{
+			dsc->hdl = hdl;
+			dsc->algo =eDSC_ALGO_DVB_CSA;// eSCRAMBLING_ALGO_DVB_CSA;
+		}
+
+		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
+			NGLOG_ERROR("va_dscr set key fail");
+			goto err1;
+		}
+	}
+	return NGL_OK;
+err2:
+	if(aui_kl_close(kl_hdl)){
+		NGLOG_ERROR("kl close fail");
+		return NGL_ERROR;
+	}
+err1:
+	if(aui_dsc_close(dsc->hdl)){
+		NGLOG_ERROR("dsc close fail");
+		return NGL_ERROR;
+	}
+	return NGL_ERROR; 
+	return NGL_OK;
+}
+#endif
 
 DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyLength,
          const BYTE  *pEvenKey,UINT32 uiEvenKeyLength)
@@ -234,7 +456,9 @@ DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyL
     CHECK(dsc);
     NGLOG_DEBUG("dsc=%p dsc->hdl=%p OddKey=%p/%d EvenKey=%p/%d schip_flag=%d",dsc,dsc->hdl,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength,dsc->schip_flag);
     
-
+	if(dsc->schip_flag){
+		return nglSchipSetKeys(dwStbDescrHandle,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength);
+	}
     if(NULL==pOddKey)uiOddKeyLength=0;
     if(NULL==pEvenKey)uiEvenKeyLength=0;
 

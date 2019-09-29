@@ -15,6 +15,7 @@ typedef size_t (*_iconv) (iconv_t cd,  char* * inbuf, size_t *inbytesleft, char*
 typedef int (*_iconv_close) (iconv_t cd);
 #endif
 
+
 class CodeConverter {
 private:
     iconv_t cd;
@@ -56,8 +57,43 @@ public:
 #else
         int rc=iconv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
 #endif
+        CheckUTF8((unsigned char*)outbuf,outlen);
         return lenin-outlen;
     }
+   int CheckUTF8(unsigned char*str,int len){
+       unsigned char*u8=str;
+       int u8err=0;
+       for(;u8-str<len;){
+           if (*u8<=0x7F){
+               u8++;
+               continue;
+           }else if((*u8&0xC0)==0xC0){   //str+=0xC0|((uni>6)&0x1F); str+=0x80|(uni&0x3F);
+               if((u8[1]&0x80)==0x80){
+                  u8+=2;
+                  continue;
+               }u8++;u8err++;
+           }else if(*u8&0xE0==0xE0){    //str+=0xE0|(uni>>12); str+=0x80|((uni>>6)&0x3F);  str+=0x80|(uni&0x3F);
+               if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)){
+                  u8+=3;
+                  continue;
+               }
+               u8++;u8err++;;
+           }else if(*u8&0xF0==0xF0){    //str+=0xF0|((uni>>18)&0x07);  str+=0x80|((uni>>12)&0x3F);     str+=0x80|((uni>>6)&0x3F);     str+=0x80|(uni&0x3F);
+               if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)&&((u8[3]&0x80)==0x80)){
+                   u8+=4;
+                   continue;
+               }
+               u8++;u8err++;
+           }else{
+               u8++;u8err++;
+           }
+      }
+      if(u8err){
+           NGLOG_DEBUG("Invalid UTF8:%s",str);
+           NGLOG_DUMP("UTF8",str,len);
+      }
+      return u8err;
+   }
 };
 void*CodeConverter::sohandle=nullptr;
 _iconv_open CodeConverter::iconvopen=nullptr;

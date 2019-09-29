@@ -71,6 +71,7 @@ INT nglDeleteSemaphore(NGLSemaphore pSemaphore)
 INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration )
 {
 #ifdef LINUX
+  int rc=NGL_OK;
   struct timespec ts,*pts=NULL;
   clock_gettime(CLOCK_MONOTONIC,&ts);
   ts.tv_sec+=uiDuration/1000;
@@ -88,10 +89,10 @@ INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration )
   if(0==uiDuration){ts.tv_sec=ts.tv_nsec=0;}
   pthread_mutex_lock(&s->mtx);
   if(s->nsem==0)
-     pthread_cond_timedwait(&s->cond,&s->mtx,pts);
+     rc=pthread_cond_timedwait(&s->cond,&s->mtx,pts);
   s->nsem--;
   pthread_mutex_unlock(&s->mtx);
-  return NGL_OK;
+  return rc;
 #else
   return aui_os_sem_wait((aui_hdl)pSemaphore,uiDuration)==AUI_RTN_SUCCESS?NGL_OK:NGL_ERROR;
 #endif

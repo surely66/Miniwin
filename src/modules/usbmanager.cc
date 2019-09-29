@@ -25,6 +25,8 @@
 #include <strstream>
 #include <fstream>
 #include <mntent.h>
+#include <volumemanager.h>
+#include <netlinkevent.h>
 
 NGL_MODULE(USBMONITOR)
 
@@ -100,11 +102,14 @@ void USBManager::onRecvMessage(const std::string&message){
     size_t pos=message.find("@");
     std::string action=message.substr(0,pos);
     std::string device=message.substr(pos+1);
-    NGLOG_VERBOSE("action:%s dev:%s",action.c_str(),device.c_str());
-    if(action.compare("add")==0)//sys+device is the device node path
+    NGLOG_DEBUG("action:%s dev:%s",action.c_str(),device.c_str());
+    /*if(action.compare("add")==0)//sys+device is the device node path
         onAddDevice(device);
     else
-        onRemoveDevice(device);
+        onRemoveDevice(device);*/
+    NetlinkEvent netevent;
+    netevent.decode((char*)message.c_str(),message.length(),1);
+    VolumeManager::Instance()->handleBlockEvent(&netevent);
 }
 
 static bool isBlockDevice(const std::string&dev){

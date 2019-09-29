@@ -23,6 +23,13 @@ typedef enum{
    eCM_LOCKED
 }NGLCipherMode;
 
+typedef struct{
+   NGLCipherMode eChipsetMode;
+   UINT32 uiSessionKeyLength;
+   const BYTE *pSessionKey;
+   BOOL cwFlag;
+}NGLSCHIP_ContentKey;
+
 DWORD nglDscOpen(UINT16 pid);
 DWORD nglDscClose(DWORD dwDescrambleID);
 DWORD nglDscSetParameters(DWORD dwDescrambleID,const NGLDSC_Param*param);

@@ -92,26 +92,26 @@ static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,void*userdata){
     rc=DtvGetServicePmt(svc,buffer);
     NGLOG_ERROR_IF(rc==0,"PMT not found");
     PMT pmt(buffer,false);
-    if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid){
-        VA_CTRL_TsChanged(0);VA_CTRL_TsChanged(1);
-    }
-    lastplayed=*svc;
 
-    VA_CTRL_SwitchOffProgram(0);
-    VA_CTRL_SwitchOffProgram(1);
-    NGLOG_DUMP("PMT",buffer,8);
     for(i=0;i<32&&lastpids[i]!=0;i++){
         VA_CTRL_RemoveStream(lastpids[i]);
     }
+    VA_CTRL_SwitchOffProgram(0);
+    if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid||(svc->tpid!=lastplayed.tpid)){
+        VA_CTRL_TsChanged(0);//VA_CTRL_TsChanged(1);
+    }
+    lastplayed=*svc;
+    //VA_CTRL_SwitchOffProgram(1);
+    NGLOG_DUMP("PMT",buffer,8);
     VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
-    VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
+    //VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
     ne=pmt.getElements(es,false);
     memset(lastpids,0,sizeof(lastpids));
     NGLOG_DEBUG("DtvGetServicePmt=%d PLAY %d.%d.%d pmtlen=%d  %d elements",rc,svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),ne);
     for(i=0;i<ne;i++){
         NGLOG_DEBUG("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
         VA_CTRL_AddStream(0,es[i].pid,es[i].pid,NULL);
-        VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
+        //VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
         lastpids[i]=es[i].pid;
     }
 }
