@@ -6,6 +6,7 @@
 #include <si_table.h>
 #include <dvbepg.h>
 #include <ctype.h> 
+#include <ngl_dmx.h>
 
 NGL_MODULE(DTVPLAYER)
 
@@ -22,7 +23,8 @@ typedef struct {
 static DWORD msgQPlayer=0;
 static SERVICELOCATOR sCurrentService;
 static std::vector<DTVNOTIFY>gNotifies;
-extern void DtvNotify(UINT,const SERVICELOCATOR*);
+
+extern void DtvNotify(UINT,const SERVICELOCATOR*,DWORD wp,ULONG lp);
 
 static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     USHORT pcr;
@@ -47,12 +49,19 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     else if(vi<0) nglAvPlay(0,0x1FFF,DECV_INVALID,es[ai].pid,es[ai].getType(),pcr);
     else if(ai<0) nglAvPlay(0,es[vi].pid,es[vi].getType(),0x1FFF,DECA_INVALID,pcr);
     else          nglAvPlay(0,es[vi].pid,es[vi].getType(),es[ai].pid,es[ai].getType(),pcr);
-    DtvNotify(MSG_SERVICE_CHANGE,sloc);
+    DtvNotify(MSG_SERVICE_CHANGE,sloc,0,0);
+}
+extern DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
+
+static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
+     DtvNotify(MSG_PMT_CHANGE,NULL,0,0);
 }
 
 static void PlayProc(void*param){
     MSGPLAY msg={{(USHORT)0,(USHORT)0,(USHORT)0xFFFF}};//0xFFFF  is an invalid serviceid
     SERVICELOCATOR lastplayed={0,0,(USHORT)0xFFFF};
+    DWORD flt_pmt=0;
+    int pmtpid;
     while(1){
         UINT count;
         int rc=NGL_ERROR;
@@ -62,6 +71,8 @@ static void PlayProc(void*param){
         }while( count && (rc==NGL_OK) );
         if(msg.loc.sid!=lastplayed.sid){
             lastplayed=msg.loc;
+            DtvGetServiceItem(&lastplayed,SKI_PMTPID,&pmtpid);
+            flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,NULL,true,3,0xFF02,(0xFF00|(lastplayed.sid>>8)),(0xFF00|(lastplayed.sid&0xFF)));
             PlayService(&msg.loc,msg.lan);
         }
     }
@@ -110,10 +121,10 @@ void DtvUnregisterNotify(DWORD hdl){
      }
 }
 
-void DtvNotify(UINT msg,const SERVICELOCATOR*svc){
+void DtvNotify(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp){
      for(auto n=gNotifies.rbegin();n!=gNotifies.rend();n++){
           if((*n).fun!=nullptr)
-            (*n).fun(msg,svc,(*n).userdata);
+            (*n).fun(msg,svc,wp,lp,(*n).userdata);
      }
 }
 

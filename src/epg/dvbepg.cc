@@ -60,7 +60,7 @@ static std::vector<NGLTunerParam>schFrequencies;
 static DWORD fltEIT, fltTDT, fltBAT;
 static DWORD msgQ=0;
 static void NotifyServiceArrived(STREAMDB&ts,SEARCHNOTIFY*notify);
-extern void DtvNotify(UINT,const SERVICELOCATOR*);
+extern void DtvNotify(UINT,const SERVICELOCATOR*,DWORD wp,ULONG lp);
 static void SENDMSG(DWORD id,DWORD p1,DWORD p2){
     EPGMSG msg={id,p1,p2};
     nglMsgQSend(msgQ,&msg,sizeof(EPGMSG),100);
@@ -115,7 +115,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
              AddEITPFSection(eit,&changed);
              if(changed&&(eit.tableId()==TBID_EITPF)){
                   //NGLOG_DEBUG("%d.%d.%d pf update",loc.netid,loc.tsid,loc.sid);
-                  DtvNotify(MSG_EPG_PF,&loc);
+                  DtvNotify(MSG_EPG_PF,&loc,0,0);
              }
          }break;
     case TBID_EITS...TBID_EITS_LAST:
@@ -124,7 +124,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
              EIT eit(tbl,false);
              SERVICELOCATOR loc=eit;
              AddEITSSection(eit,&changed);
-             if(changed && ((eit.tableId()&0x50)==0x50))DtvNotify(MSG_EPG_SCHEDULE,&loc);
+             if(changed && ((eit.tableId()&0x50)==0x50))DtvNotify(MSG_EPG_SCHEDULE,&loc,0,0);
          }break;
     case TBID_TDT:
     case TBID_TOT:{
@@ -150,7 +150,7 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
     }
 }
 
-static DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...){
+DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...){
     DWORD flt=nglAllocateSectionFilter(0,pid,cbk,param,NGL_DMX_SECTION);
     BYTE mask[16],match[16];
     va_list ap;

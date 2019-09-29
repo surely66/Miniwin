@@ -83,7 +83,7 @@ static DWORD CreateFilter(int pid,int num,...){
     return hFilter;
 }
 
-static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,void*userdata){
+static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*userdata){
     BYTE buffer[1024];
     int i,ne,rc;
     ELEMENTSTREAM es[32];

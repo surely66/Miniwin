@@ -285,12 +285,26 @@ static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
     nglDestroyEvent(hevt);
     return rc;
 }
+
+INT DtvGetServerPmtPid(const SERVICELOCATOR*sloc){
+    USHORT pmtpid=0;
+    for(auto itr_ts:gStreams ){
+        if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
+             PAT pat(itr_ts.pat.front());
+             pmtpid=pat.getPMTPID(sloc->sid);
+             break;
+        }
+    }
+    return pmtpid;
+}
+
 INT DtvGetServicePmt(const SERVICELOCATOR*sloc,BYTE*pmtbuf){
     int rc=0;
     USHORT pmtpid=0;
     STREAMDB *ts=nullptr;
     if(NULL==sloc||NULL==pmtbuf)return 0;
     NGLOG_DEBUG("%d.%d.%d streams.size=%d",sloc->netid,sloc->tsid,sloc->sid,gStreams.size());
+    pmtpid=DtvGetServerPmtPid(sloc);
     for(auto itr_ts:gStreams ){
         if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
              rc++;   ts=&itr_ts;
@@ -437,6 +451,7 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     if(got==service_lcn.end()||(value==NULL))
         return NGL_ERROR;
     switch(item){
+    case SKI_PMTPID :*value=DtvGetServerPmtPid(svc);break;
     case SKI_VISIBLE:*value=got->second->visible;break;
     case SKI_DELETED:*value=got->second->deleted;break;
     case SKI_LCN    :*value=got->second->lcn;break;

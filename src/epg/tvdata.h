@@ -15,6 +15,7 @@ int DtvSaveProgramsData(const char*fname);
 INT DtvEnumTSService(const STREAMDB&ts,DTV_SERVICE_CBK cbk,void*userdata);
 
 typedef enum{
+   SKI_PMTPID,
    SKI_VISIBLE,
    SKI_DELETED,
    SKI_LCN
@@ -22,7 +23,7 @@ typedef enum{
 INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value);
 const DVBService*DtvGetServiceInfo(const SERVICELOCATOR*svc);
 INT DtvGetServiceByLCN(USHORT lcn,SERVICELOCATOR*loc);
-
+INT DtvGetServerPmtPid(const SERVICELOCATOR*sloc);
 typedef enum{
   LCN_FROM_NIT=1,
   LCN_FROM_BAT=2,

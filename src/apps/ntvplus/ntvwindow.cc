@@ -7,7 +7,13 @@ namespace ntvplus{
 #define WM_GETSIGNAL 1001
 #define WM_TIME_UPDATE 1002
 
-static void EPG_CBK(UINT msgtype,const SERVICELOCATOR*svc,void*userdata);
+static void EPG_CBK(UINT msgtype,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*userdata){
+    NTVWindow*w=(NTVWindow*)userdata;
+    switch(msgtype){
+    case MSG_EPG_PF:w->onEITPF(svc);break;
+    case MSG_EPG_SCHEDULE:w->onEITS(svc);break;
+    }
+}
 
 NTVWindow::NTVWindow(int x,int y,int w,int h):Window(x,y,w,h){
     clearFlag(Attr::ATTR_BORDER);
@@ -44,13 +50,6 @@ NTVWindow::~NTVWindow(){
     DtvUnregisterNotify(handle_notify);
 }
 
-static void EPG_CBK(UINT msgtype,const SERVICELOCATOR*svc,void*userdata){
-    NTVWindow*w=(NTVWindow*)userdata;
-    switch(msgtype){
-    case MSG_EPG_PF:w->onEITPF(svc);break;
-    case MSG_EPG_SCHEDULE:w->onEITS(svc);break;
-    }
-}
 
 void NTVWindow::onEITPF(const SERVICELOCATOR*svc){
     DVBEvent pf[2];
