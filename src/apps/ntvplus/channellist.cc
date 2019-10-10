@@ -6,9 +6,11 @@
 #include <ngl_log.h>
 #include <ngl_panel.h>
 #define IDC_CHANNELS 100
-#define IDC_EVENTP 101
-#define IDC_EVENTF 102
-#define IDC_TPINFO 103
+#define IDC_NAMEP 101
+#define IDC_DESCP  102
+#define IDC_NAMEF 103
+#define IDC_DESCF  104
+#define IDC_TPINFO 105
 NGL_MODULE(CHANNELLIST)
 
 namespace ntvplus{
@@ -16,8 +18,8 @@ namespace ntvplus{
 class ChannelsWindow:public NTVWindow{
 protected:
    ListView*chlst;
-   TextField*eventp;
-   TextField*eventf;
+   TextField*namep,*descp;
+   TextField*namef,*descf;
    ToolBar*tbfavs;
    std::vector<unsigned int>favgroups;
 public:
@@ -59,18 +61,19 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
         tpinfo->setText(GetTPString(&tp)); 
     });
     if(favgroups.size())loadServices(favgroups[0]);
+    namep=new TextField("NOW",400,36);
+    addChildView(namep)->setId(IDC_NAMEP).setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,110);
 
-    addChildView(new TextField("NOW",100,36))->setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,110);
+    descp=new TextField(std::string(),800,220);
+    descp->setAlignment(DT_LEFT|DT_TOP|DT_MULTILINE);
+    addChildView(descp)->setPos(455,148).setId(IDC_DESCP).setBgColor(0xFF444444);
 
-    eventp=new TextField(std::string(),800,220);
-    eventp->setAlignment(DT_LEFT|DT_VCENTER|DT_MULTILINE);
-    addChildView(eventp)->setPos(455,148).setId(IDC_EVENTP).setBgColor(0xFF444444);
+    namef=new TextField("NEXT",400,36);
+    addChildView(namef)->setId(IDC_NAMEF).setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,370);
 
-    addChildView(new TextField("NEXT",100,36))->setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,370);
-
-    eventf=new TextField(std::string(),800,220);
-    eventf->setAlignment(DT_CENTER|DT_TOP|DT_MULTILINE);
-    addChildView(eventf)->setPos(455,408).setId(IDC_EVENTF).setBgColor(0xFF222222);
+    descf=new TextField(std::string(),800,220);
+    descf->setAlignment(DT_LEFT|DT_TOP|DT_MULTILINE);
+    addChildView(descf)->setPos(455,408).setId(IDC_DESCF).setBgColor(0xFF222222);
 
     
     addTipInfo("help_icon_4arrow.png","Navigation",50,160);
@@ -79,7 +82,7 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     addTipInfo("help_icon_red.png","Sort",-1,160);
     addTipInfo("help_icon_yellow.png","EditChannel",-1,160);
 
-    setMessageListener([](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
+    setMessageListener([this](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
         if(msg==1000){
              DVBEvent pf[2];
              NGLOG_DEBUG("Get Event P/F to ui");
@@ -90,11 +93,9 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
              ChannelItem*itm=(ChannelItem*)lv->getItem(idx);
              int rc=DtvGetPFEvent(&itm->svc,pf);
              NGLOG_DEBUG("DtvGetPFEvent=%d",rc); 
-             TextField*tvp=(TextField*)v.findViewById(IDC_EVENTP);
-             TextField*tvf=(TextField*)v.findViewById(IDC_EVENTF);
                        
-             if(rc&1){pf[0].getShortName(name,des);tvp->setText(name);}
-             if(rc&2){pf[1].getShortName(name,des);tvf->setText(name);}           
+             if(rc&1){pf[0].getShortName(name,des);namep->setText(name);descp->setText(des);}
+             if(rc&2){pf[1].getShortName(name,des);namef->setText(name);descf->setText(des);}           
         }
     });    
 }

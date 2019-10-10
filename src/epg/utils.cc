@@ -10,6 +10,7 @@
 NGL_MODULE(UTILS)
 
 #ifdef __GLIBC__
+/**__GLIBC__has include iconv but has some problem, so we load func from so*/
 typedef iconv_t (*_iconv_open)(const char* tocode, const char* fromcode);
 typedef size_t (*_iconv) (iconv_t cd,  char* * inbuf, size_t *inbytesleft, char* * outbuf, size_t *outbytesleft);
 typedef int (*_iconv_close) (iconv_t cd);
@@ -49,18 +50,18 @@ public:
         iconv_close(cd);
 #endif 
     }
-    int convert(char *inbuf,int inlen,char *outbuf,int outlen) {
-        char**pin=&inbuf,**pout=&outbuf;
-        int lenin=outlen;
+    int convert(char *inbuf,int len,char *outbuf,int outlen) {
+        char**pin=&inbuf,**pout=&outbuf,*ins=inbuf;
+        int lenin=outlen,inlen=len;
 #ifdef __GLIBC__
         int rc=iconv_conv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
 #else
         int rc=iconv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
 #endif
-        CheckUTF8((unsigned char*)outbuf,outlen);
+        //CheckUTF8((BYTE*)ins,(unsigned char*)outbuf,lenin-outlen);
         return lenin-outlen;
     }
-   int CheckUTF8(unsigned char*str,int len){
+   int CheckUTF8(BYTE*inbuf,BYTE*str,int len){
        unsigned char*u8=str;
        int u8err=0;
        for(;u8-str<len;){
@@ -71,26 +72,28 @@ public:
                if((u8[1]&0x80)==0x80){
                   u8+=2;
                   continue;
-               }u8++;u8err++;
+               }u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
            }else if(*u8&0xE0==0xE0){    //str+=0xE0|(uni>>12); str+=0x80|((uni>>6)&0x3F);  str+=0x80|(uni&0x3F);
                if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)){
                   u8+=3;
                   continue;
                }
-               u8++;u8err++;;
+               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
            }else if(*u8&0xF0==0xF0){    //str+=0xF0|((uni>>18)&0x07);  str+=0x80|((uni>>12)&0x3F);     str+=0x80|((uni>>6)&0x3F);     str+=0x80|(uni&0x3F);
                if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)&&((u8[3]&0x80)==0x80)){
                    u8+=4;
                    continue;
                }
-               u8++;u8err++;
+               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
            }else{
-               u8++;u8err++;
+               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
            }
       }
       if(u8err){
-           NGLOG_DEBUG("Invalid UTF8:%s",str);
+           NGLOG_DEBUG("Invalid UTF8:%s  \r\naddr%p %d errs",str,str,u8err);
+           NGLOG_DUMP("INBUF",inbuf-1,len+1);
            NGLOG_DUMP("UTF8",str,len);
+           //memcpy((void*)len,str,1000);
       }
       return u8err;
    }
@@ -133,7 +136,8 @@ int ToUtf8(const char*buf,int len,char*utf){
     default  :strcpy(charset,"ISO8859-1");charpos=0;   break;
     }
     CodeConverter cc(charset,"utf-8");
-    utflen=cc.convert((char*)(buf+charpos),len-charpos,utf,utflen);
+    len-=charpos;
+    utflen=cc.convert((char*)(buf+charpos),len,utf,utflen);
     utf[utflen]=0;
     NGLOG_VERBOSE(">>>>ToUtf8 convert=%d charset=%s ",utflen,charset);
     return utflen;

@@ -21,6 +21,7 @@ typedef struct{
 
 static NGLAV sAvPlayers[NB_DEMUX];
 static aui_hdl _g_dis_handle_hd,_g_dis_handle_sd;
+static void SetAVCallback(const NGLAV*);
 void init_dis_handle(void);
 
 static int VTYPE2AUI(int nt){
@@ -133,8 +134,9 @@ INT nglAvPlay(int dmxid,int vid,int vtype,int aid,int atype,int pcr)
      memset(&data_path_info, 0, sizeof(data_path_info));
      data_path_info.data_path_type = AUI_DMX_DATA_PATH_CLEAR_PLAY;
      rc=aui_dmx_data_path_set(av->attr.pv_hdl_dmx, &data_path_info);
-     NGLOG_DEBUG("aui_dmx_data_path_set dmx=%p rc=%d",av->attr.pv_hdl_dmx,rc);
+     NGLOG_DEBUG("aui_dmx_data_path_set dmx=%p decv=%p rc=%d",av->attr.pv_hdl_dmx, av->attr.pv_hdl_decv,rc);
 
+     SetAVCallback(av);
      rc=aui_av_start(av->hdl_av);
      NGLOG_DEBUG("aui_av_start=%d video=%d/%d audio=%d/%d pcr=%d",rc,vid,vtype,aid,atype,pcr);
 }
@@ -148,6 +150,7 @@ INT nglAvStop(int dmxid){
      }
      return NGL_OK;
 }
+
 INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
      NGLAV*av=&sAvPlayers[dmxid];
      NGLRect src={0,0,1280,720};
@@ -181,39 +184,50 @@ INT nglAvSetVideoWindow(int dmxid,const NGLRect*inRect,const NGLRect*outRect){
 }
 
 static void first_i_frame_deocded(void * p_user_hld, unsigned int parm1, unsigned parm2){
-	(void)p_user_hld;
-	(void)parm1;
-	(void)parm2;
-	//if(GL_PLAY_Video_Callback)
-        //   (*GL_PLAY_Video_Callback)(2,0);
-        NGLOG_DEBUG("");
+    NGLOG_DEBUG("p_user_hld=%p param1=%x param2=%x",p_user_hld,parm1,parm2);
 }
 static void frame_rate_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){
-	(void)p_user_hld;
-	(void)parm2;
-	struct aui_decv_info_cb *new_info = (struct aui_decv_info_cb *)parm1;
-	//if(GL_PLAY_Video_Callback)
-        //(*GL_PLAY_Video_Callback)(1,(int)new_info->frame_rate);
-	NGLOG_DEBUG("video_info_change_cb,width =%d,height =%d ,frame_rate =%d \n",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
+    struct aui_decv_info_cb *new_info = (struct aui_decv_info_cb *)parm1;
+    NGLOG_DEBUG("video_info_change_cb,width =%d,height =%d ,frame_rate =%d \n",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
 }
 
-static int PlayStatus = 0;
 static void play_status_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){
-	(void)p_user_hld;
-	(void)parm2;
-	(void)parm1;
-	if(PlayStatus != 1)
-	   PlayStatus = 1;
-        NGLOG_DEBUG("");	
+    NGLOG_VERBOSE("New GOP arrivedp_user_hld=%p param1=%x,param2=%x",p_user_hld,parm1,parm2);	
 }
 
 static void cb_first_frame(void *p1, void *p2, void *p_usr_data){
-    (void)p1;
-    (void)p2;
-    (void)p_usr_data;	
-    if(PlayStatus != 1)
-	PlayStatus = 1;	
-    NGLOG_DEBUG("");
+    NGLOG_DEBUG("p_usr_data=%p  p1=%p,p2=%p",p_usr_data,p1,p2);
 }
 
+static void SetAVCallback(const NGLAV*av){ 
+    aui_hdl decv_hdl=av->attr.pv_hdl_decv;
+    aui_hdl deca_hdl=av->attr.pv_hdl_deca;
+    struct aui_decv_callback_node first_iframe_callback;
+    struct aui_decv_callback_node frame_rate_info_change_callback;
+    struct aui_decv_callback_node play_status_callback;
+    struct aui_st_deca_io_reg_callback_para cb_para;
+   
+    cb_para.en_cb_type=AUI_DECA_CB_FIRST_FRAME;
+    cb_para.p_cb=cb_first_frame;
+    cb_para.pv_param=av;
+    aui_deca_set(deca_hdl,AUI_DECA_REG_CB,&cb_para);
 
+    memset(&first_iframe_callback,0,sizeof(struct aui_decv_callback_node));
+    first_iframe_callback.callback = first_i_frame_deocded;
+    first_iframe_callback.type = AUI_DECV_CB_FIRST_I_FRAME_DECODED;
+    first_iframe_callback.puser_data=av;
+    aui_decv_set(decv_hdl,AUI_DECV_SET_REG_CALLBACK,&first_iframe_callback); 
+
+    memset(&frame_rate_info_change_callback,0,sizeof(struct aui_decv_callback_node));
+    frame_rate_info_change_callback.callback = frame_rate_info_change;
+    frame_rate_info_change_callback.type = AUI_DECV_CB_INFO_CHANGED ;
+    frame_rate_info_change_callback.puser_data=av;
+    aui_decv_set(decv_hdl,AUI_DECV_SET_REG_CALLBACK,&frame_rate_info_change_callback); 
+
+    memset(&play_status_callback,0,sizeof(struct aui_decv_callback_node));
+    play_status_callback.callback = play_status_info_change;
+    play_status_callback.type = AUI_DECV_CB_MONITOR_GOP ;
+    play_status_callback.puser_data=av;
+    aui_decv_set(decv_hdl,AUI_DECV_SET_REG_CALLBACK,&play_status_callback); 
+    NGLOG_DEBUG("deca_hdl=%p decv_hdl=%p",deca_hdl,decv_hdl);
+}

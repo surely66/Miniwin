@@ -25,6 +25,8 @@ enum{
    TBID_CAT=0x01,
    TBID_PMT=0x02,
    TBID_TSDT=0x03,
+   TBID_DSI =0x3B,
+   TBID_DDB =0x3C,
    TBID_SDT=0x42,
    TBID_SDT_OTHER=0x46,
    TBID_NIT=0x40,
@@ -107,6 +109,7 @@ public:
     PSITable(const PSITable&b,bool deepcopy=true);
     ~PSITable();
     unsigned char tableId()const {return data[0];}
+    unsigned char version()const {return (data[5]&0x3E)>>1;}
     size_t sectionLength()const {return (data[1]&0x0F)<<8|data[2]; }
     unsigned short extTableId()const { return data[3]<<8|data[4]; }
     unsigned char sectionNo()const {return data[6];}

@@ -25,6 +25,7 @@ static SERVICELOCATOR sCurrentService;
 static std::vector<DTVNOTIFY>gNotifies;
 
 extern void DtvNotify(UINT,const SERVICELOCATOR*,DWORD wp,ULONG lp);
+extern DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
 
 static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     USHORT pcr;
@@ -51,16 +52,20 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     else          nglAvPlay(0,es[vi].pid,es[vi].getType(),es[ai].pid,es[ai].getType(),pcr);
     DtvNotify(MSG_SERVICE_CHANGE,sloc,0,0);
 }
-extern DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
 
 static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
-     DtvNotify(MSG_PMT_CHANGE,NULL,0,0);
+     PMT p1((BYTE*)UserData,false);
+     PMT p2(Buffer,false);
+     if(p1.getProgramNumber()!=p2.getProgramNumber())return;
+     if( (p1.version()!=p2.version()) || (p1.crc32()!=p2.crc32()) ) 
+         DtvNotify(MSG_PMT_CHANGE,&sCurrentService,BufferLength,(ULONG)Buffer);
 }
 
 static void PlayProc(void*param){
     MSGPLAY msg={{(USHORT)0,(USHORT)0,(USHORT)0xFFFF}};//0xFFFF  is an invalid serviceid
     SERVICELOCATOR lastplayed={0,0,(USHORT)0xFFFF};
     DWORD flt_pmt=0;
+    BYTE PMT[1024];
     int pmtpid;
     while(1){
         UINT count;
@@ -71,8 +76,10 @@ static void PlayProc(void*param){
         }while( count && (rc==NGL_OK) );
         if(msg.loc.sid!=lastplayed.sid){
             lastplayed=msg.loc;
+            DtvGetServicePmt(&lastplayed,PMT);
             DtvGetServiceItem(&lastplayed,SKI_PMTPID,&pmtpid);
-            flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,NULL,true,3,0xFF02,(0xFF00|(lastplayed.sid>>8)),(0xFF00|(lastplayed.sid&0xFF)));
+            nglFreeSectionFilter(flt_pmt);
+            flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,PMT,true,3,0xFF02,(0xFF00|(lastplayed.sid>>8)),(0xFF00|(lastplayed.sid&0xFF)));
             PlayService(&msg.loc,msg.lan);
         }
     }

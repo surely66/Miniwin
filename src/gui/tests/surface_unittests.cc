@@ -74,12 +74,12 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
            ctx->draw_text(20,20,alignment);
            ctx->draw_rect(rect);
            ctx->set_color(0xFF00FF00);
-           ctx->draw_text(rect,"A chrown fox jump over the lazy dog",(v<<4)|h);
+           ctx->draw_text(rect,"The quick brown fox jump sover the lazy dog.",(v<<4)|h);
            ctx->flip();
            strcat(alignment,".png");
            ctx->dump2png(alignment);
-           nglSleep(500);
-        } 
+           nglSleep(1000);
+        }nglSleep(1000); 
     }
     nglSleep(2000);
 }
