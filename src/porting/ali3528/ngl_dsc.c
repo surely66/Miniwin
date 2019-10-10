@@ -344,28 +344,13 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 	}
 
 	if(!dsc->hdl_kl){
-		if(aui_kl_open(&kl_attr, &kl_hdl)){
-			NGLOG_ERROR("aui_kl_open fail");
-			return NGL_ERROR;
-		}
-		dsc->hdl_kl = kl_hdl;
-	}else{
-		// Just need to keep generating key
-		kl_hdl = dsc->hdl_kl;
-		unsigned long key_dst_pos;
-		cfg.run_level_mode = AUI_KL_RUN_LEVEL_MODE_LEVEL_ALL;
-		cfg.en_kl_algo = AUI_KL_ALGO_TDES;
-		cfg.en_crypt_mode = AUI_KL_DECRYPT;
-		cfg.en_cw_key_attr = AUI_KL_CW_KEY_ODD_EVEN;	/*It is used for TS mode*/
-		memcpy(cfg.ac_key_val, key_buffer, MAX_KEY_SIZE + 2 * uiOddKeyLength);
-		if(aui_kl_gen_key_by_cfg(kl_hdl, &cfg, &key_dst_pos)){	/*just generate key*/
-			NGLOG_ERROR("aui_kl_gen_key_by_cfg fail");
-			goto err2;
-		}
-		NGLOG_DEBUG("1 key_dst_pos: %d", key_dst_pos);
-
-		return NGL_OK;
+	    if(aui_kl_open(&kl_attr, &kl_hdl)){
+	 	NGLOG_ERROR("aui_kl_open fail");
+		return NGL_ERROR;
+	    }
+	    dsc->hdl_kl = kl_hdl;
 	}
+	kl_hdl = dsc->hdl_kl;
 
 	unsigned long key_dst_pos;
 	cfg.run_level_mode = AUI_KL_RUN_LEVEL_MODE_LEVEL_ALL;

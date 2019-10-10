@@ -23,18 +23,7 @@ DWORD VA_DSCR_Init();
 #include <ngl_pvr.h>
 #include <dvbepg.h>
 NGL_MODULE(VA2NGL)
-static DWORD CreateFilter(int pid,int num,...);
-static BYTE CATSection[1024];
-static INT SectionCBK(DWORD dwVaFilterHandle,UINT32 uiBufferLength,BYTE *pBuffer, void *pUserData)
-{
-    if(1==pBuffer[0]){
-        if(memcmp(pBuffer,CATSection,8)){
-            NGLOG_DEBUG("CAT Updated SectionCBK filter=0x%x tbid=%x",dwVaFilterHandle,pBuffer[0] );
-            VA_CTRL_CatUpdated(0,uiBufferLength,pBuffer);     
-            memcpy(CATSection,pBuffer,uiBufferLength);
-        }
-    }
-}
+
 static void*ACSProc(void*p){
     int i,ret;
     tVA_CTRL_ConfigurationParameters param;
@@ -51,7 +40,6 @@ static void*ACSProc(void*p){
     NGLOG_DEBUG("VA_CTRL_Start...");
     for(i=0;i<3;i++)
         VA_CTRL_OpenAcsInstance(i,(tVA_CTRL_AcsMode)i);
-    CreateFilter(1,1,1);
 
     VA_CTRL_Start();
     NGLOG_DEBUG("VA_CTRL_Start...end");
@@ -59,60 +47,53 @@ static void*ACSProc(void*p){
 
 static SERVICELOCATOR lastplayed;
 static WORD lastpids[32];
-static DWORD CreateFilter(int pid,int num,...){
-    va_list ap;
-    DWORD  hFilter;
-    BYTE mask[8],value[8];
-    int i,idx;
-    char buffer[64];
-    memset(mask,0,sizeof(mask));
-    memset(buffer,0,sizeof(buffer));
-    va_start(ap,num);
-    for(i=0,idx=0;i<num;i++){
-        mask[idx]=0xFF;
-        value[idx]=(BYTE)va_arg(ap,int);
-        sprintf(buffer+i*3,"%02x,",value[idx]);
-        if(i==0)idx+=2;else idx++;//skip section length field
-    }
-    va_end(ap);
-    if(num>1)num+=2;
-    printf("filter pid=%d %d pattern:%s",pid,num,buffer);
-    hFilter=VA_DMX_AllocateSectionFilter(0,0,pid,SectionCBK);
-    VA_DMX_SetSectionFilterParameters(hFilter,num,mask,value,(tVA_DMX_NotificationMode)1);//0-onshort ,1-eVA_DMX_Continuous);
-    VA_DMX_StartSectionFilter(hFilter);
-    return hFilter;
+static INT ACSStreamNOTIFY(DWORD dwStbStreamHandle, tVA_CTRL_StreamNotificationType eStreamNotificationType, tVA_CTRL_StreamNotificationInfo uStreamNotificationInfo){
+    return kVA_OK;
 }
-
 static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*userdata){
     BYTE buffer[1024];
     int i,ne,rc;
     ELEMENTSTREAM es[32];
-    if(MSG_SERVICE_CHANGE!=msg)
-        return;
-    rc=DtvGetServicePmt(svc,buffer);
-    NGLOG_ERROR_IF(rc==0,"PMT not found");
     PMT pmt(buffer,false);
+    switch(msg){
+    case MSG_SERVICE_CHANGE:
+        rc=DtvGetServicePmt(svc,buffer);
+        NGLOG_ERROR_IF(rc==0,"PMT not found");
 
-    for(i=0;i<32&&lastpids[i]!=0;i++){
-        VA_CTRL_RemoveStream(lastpids[i]);
-    }
-    VA_CTRL_SwitchOffProgram(0);
-    if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid||(svc->tpid!=lastplayed.tpid)){
-        VA_CTRL_TsChanged(0);//VA_CTRL_TsChanged(1);
-    }
-    lastplayed=*svc;
-    //VA_CTRL_SwitchOffProgram(1);
-    NGLOG_DUMP("PMT",buffer,8);
-    VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
-    //VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
-    ne=pmt.getElements(es,false);
-    memset(lastpids,0,sizeof(lastpids));
-    NGLOG_DEBUG("DtvGetServicePmt=%d PLAY %d.%d.%d pmtlen=%d  %d elements",rc,svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),ne);
-    for(i=0;i<ne;i++){
-        NGLOG_DEBUG("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
-        VA_CTRL_AddStream(0,es[i].pid,es[i].pid,NULL);
-        //VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
-        lastpids[i]=es[i].pid;
+        for(i=0;i<32&&lastpids[i]!=0;i++){
+           VA_CTRL_RemoveStream(lastpids[i]);
+        }
+        VA_CTRL_SwitchOffProgram(0);
+        if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid||(svc->tpid!=lastplayed.tpid)){
+           VA_CTRL_TsChanged(0);//VA_CTRL_TsChanged(1);
+        }
+        lastplayed=*svc;
+        //VA_CTRL_SwitchOffProgram(1);
+        NGLOG_DUMP("PMT",buffer,8);
+        VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
+        //VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
+        ne=pmt.getElements(es,false);
+        memset(lastpids,0,sizeof(lastpids));
+        NGLOG_DEBUG("DtvGetServicePmt=%d PLAY %d.%d.%d pmtlen=%d  %d elements",rc,svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),ne);
+        for(i=0;i<ne;i++){
+            NGLOG_DEBUG("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
+            VA_CTRL_AddStream(0,es[i].pid,es[i].pid,ACSStreamNOTIFY);
+            //VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
+            lastpids[i]=es[i].pid;
+        }
+        break;
+    case MSG_PMT_CHANGE:
+        {
+            PSITable table((BYTE*)lp,false);
+            NGLOG_DEBUG("MSG_PMT_CHANGED %d.%d.%d sid:%x ver:%d",svc->netid,svc->tsid,svc->sid,table.extTableId(),table.version());
+        }break;
+    case MSG_CAT_CHANGE:
+        {
+            PSITable table((BYTE*)lp,false);
+            NGLOG_DEBUG("MSG_CAT_CHANGE ver:%d len:%d",table.version(),wp);
+            VA_CTRL_CatUpdated(0,wp,(BYTE*)lp);
+        }break;
+    default:break;
     }
 }
 

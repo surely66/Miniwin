@@ -56,17 +56,20 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
 static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
      PMT p1((BYTE*)UserData,false);
      PMT p2(Buffer,false);
-     if(p1.getProgramNumber()!=p2.getProgramNumber())return;
      if( (p1.version()!=p2.version()) || (p1.crc32()!=p2.crc32()) ) 
-         DtvNotify(MSG_PMT_CHANGE,&sCurrentService,BufferLength,(ULONG)Buffer);
+         DtvNotify((Buffer[0]==TBID_PMT?MSG_PMT_CHANGE:MSG_CAT_CHANGE),&sCurrentService,BufferLength,(ULONG)Buffer);
+     memcpy((BYTE*)UserData,Buffer,BufferLength);
 }
 
 static void PlayProc(void*param){
     MSGPLAY msg={{(USHORT)0,(USHORT)0,(USHORT)0xFFFF}};//0xFFFF  is an invalid serviceid
     SERVICELOCATOR lastplayed={0,0,(USHORT)0xFFFF};
     DWORD flt_pmt=0;
+    DWORD flt_cat=0;
     BYTE PMT[1024];
+    BYTE CAT[1024];
     int pmtpid;
+    flt_cat=CreateFilter(PID_CAT,SectionMonitor,CAT,true,1,0xFF01);
     while(1){
         UINT count;
         int rc=NGL_ERROR;
@@ -78,6 +81,7 @@ static void PlayProc(void*param){
             lastplayed=msg.loc;
             DtvGetServicePmt(&lastplayed,PMT);
             DtvGetServiceItem(&lastplayed,SKI_PMTPID,&pmtpid);
+            nglStopSectionFilter(flt_pmt);
             nglFreeSectionFilter(flt_pmt);
             flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,PMT,true,3,0xFF02,(0xFF00|(lastplayed.sid>>8)),(0xFF00|(lastplayed.sid&0xFF)));
             PlayService(&msg.loc,msg.lan);
