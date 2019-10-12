@@ -36,13 +36,14 @@ static ACSDSC*GetDSC(DWORD pid){
 DWORD VA_DSCR_Init(){
     int i;
     memset(dscs,0,sizeof(dscs));
+    nglDscInit();
     NGLOG_DEBUG("VA_DSCR_Init");
     return kVA_OK;
 }
 
 DWORD VA_DSCR_Open( DWORD dwStbStreamHandle )
 {
-    int i;
+    int i,pid_count=0;
     ACSDSC*dsc=NULL;
     if(NULL!=dsc||dwStbStreamHandle>=0x1FFF)
         return  kVA_ILLEGAL_HANDLE;
@@ -53,10 +54,14 @@ DWORD VA_DSCR_Open( DWORD dwStbStreamHandle )
         }
     }
     if(dsc){
-       dsc->handle=nglDscOpen((UINT16)dwStbStreamHandle);
-       if(dsc->handle)dsc->pid=dwStbStreamHandle;
+        USHORT pids[8];
+        pid_count=GetCurrentServiceEcmPids(pids);        
+        NGLOG_DEBUG("pid_count=%d",pid_count,pids[0],pids[1]);
+        if(pid_count==0){pids[0]=dwStbStreamHandle&0x1FFF;pid_count=1;}
+        dsc->handle=nglDscOpen(pids,pid_count);
+        if(dsc->handle)dsc->pid=dwStbStreamHandle;
     }
-    NGLOG_DEBUG("dsc=%p idx=%d nglhandle=%p pid=%d",dsc,(dsc?dsc-dscs:-1),(dsc?dsc->handle:0),dwStbStreamHandle);
+    NGLOG_DEBUG("dsc=%p idx=%d nglhandle=%p pid=%d pid_count=%d",dsc,(dsc?dsc-dscs:-1),(dsc?dsc->handle:0),dwStbStreamHandle,pid_count);
     if(NULL==dsc||0==dsc->handle)return kVA_ILLEGAL_HANDLE;
     return (DWORD)dsc;
 }
@@ -78,8 +83,7 @@ INT VA_DSCR_Close( DWORD dwStbDescrHandle )
     return kVA_ERROR;
 }
 
-INT VA_DSCR_SetKeys(
-    DWORD dwStbDescrHandle,
+INT VA_DSCR_SetKeys( DWORD dwStbDescrHandle,
     UINT16 uiOddKeyLength, const BYTE  *pOddKey,
     UINT16 uiEvenKeyLength, const BYTE  *pEvenKey,
     void *pUserData )

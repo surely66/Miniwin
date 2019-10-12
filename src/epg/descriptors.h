@@ -18,7 +18,7 @@ class Descriptors{
 private:
    int ownedbuff;
 protected:
-   INT des_length;
+   INT length;
    BYTE*descriptors;
 public:
    Descriptors();
@@ -29,7 +29,7 @@ public:
    void cloneData();
    BYTE*findDescriptor(INT tag)const;
    INT findDescriptors(INT,...)const;
-   int getLength()const{return des_length;}
+   int getLength()const{return length;}
    operator const BYTE*(){return descriptors;}
 };
 
@@ -37,7 +37,7 @@ class CADescriptor:Descriptors{
 public:
     CADescriptor(const BYTE*pd,int len,bool deep=false):Descriptors(pd,len,deep){}
     USHORT getCAID(){return descriptors[2]<<8|descriptors[3];}
-    USHORT getPID(){return ((descriptors[4]&0x1F)<<8)|descriptors[5];}
+    USHORT getEcmPID(){return ((descriptors[4]&0x1F)<<8)|descriptors[5];}
 };
 class NameDescriptor:public Descriptors{
 public:

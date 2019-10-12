@@ -9,10 +9,12 @@ enum{
     LENGTH_SHORT=1000,
     LENGTH_LONG=3000
 };
+typedef std::function<void(Window&,int)>OnCreateContentListener;
 public:
-    ToastWindow(const std::string&txt,int w,int h,int timeout);
+    ToastWindow(int w,int h,int timeout);
     virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
-    static ToastWindow*makeText(const std::string&txt,int long timeout=LENGTH_SHORT);
+    static ToastWindow*makeWindow(int w,int h,int flags,OnCreateContentListener oncreate,UINT timeout=LENGTH_SHORT);
+    static ToastWindow*makeText(const std::string&txt,UINT timeout=LENGTH_SHORT);
 private:
     const static int TIMER_ID=0x1000;
     DWORD timeout_;

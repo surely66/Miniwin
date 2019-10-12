@@ -3,6 +3,7 @@ extern "C"{
 }
 #include <windows.h>
 #include <ngl_ir.h>
+#include <ngl_video.h>
 #include <appmenus.h>
 #include <dvbapp.h>
 #include <dvbepg.h>
@@ -11,6 +12,16 @@ extern "C"{
 #include <string>
 
 using namespace ntvplus;
+
+static void ShowVolumeWindow(int timeout){
+    ToastWindow::makeWindow(400,20,0,[&](Window&w,int){
+           int vol=nglSndGetColume(0);
+           ProgressBar*p=new ProgressBar(390,10);
+           w.addChildView(p);
+           p->setProgress(vol);
+           w.setPos(400,600);
+       },timeout);
+}
 
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
@@ -21,7 +32,7 @@ int main(int argc,const char*argv[]){
     app.setOpacity(app.getArgAsInt("alpha",255));
     app.getString("mainmenu",app.getArg("language","eng"));
     desktop->setKeyListener([&](int key)->bool{
-         printf("rcv key:%x menu=%x\r\n",key,NGL_KEY_MENU);
+         printf("rcv key:%x \r\n",key);
          switch(key){
          case NGL_KEY_MENU:CreateMainMenu();return true;
          case NGL_KEY_ENTER:CreateChannelList();return true;
@@ -33,6 +44,14 @@ int main(int argc,const char*argv[]){
          case NGL_KEY_F5:
                  return true;
          case NGL_KEY_ESCAPE:exit(0);
+         case NGL_KEY_VOL_INC:
+         case NGL_KEY_VOL_DEC:
+              {
+                  INT vol=nglSndGetColume(0);
+                  vol+=key==NGL_KEY_VOL_INC?5:-5;
+                  nglSndSetVolume(0,vol);
+                  ShowVolumeWindow(2000);
+              }break;
          default:return false;
          }
     });

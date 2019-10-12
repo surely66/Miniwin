@@ -18,44 +18,61 @@ typedef struct{
    BYTE pk[32];
    int algo;
    int schip_flag;
-   UINT16 pid;
+   USHORT pid;
+   USHORT pids[16];
+   UINT pid_cnt;
    NGLCipherMode cipherMode;
    int key_len;
 }NGLDSC;
+typedef struct{
+   aui_hdl hdl;
+   unsigned short pids[16];
+   unsigned int pid_count;
+}DSCHDL;
 
 NGLSCHIP_ContentKey*pContentKey=NULL;
 #define NUM_DSCS 8
 static NGLDSC nglDSCS[NUM_DSCS];
-static NGLCipherMode sCipherMode=eCM_INACTIVE;
-static BYTE sSessionKey[256];//used to decrypt cw
+static DSCHDL dscHandles[eDSC_ALGO_ENUM_LAST];
 static NGLDSC*GetNGDSC(UINT16 pid){
-  int i;
-  for(i=0;i<sizeof(nglDSCS)/sizeof(NGLDSC);i++)
-    if(nglDSCS[i].pid==pid)
-       return nglDSCS+i;
-  return NULL;
+	int i;
+	for(i=0;i<sizeof(nglDSCS)/sizeof(NGLDSC);i++)
+		if(nglDSCS[i].pid==pid)
+			return nglDSCS+i;
+	return NULL;
 }
 #define CHECK(p) {if(p<nglDSCS||p>=&nglDSCS[NUM_DSCS])return NGL_INVALID_PARA;}
 DWORD nglDscInit(){
-   NGLOG_DEBUG("");
-   aui_dsc_init(NULL,NULL);
-   aui_kl_init(NULL,NULL);
-   NGLOG_DEBUG("aui_dsc_init");
-   aui_log_priority_set(AUI_MODULE_DSC,AUI_LOG_PRIO_DEBUG);
-   aui_log_priority_set(AUI_MODULE_KL,AUI_LOG_PRIO_DEBUG);
-   bzero(nglDSCS,sizeof(nglDSCS));
-   
+    aui_attr_dsc attr;
+    NGLOG_DEBUG("");
+    aui_dsc_init(NULL,NULL);
+    aui_kl_init(NULL,NULL);
+    NGLOG_DEBUG("aui_dsc_init");
+    aui_log_priority_set(AUI_MODULE_DSC,AUI_LOG_PRIO_DEBUG);
+    aui_log_priority_set(AUI_MODULE_KL,AUI_LOG_PRIO_DEBUG);
+    bzero(nglDSCS,sizeof(nglDSCS));
+    bzero(dscHandles,sizeof(dscHandles));
+	//bzero(nglDscChPids,sizeof(nglDscChPids));
+
+    attr.uc_dev_idx = 0;
+    attr.dsc_data_type = AUI_DSC_DATA_TS;
+    attr.uc_algo = AUI_DSC_ALGO_CSA;
+    aui_dsc_open(&attr,&dscHandles[eDSC_ALGO_DVB_CSA].hdl);
+
+    attr.uc_dev_idx=1;
+    attr.uc_algo=AUI_DSC_ALGO_AES;
+    aui_dsc_open(&attr,&dscHandles[eDSC_ALGO_AES_128_CBC].hdl);
+    NGLOG_DEBUG("dsc handles[0]=%p handles[1]=%p",dscHandles[eDSC_ALGO_DVB_CSA].hdl,dscHandles[eDSC_ALGO_AES_128_CBC].hdl);
 }
 
-DWORD nglDscOpen(UINT16 pid)
+DWORD nglDscOpen(USHORT*pids,UINT cnt)
 {
     int i;
-    NGLDSC*dsc=GetNGDSC(pid);
-    NGLOG_DEBUG("");
-    if(NULL!=dsc||pid>=0x1FFF){
-        NGLOG_ERROR("pid %d exists or invalid pid",pid);
-        return  NULL;
-    }
+	NGLDSC*dsc=GetNGDSC(pids[0]);
+	if(cnt==0||NULL!=dsc||pids[0]>=0x1FFF){
+		NGLOG_ERROR("pid %d exists or invalid pid",(pids?pids[0]:-1));
+		return  NULL;
+	}
     for(i=0;i<sizeof(nglDSCS)/sizeof(NGLDSC);i++){
         if(nglDSCS[i].pid==0){
            dsc=nglDSCS+i;
@@ -70,16 +87,18 @@ DWORD nglDscOpen(UINT16 pid)
     dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;//AUI_DSC_ENCRYPT;CSA must be DECRYPT(othrewise aui_dsc_attach_key_info2dsc will return error)
 
     dsc->attr.uc_algo = AUI_DSC_ALGO_CSA;
+    dsc->algo = eDSC_ALGO_DVB_CSA;
     dsc->attr.csa_version=AUI_DSC_CSA2;
     dsc->attr.uc_mode=AUI_DSC_WORK_MODE_IS_CBC;
     dsc->attr.puc_iv_ctr=NULL;
 
     dsc->hdl=NULL;
-    dsc->pid=pid;
+    memcpy(dsc->pids,pids,cnt*sizeof(USHORT));
     dsc->schip_flag=0;
-    dsc->attr.pus_pids=&dsc->pid;
-    dsc->attr.ul_pid_cnt=1;
-    NGLOG_DEBUG("\t %s dsc=%p pid=%d",__FUNCTION__,dsc,pid);
+    dsc->pid=dsc->pids[0];
+    dsc->attr.pus_pids=&dsc->pids;
+    dsc->attr.ul_pid_cnt=dsc->pid_cnt=cnt;
+    NGLOG_DEBUG("\t %s dsc=%p pid=%d cnt=%d",__FUNCTION__,dsc,pids[0],cnt);
     return (DWORD)dsc;
 }
 
@@ -87,11 +106,24 @@ DWORD nglDscClose(DWORD dwDescrambleID )
 {
     NGLDSC*dsc=(NGLDSC*)dwDescrambleID;
     CHECK(dsc);
-    NGLOG_DEBUG("%s dsc=%p hdl=%p hdl_kl=%p pid=%d",__FUNCTION__,dsc,dsc->hdl,dsc->hdl_kl,(dsc?dsc->pid:0));
-    if(dsc->hdl!=NULL||0!=dsc->pid){
-         dsc->pid=0;
-         aui_dsc_close(dsc->hdl);
-         aui_kl_close(dsc->hdl_kl);
+    NGLOG_DEBUG("%s dsc=%p hdl=%p hdl_kl=%p pid=%d",__FUNCTION__,dsc,dsc->hdl,dsc->hdl_kl,(dsc?dsc->pids[0]:0));
+    if(dsc->hdl!=NULL||0!=dsc->pid_cnt){
+        aui_dsc_deattach_key_by_pid(dsc->hdl,dsc->pid);
+        int cnt=dscHandles[dsc->algo].pid_count;
+        for(int i=0;i<cnt;i++){
+            unsigned short *ps=dscHandles[dsc->algo].pids; 
+            if(dscHandles[dsc->algo].pids[i]==dsc->pid){
+                memcpy(ps+i,ps+i+1,(cnt-i-1)*sizeof(short));
+                dscHandles[dsc->algo].pid_count--;
+            }
+        }
+		if(dsc->attr.pus_pids)// clean pids
+			bzero(dsc->attr.pus_pids,dsc->attr.ul_pid_cnt);
+         dsc->pid_cnt=0;
+		 dsc->pid=0;
+         //aui_dsc_close(dsc->hdl);
+        if(dsc->hdl_kl)
+           aui_kl_close(dsc->hdl_kl);
          dsc->hdl_kl=NULL;
          dsc->hdl=NULL;
     }
@@ -115,33 +147,37 @@ static INT OpenHDL(NGLDSC*dsc){
     if(NULL==dsc->hdl){
         aui_hdl hdl_dmx;
         aui_dmx_data_path dmx_path;
-        dsc->attr.dsc_key_type =(0==dsc->schip_flag||AUI_DSC_ALGO_CSA==dsc->attr.uc_algo)?AUI_DSC_HOST_KEY_SRAM:AUI_DSC_CONTENT_KEY_KL;
+        dsc->attr.dsc_key_type =(0==dsc->schip_flag/*||AUI_DSC_ALGO_CSA==dsc->attr.uc_algo*/)?AUI_DSC_HOST_KEY_SRAM:AUI_DSC_CONTENT_KEY_KL;
         switch(dsc->attr.uc_algo){
-        case AUI_DSC_ALGO_CSA:dsc->attr.en_en_de_crypt=AUI_DSC_ENCRYPT;break;//CSA must be DECRYPT
-        case AUI_DSC_ALGO_AES:dsc->attr.en_en_de_crypt=AUI_DSC_ENCRYPT;break;
+        case AUI_DSC_ALGO_CSA:dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;break;//CSA must be DECRYPT
+        case AUI_DSC_ALGO_AES:dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;break;
         }
-        if((NULL==dsc->hdl)&&(AUI_RTN_SUCCESS!=aui_find_dev_by_idx(AUI_MODULE_DSC,dsc->attr.uc_dev_idx ,&dsc->hdl)))
-            aui_dsc_open(&dsc->attr,&dsc->hdl);
+        dsc->hdl=dscHandles[dsc->algo].hdl;  
+	    dsc->attr.uc_dev_idx =(int)dsc->algo;
         
         if(AUI_RTN_SUCCESS!=aui_find_dev_by_idx(AUI_MODULE_DMX,0,&hdl_dmx))
             NGLOG_DEBUG("OpenHDL find_dev of DMX failed");
 
-        bzero(&dmx_path,sizeof(dmx_path));
-        dmx_path.data_path_type = AUI_DMX_DATA_PATH_DE_PLAY;
-        dmx_path.dsc_type = AUI_DMX_DATA_PATH_DSC_TYPE_HANDLE;
-        dmx_path.p_hdl_de_dev =dsc->hdl;
-        rc=aui_dmx_data_path_set(hdl_dmx,&dmx_path);
+        if(dsc->hdl){
+          bzero(&dmx_path,sizeof(dmx_path));
+          dmx_path.data_path_type = AUI_DMX_DATA_PATH_DE_PLAY;
+          dmx_path.dsc_type = AUI_DMX_DATA_PATH_DSC_TYPE_HANDLE;
+          dmx_path.p_hdl_de_dev =dsc->hdl;
+          rc=aui_dmx_data_path_set(hdl_dmx,&dmx_path);
+        }
         NGLOG_DEBUG_IF(rc,"OpenHDL aui_dmx_data_path_set=%d hdl_dmx=%p  dschdl=%p algo=%s",rc,hdl_dmx,dsc->hdl,AuiAlgo(dsc->attr.uc_algo));
-        if(aui_find_dev_by_idx(AUI_MODULE_KL,dsc->attr.uc_dev_idx,&dsc->hdl_kl)){
+	}
+	if(NULL==dsc->hdl_kl){
+        int idx=dsc-nglDSCS;
+        if(aui_find_dev_by_idx(AUI_MODULE_KL,idx,&dsc->hdl_kl)){
             struct aui_attr_kl attr;
             memset(&attr,0,sizeof(aui_attr_kl));
-            attr.uc_dev_idx = dsc->attr.uc_dev_idx;
+            attr.uc_dev_idx = idx;
             attr.en_key_pattern = (8==dsc->key_len) ? AUI_KL_OUTPUT_KEY_PATTERN_64_ODD_EVEN:AUI_KL_OUTPUT_KEY_PATTERN_128_ODD_EVEN;
             attr.en_level = AUI_KL_KEY_TWO_LEVEL;//AUI_KL_KEY_THREE_LEVEL AUI_KL_KEY_TWO_LEVEL AUI_KL_KEY_ONE_LEVEL
             attr.en_root_key_idx = AUI_KL_ROOT_KEY_0_0;
             attr.en_key_ladder_type=AUI_KL_TYPE_ALI;
             rc=aui_kl_open(&attr,&dsc->hdl_kl);
-            NGLOG_DEBUG("dsc=%p aui_kl_open=%d hdl_kl=%p uc_dev_idx=%d",dsc,rc,dsc->hdl_kl,attr.uc_dev_idx);
         }
         NGLOG_DEBUG("dsc=%p dsc->hdl_kl=%p algo=%s",dsc,dsc->hdl_kl,AuiAlgo(dsc->attr.uc_algo));
     }
@@ -169,7 +205,6 @@ static INT OpenHDL(NGLDSC*dsc){
         }break;
     case AUI_DSC_HOST_KEY_SRAM:
         dsc->attr.puc_key=dsc->key;
-        dsc->attr.uc_dev_idx = (dsc-nglDSCS);
         dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;//AUI_DSC_ENCRYPT;CSA must be DECRYPT(othrewise aui_dsc_attach_key_info2dsc will return error)
 
         dsc->attr.uc_mode=AUI_DSC_WORK_MODE_IS_CBC;
@@ -178,8 +213,6 @@ static INT OpenHDL(NGLDSC*dsc){
     case AUI_DSC_CONTENT_KEY_OTP:
         break;
    }
-   NGLOG_DEBUG("dsc %p dsc.hdl=%p dsc.hdl_kl=%p dsc.attr.uc_algo=%s dsc_key_type=%s",dsc,dsc->hdl,dsc->hdl_kl,
-            AuiAlgo(dsc->attr.uc_algo),AuiKeyType(dsc->attr.dsc_key_type));
 }
 
 static const char*PRINTALGO(int a){
@@ -219,16 +252,12 @@ DWORD nglDscSetParameters(DWORD dwStbStreamHandle,const NGLDSC_Param *param )
     case eDSC_ALGO_DVB_CSA3_FULLY_ENHANCED_MODE:     dsc->attr.uc_algo = AUI_DSC_ALGO_AES;break;
     default:break;
     }
-	if(dsc->algo!=param->algo){
-		aui_dsc_close(dsc->hdl);
-		dsc->hdl=NULL;
-		NGLOG_DEBUG("algo changed from %s->%s",PRINTALGO(dsc->algo),PRINTALGO(param->algo));
-		dsc->algo=param->algo;
-	}
+	dsc->hdl=NULL;
+	dsc->algo=param->algo;
     OpenHDL(dsc);
     return NGL_OK;
 }
-#if 1 
+
 #define MAX_KEY_SIZE 16
 static INT VA_DSCR_SCHIP_SetHostKeys(DWORD dwStbDescrHandle,
 	UINT16 uiOddKeyLength, const BYTE  *pOddKey,
@@ -262,8 +291,8 @@ static INT VA_DSCR_SCHIP_SetHostKeys(DWORD dwStbDescrHandle,
 	dsc_attr.dsc_key_type = AUI_DSC_HOST_KEY_SRAM;
 	dsc_attr.en_parity = AUI_DSC_PARITY_MODE_AUTO_PARITY_MODE0;	/*The parity is detected from TS packet header*/
 
-	dsc_attr.ul_pid_cnt = 1;
-	dsc_attr.pus_pids = (unsigned short *)(&(dsc->pid));
+	dsc_attr.ul_pid_cnt = dsc->pid_cnt;
+	dsc_attr.pus_pids = dsc->pids;
 
 
 	if(dsc->hdl){
@@ -279,14 +308,7 @@ static INT VA_DSCR_SCHIP_SetHostKeys(DWORD dwStbDescrHandle,
 		dsc_attr.dsc_data_type = AUI_DSC_DATA_TS;
 		dsc_attr.uc_algo = AUI_DSC_ALGO_CSA;
 		dsc_attr.csa_version = AUI_DSC_CSA2;
-		if(aui_dsc_open(&dsc_attr, &hdl)){
-			NGLOG_ERROR("dsc open fail");
-			return NGL_INVALID_PARA;
-		}else{
-			dsc->hdl = hdl;
-			dsc->algo = eDSC_ALGO_DVB_CSA;
-		}
-
+        dsc->hdl=dscHandles[dsc->algo].hdl;
 		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
 			NGLOG_ERROR("va_dscr set key fail");
 			goto err1;
@@ -295,10 +317,10 @@ static INT VA_DSCR_SCHIP_SetHostKeys(DWORD dwStbDescrHandle,
 	return NGL_OK;
 
 err1:
-	if(aui_dsc_close(dsc->hdl)){
+	/*if(aui_dsc_close(dsc->hdl)){
 		NGLOG_ERROR("dsc close fail");
 		return NGL_ERROR;
-	}
+	}*/
 	return NGL_ERROR;
 }
 
@@ -309,8 +331,9 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 	aui_attr_kl kl_attr;
 	aui_hdl kl_hdl;
 	struct aui_cfg_kl cfg;
+    int rc;
 	unsigned char key_buffer[MAX_KEY_SIZE * 3] = {0};
-
+    const char*mdname[]={"INACTIVE","SESSION","LOCKED"};
 	aui_cfg_kl cfg_kl;
 	aui_kl_key_source_attr key_source;
 	aui_kl_key_source_attr data_source;
@@ -319,15 +342,12 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 	memcpy(key_buffer + MAX_KEY_SIZE, pOddKey, uiOddKeyLength);
 	memcpy(key_buffer + MAX_KEY_SIZE + uiOddKeyLength, pEvenKey, uiEvenKeyLength);
 	NGLOG_DUMP("PK & CW:", key_buffer, MAX_KEY_SIZE + 2 * uiOddKeyLength);
-	NGLOG_DEBUG("Setup 1 eChipsetMode: %d", pContentKey->eChipsetMode);
+	NGLOG_DEBUG("[%d]Setup 1 contentkey.eChipsetMode: %s dsc.ciphermode=%s",dsc->pid,mdname[pContentKey->eChipsetMode],mdname[dsc->cipherMode]);
 
 	if(pContentKey->eChipsetMode != dsc->cipherMode){
-		NGLOG_DEBUG("%s (%d)\n", __FUNCTION__, __LINE__);
-		if(VA_DSCR_SCHIP_SetHostKeys(dwStbDescrHandle, uiOddKeyLength, pOddKey, uiEvenKeyLength, pEvenKey)){
-			NGLOG_ERROR("va_dscr_schip_sethostkeys error!\n");
-			return NGL_ERROR;
-		}
-		return NGL_OK;
+		rc=VA_DSCR_SCHIP_SetHostKeys(dwStbDescrHandle, uiOddKeyLength, pOddKey, uiEvenKeyLength, pEvenKey);
+		NGLOG_DEBUG("va_dscr_schip_sethostkeys rc=%d",rc);
+		return rc;
 	}
 
 	kl_attr.uc_dev_idx = (dsc-nglDSCS);
@@ -336,10 +356,8 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 	kl_attr.en_key_ladder_type = AUI_KL_TYPE_ALI;
 	
 	if(uiOddKeyLength == MAX_KEY_SIZE){
-		NGLOG_DEBUG("FPA 128");
 		kl_attr.en_key_pattern = AUI_KL_OUTPUT_KEY_PATTERN_128_ODD_EVEN;
 	}else{
-		NGLOG_DEBUG("FPA 64");
 		kl_attr.en_key_pattern = AUI_KL_OUTPUT_KEY_PATTERN_64_ODD_EVEN;
 	}
 
@@ -367,7 +385,7 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 
 	// set KL position to dsc
 	dsc_attr.ul_key_pos = key_dst_pos;
-	NGLOG_DEBUG("3 key_dst_pos: %d\n", key_dst_pos);
+	NGLOG_DEBUG("3 key_dst_pos: %d dsc->algo=%s\n", key_dst_pos,PRINTALGO(dsc->algo));
 	dsc_attr.en_residue = AUI_DSC_RESIDUE_BLOCK_IS_AS_ATSC;
 
 	if (dsc->algo == eDSC_ALGO_AES_128_CBC){//eSCRAMBLING_ALGO_AES_128_CBC) {
@@ -386,8 +404,8 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 	dsc_attr.ul_key_pattern = AUI_DSC_KEY_PATTERN_ODD_EVEN; /*Odd & Even Keys are provided*/
 	dsc_attr.dsc_key_type = AUI_DSC_CONTENT_KEY_KL;
 	dsc_attr.en_parity = AUI_DSC_PARITY_MODE_AUTO_PARITY_MODE0;	/*The parity is detected from TS packet header*/
-	dsc_attr.ul_pid_cnt = 1;
-	dsc_attr.pus_pids = (unsigned short *)(&(dsc->pid));
+	dsc_attr.ul_pid_cnt = dsc->pid_cnt;
+	dsc_attr.pus_pids = dsc->pids;
 
 	if(dsc->hdl) {
 		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
@@ -401,14 +419,7 @@ DWORD nglSchipSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKe
 		dsc_attr.dsc_data_type = AUI_DSC_DATA_TS;
 		dsc_attr.uc_algo = AUI_DSC_ALGO_CSA;
 		dsc_attr.csa_version = AUI_DSC_CSA2;
-		if(aui_dsc_open(&dsc_attr, &hdl)){
-			NGLOG_ERROR("dsc open fail");
-			return NGL_INVALID_PARA;
-		}else{
-			dsc->hdl = hdl;
-			dsc->algo =eDSC_ALGO_DVB_CSA;// eSCRAMBLING_ALGO_DVB_CSA;
-		}
-
+        dsc->hdl=dscHandles[dsc->algo].hdl;
 		if(aui_dsc_attach_key_info2dsc(dsc->hdl, &dsc_attr)){
 			NGLOG_ERROR("va_dscr set key fail");
 			goto err1;
@@ -421,26 +432,23 @@ err2:
 		return NGL_ERROR;
 	}
 err1:
-	if(aui_dsc_close(dsc->hdl)){
+	/*if(aui_dsc_close(dsc->hdl)){
 		NGLOG_ERROR("dsc close fail");
 		return NGL_ERROR;
-	}
+	}*/
 	return NGL_ERROR; 
-	return NGL_OK;
 }
-#endif
 
 DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyLength,
          const BYTE  *pEvenKey,UINT32 uiEvenKeyLength)
 {
     int ret;
-    BYTE*pk;
+    BYTE oddkey[16],evenkey[16];
     NGLDSC*dsc=(NGLDSC*)dwStbDescrHandle;
-    //NGLOG_DUMP("ODD",pOddKey,uiOddKeyLength);
-    //NGLOG_DUMP("EVEN",pEvenKey,uiEvenKeyLength);
+    const char*mdname[]={"INACTIVE","SESSION","LOCKED"};
     CHECK(dsc);
-    NGLOG_DEBUG("dsc=%p dsc->hdl=%p OddKey=%p/%d EvenKey=%p/%d schip_flag=%d",dsc,dsc->hdl,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength,dsc->schip_flag);
-    
+	NGLOG_DEBUG("dsc[%d]=%p dsc->hdl=%p OddKey=%p/%d EvenKey=%p/%d schip=%d chipsetmode=%s/%s",dsc->pid,dsc,dsc->hdl,pOddKey,uiOddKeyLength,
+              pEvenKey,uiEvenKeyLength,dsc->schip_flag,(pContentKey?mdname[pContentKey->eChipsetMode]:"NULL"),mdname[dsc->cipherMode]);
 	if(dsc->schip_flag){
 		return nglSchipSetKeys(dwStbDescrHandle,pOddKey,uiOddKeyLength,pEvenKey,uiEvenKeyLength);
 	}
@@ -454,23 +462,31 @@ DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyL
     if(16==uiOddKeyLength||16==uiEvenKeyLength) dsc->attr.uc_algo=AUI_DSC_ALGO_AES;
     
     switch(dsc->attr.uc_algo){
-    case AUI_DSC_ALGO_CSA:dsc->attr.ul_key_len=8*8;
+	case AUI_DSC_ALGO_CSA://eDSC_ALGO_DVB_CSA
+			dsc->attr.ul_key_len=8*8;
+			dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;
             if(uiOddKeyLength>8||uiEvenKeyLength>8){ NGLOG_ERROR("CSA.NGL_INVALID_PARA");return NGL_INVALID_PARA;}
             dsc->attr.puc_iv_ctr=NULL;
-            if(pOddKey){
-                pk=(BYTE*)pOddKey;
-                pk[3]=pk[0]+pk[1]+pk[2];
-                pk[7]=pk[4]+pk[5]+pk[6];
-            }
-            if(pEvenKey){
-                pk=(BYTE*)pEvenKey;
-                pk[3]=pk[0]+pk[1]+pk[2];
-                pk[7]=pk[4]+pk[5]+pk[6];
-            }
+			if(pOddKey){
+				memcpy(oddkey, pOddKey, uiOddKeyLength);	
+				oddkey[3] = (oddkey[2] + oddkey[1] + oddkey[0])&0xff;
+				oddkey[7] = (oddkey[6] + oddkey[5] + oddkey[4])&0xff;
+			}
+			if(pEvenKey){
+				memcpy(evenkey, pEvenKey, uiEvenKeyLength);	
+				evenkey[3] = (evenkey[2] + evenkey[1] + evenkey[0])&0xff;
+				evenkey[7] = (evenkey[6] + evenkey[5] + evenkey[4])&0xff;
+			}
             break;
-    case AUI_DSC_ALGO_AES:dsc->attr.ul_key_len=16*8;
+	case AUI_DSC_ALGO_AES://eDSC_ALGO_AES_128_CBC
+			dsc->attr.ul_key_len=16*8;
+			dsc->attr.en_en_de_crypt=AUI_DSC_DECRYPT;
             if(uiOddKeyLength>16||uiEvenKeyLength>16){NGLOG_ERROR("AES.NGL_INVALID_PARA");return NGL_INVALID_PARA;}
             dsc->attr.puc_iv_ctr=dsc->iv;
+			if(pOddKey&&uiOddKeyLength)
+				memcpy(oddkey,pOddKey,uiOddKeyLength);
+			if(pEvenKey&&uiEvenKeyLength)
+				memcpy(evenkey , pEvenKey,uiEvenKeyLength );
             break;
     }
     if(NULL!=pOddKey && NULL!=pEvenKey)
@@ -481,18 +497,19 @@ DWORD nglDscSetKeys(DWORD dwStbDescrHandle,const BYTE  *pOddKey,UINT32 uiOddKeyL
          dsc->attr.ul_key_pattern= AUI_DSC_KEY_PATTERN_ODD;
 
     if(pOddKey&&uiOddKeyLength)
-        memcpy(dsc->key,   pOddKey ,uiOddKeyLength);
+		memcpy(dsc->key,oddkey,uiOddKeyLength);
 
     if(pEvenKey&&uiEvenKeyLength)
-        memcpy(dsc->key+uiOddKeyLength , pEvenKey , uiEvenKeyLength );
-    //NGLOG_DUMP("ODDEVEN",dsc->key,uiOddKeyLength+uiEvenKeyLength);
+		memcpy(dsc->key+uiOddKeyLength,evenkey ,uiEvenKeyLength );
+	NGLOG_DUMP("ODDEVEN",dsc->key,uiOddKeyLength+uiEvenKeyLength);
     dsc->attr.en_parity = AUI_DSC_PARITY_MODE_AUTO_PARITY_MODE0;
 
     OpenHDL(dsc);
-    ret=aui_dsc_attach_key_info2dsc(dsc->hdl,&dsc->attr);
-    NGLOG_DEBUG("attach_key_info2dsc=%d dsc=%p KeyLen=%d/%d hdl=%p iv=%p algo=%s",ret,dsc,uiOddKeyLength,uiEvenKeyLength,
-           dsc->hdl,dsc->attr.puc_iv_ctr,AuiAlgo(dsc->attr.uc_algo));
-    return ret==0?NGL_OK:NGL_ERROR;
+	if(dsc->hdl)
+		ret=aui_dsc_attach_key_info2dsc(dsc->hdl,&dsc->attr);
+	NGLOG_DEBUG("attach_key_info2dsc=%d dsc=%p KeyLen=%d/%d hdl=%p iv=%p algo=%s",ret,dsc,uiOddKeyLength,uiEvenKeyLength,
+			dsc->hdl,dsc->attr.puc_iv_ctr,AuiAlgo(dsc->attr.uc_algo));
+	return ret==0?NGL_OK:NGL_ERROR;
 }
 
 #define CHIPSET_OTP_ADDR (0)
@@ -503,51 +520,75 @@ DWORD nglGetCipherMode(NGLCipherMode*md){
     DWORD data;
     AUI_RTN_CODE ret;
     ret= aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
-    *md=sCipherMode;
-    if( (data & KL_KEY_OTP_SET) && (sCipherMode==eCM_LOCKED) )
+	if(AUI_RTN_SUCCESS!=ret)return NGL_INVALID_PARA;
+	if( (data & KL_KEY_OTP_SET) && (pContentKey->eChipsetMode==eCM_LOCKED) )
        *md=eCM_LOCKED;
-    else *md=sCipherMode;
+	else if(pContentKey->eChipsetMode==eCM_INACTIVE)
+	      *md=eCM_INACTIVE;
+	else *md=eCM_SESSION;
     return NGL_OK;
 }
 
 DWORD nglSetCipherMode(NGLCipherMode md){
     DWORD data;
     AUI_RTN_CODE ret;
-    switch(md){//
-    case eCM_INACTIVE:
-          ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
-          if( (AUI_RTN_SUCCESS!=ret) || ((data&KL_KEY_OTP_SET)==1) )
-             return NGL_ERROR;
-          sCipherMode=eCM_INACTIVE;
-          break;
-    case eCM_SESSION:
-          ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
-          if( (AUI_RTN_SUCCESS!=ret) || ((data&KL_KEY_OTP_SET)==1) )
-             return NGL_ERROR;
-          sCipherMode=eCM_SESSION;
-          break;
-    case eCM_LOCKED:
-          ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
-          if(AUI_RTN_SUCCESS!=ret)return NGL_ERROR;
-          data|=KL_KEY_OTP_SET;
-          // because once OTP has been written, this chip can't be reversible. 
-          //ret = aui_otp_write(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
-          sCipherMode=eCM_LOCKED;
-          break;
-    default:return NGL_INVALID_PARA;
-    }
-    return NGL_OK;
+	if(NULL==pContentKey)pContentKey = (NGLSCHIP_ContentKey *)malloc(sizeof(NGLSCHIP_ContentKey));
+
+	switch(md){//
+	case eCM_INACTIVE:
+		ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
+		if (AUI_RTN_SUCCESS!=ret){
+		    NGLOG_DEBUG("otp_read error");
+			goto Error;
+		}
+		if((data&KL_KEY_OTP_SET)==1){
+		    NGLOG_DEBUG("Can't use INACTIVE mode");
+		}
+		pContentKey->eChipsetMode=eCM_INACTIVE;
+		break;
+	case eCM_SESSION:
+		ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
+		if( (AUI_RTN_SUCCESS!=ret) ){
+			NGLOG_DEBUG("otp_read error");goto Error;
+		}
+		if( (data&KL_KEY_OTP_SET)==1){
+		    NGLOG_DEBUG("Can't use eSESSION mode");goto Error;
+		}
+		pContentKey->eChipsetMode=eCM_SESSION;
+		break;
+	case eCM_LOCKED:
+		ret = aui_otp_read(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
+		if(AUI_RTN_SUCCESS!=ret){
+		    NGLOG_DEBUG("aui_otp_read error.");
+			goto Error;
+		}
+		data|=KL_KEY_OTP_SET;
+		// because once OTP has been written, this chip can't be reversible. 
+		//ret = aui_otp_write(KEY_OTP_ADDR, (unsigned char *)&data, sizeof(data));
+		pContentKey->eChipsetMode=eCM_LOCKED;
+		break;
+	default:return NGL_INVALID_PARA;
+	}
+	return NGL_OK;
+Error:
+	free(pContentKey);
+	pContentKey=NULL;
+	return NGL_ERROR;
 }
 
 DWORD nglSetCipherSessionKey(const BYTE*pSessionKey,UINT uiSessionKeyLength){
-    memcpy(sSessionKey,pSessionKey,uiSessionKeyLength);
     DWORD index, index2;
+    char buff[32];
     NGLDSC *pStbSession,*pStbSession2;
     //NGLDSC*dsc;	
     if(!pSessionKey || uiSessionKeyLength == 0 ||(uiSessionKeyLength % 8)){
 	return NGL_INVALID_PARA;
     }
-	
+	if(NULL==pContentKey)pContentKey = (NGLSCHIP_ContentKey *)malloc(sizeof(NGLSCHIP_ContentKey));
+	pContentKey->cwFlag = 1;
+	pContentKey->pSessionKey = pSessionKey;
+	pContentKey->uiSessionKeyLength = uiSessionKeyLength;
+
     for(index = 0; index < NUM_DSCS; index++ ) {
  	if(nglDSCS[index].pid) {
 	    pStbSession =&nglDSCS[index];// (tVA_DSCR_StbSession *)vaDscrHandle[index];
@@ -571,12 +612,17 @@ DWORD nglSetCipherSessionKey(const BYTE*pSessionKey,UINT uiSessionKeyLength){
 
     pStbSession->schip_flag = 1;
     pStbSession2->schip_flag = 1;
-    pStbSession->cipherMode = sCipherMode;//pContentKey->eChipsetMode;
-    pStbSession2->cipherMode = sCipherMode;//pContentKey->eChipsetMode;*/
+   	pStbSession->cipherMode = pContentKey->eChipsetMode;
     memcpy(pStbSession->pk, pSessionKey, uiSessionKeyLength);
+	pStbSession2->cipherMode= pContentKey->eChipsetMode;
     memcpy(pStbSession2->pk, pSessionKey, uiSessionKeyLength);
-    NGLOG_DEBUG("=index=%d index2=%d sCipherMode=%d",index,index2,sCipherMode);
-    NGLOG_DUMP("SessionKey",pSessionKey,uiSessionKeyLength);
+    NGLOG_DEBUG("=index=%d index2=%d sCipherMode=%d",index,index2,pContentKey->eChipsetMode);
+	NGLOG_DEBUG("pSessionKey=%p index=%d/%d index2=%d/%d CiphersetMode=%d",pSessionKey,index,pStbSession->pid,index2,pStbSession2->pid,pContentKey->eChipsetMode);
+    NGLOG_DUMP("pSessionKey",pSessionKey,uiSessionKeyLength);
+    sprintf(buff,"SessionKey[%d]",pStbSession->pid);
+	NGLOG_DUMP(buff,pStbSession->pk,uiSessionKeyLength);
+    sprintf(buff,"SessionKey[%d]",pStbSession2->pid);
+	NGLOG_DUMP(buff,pStbSession2->pk,uiSessionKeyLength);
     return NGL_OK;
 }
 

@@ -8,12 +8,12 @@
 Descriptors::Descriptors(){
     ownedbuff=0;
     descriptors=NULL;
-    des_length=0;
+    length=0;
 }
 
 Descriptors::Descriptors(const Descriptors&o)
   :Descriptors(){
-    setDescriptor(o.descriptors,o.des_length,true);
+    setDescriptor(o.descriptors,o.length,true);
 }
 
 Descriptors::Descriptors(const BYTE*des,INT len,bool deepcopy)
@@ -28,9 +28,9 @@ Descriptors::~Descriptors(){
 }
 
 void Descriptors::cloneData(){
-    if(des_length && 0==ownedbuff){
-       BYTE*p=(BYTE*)nglMalloc(des_length);
-       memcpy(p,descriptors,des_length);
+    if(length && 0==ownedbuff){
+       BYTE*p=(BYTE*)nglMalloc(length);
+       memcpy(p,descriptors,length);
        descriptors=p;
        ownedbuff=1;
     }
@@ -45,12 +45,12 @@ void Descriptors::setDescriptor(const BYTE*des,INT len,bool deepcopy){
     }else{
        descriptors=(BYTE*)des;
     }
-    des_length=len;
+    length=len;
     ownedbuff=deepcopy;
 }
 
 BYTE*Descriptors::findDescriptor(INT tag)const{
-    for(int pos=0;pos<des_length;){
+    for(int pos=0;pos<length;){
         if(descriptors[pos]==tag)return descriptors+pos;
         pos+=2+descriptors[pos+1];
     }
@@ -71,7 +71,7 @@ INT Descriptors::findDescriptors(INT tag,...)const
 }
 
 int NameDescriptor::getName(char*name){
-    ToUtf8((const char*)(descriptors+2),des_length,name);
+    ToUtf8((const char*)(descriptors+2),length,name);
     return descriptors[1];
 }
 
@@ -86,7 +86,7 @@ int ServiceDescriptor::getName(char*name,char*provider){
 
 int MultiServiceNameDescriptor::getName(char*name,char*provider,const char*lan){
     BYTE*p=descriptors+2;
-    for(int i=0;i<des_length;i++){
+    for(int i=0;i<length;i++){
         char nlan[3];
         memcpy(nlan,p,3);
         int plen=p[3];
@@ -102,12 +102,12 @@ int MultiServiceNameDescriptor::getName(char*name,char*provider,const char*lan){
 }
 
 int ParentRatingDescriptor::getRatings(BYTE*clan){
-    memcpy(clan,descriptors,des_length);
-    return des_length/4;
+    memcpy(clan,descriptors,length);
+    return length/4;
 }
 
 int ParentRatingDescriptor::getRating(const char*lan){
-    for(int i=0;i<des_length;i+=4){
+    for(int i=0;i<length;i+=4){
         if(memcmp(descriptors+i+2,lan,3)==0)
            return descriptors[+i+5];
     }
@@ -143,7 +143,7 @@ int  ExtendEventDescriptor::getText(char*text){
 
 int MultiNameDescriptor::getName(char*name,const char*lan){
     BYTE*p=descriptors+2;
-    for(int i=0;i<des_length;){
+    for(int i=0;i<length;){
         char nlan[4];
         memcpy(nlan,p,3);
         int nlen=p[3];
@@ -164,7 +164,7 @@ ServiceListDescriptor::ServiceListDescriptor(USHORT nid,USHORT tid,const BYTE*pd
 
 int ServiceListDescriptor::getService(SERVICELOCATOR*svc,BYTE*types){
     BYTE*pd=descriptors+2;
-    int count=des_length/3;
+    int count=length/3;
     for(int i=0;i<count;i++){
         svc[i].netid=netid;
         svc[i].tsid=tsid;
@@ -183,7 +183,7 @@ NordigLCNDescriptor::NordigLCNDescriptor(USHORT nid,USHORT tid,const BYTE*pd,int
 
 int NordigLCNDescriptor::getLCN(SERVICELOCATOR*svc,USHORT*lcn){
     BYTE*pd=descriptors+2;
-    int count=des_length/4;
+    int count=length/4;
     for(int i=0;i<count;i++){
         svc[i].netid=netid;
         svc[i].tsid=tsid;

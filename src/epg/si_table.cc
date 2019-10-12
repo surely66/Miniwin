@@ -131,14 +131,31 @@ INT MpegElement::getCategory(){
     return -1;
 }
 
-USHORT PMT::ecmPid(){
-    USHORT pid=0x1FFF;
-    INT len;
-    BYTE*pinfo=getProgramDescriptors(len);
-    Descriptors des(pinfo,len);
-    BYTE*p=des.findDescriptor(TAG_CA);
-    if(p)pid=(p[4]&0x1F)<<8|p[5];
-    return pid;
+INT MpegElement::getCAECM(USHORT*caid,USHORT*ecmpid){
+    INT len,cnt=0;
+    BYTE*p=descriptors;
+    for(;p-descriptors<length;){
+        if(p[0]==TAG_CA){
+           if(caid)*caid ++=(p[2]<<8)|p[3];
+           if(ecmpid)*ecmpid++=(p[4]&0x1F)<<8|p[5];
+           cnt++;
+        }p+=(2+p[1]);
+    }
+    return cnt;
+
+}
+
+INT PMT::getCAECM(USHORT*caid,USHORT*ecmpid){
+    INT len,cnt=0;
+    BYTE*p,*pinfo=getProgramDescriptors(len);
+    for(p=pinfo;p-pinfo<len;){
+        if(p[0]==TAG_CA){
+           if(caid)  *caid++=(p[2]<<8)|p[3];
+           if(ecmpid)*ecmpid++=(p[4]&0x1F)<<8|p[5];
+           cnt++;
+        }p+=(2+p[1]); 
+    }
+    return cnt;
 }
 
 BYTE*CAT::getDescriptors(int&len){
@@ -166,7 +183,7 @@ int PMT::getElements(ELEMENTSTREAM*es,bool own){
     for(i=0;des<data+sectionLength()-1;i++){
         es->stream_type=des[0];
         es->pid=(des[1]&0x1F)<<8|des[2];
-        es->setDescriptor(des+5,(des[3]&0x0F)<<8|des[4],own);//es->des_length=(des[3]&0x0F)<<8|des[4];
+        es->setDescriptor(des+5,(des[3]&0x0F)<<8|des[4],own);//es->length=(des[3]&0x0F)<<8|des[4];
         des+=es->getLength()+5;
         GetExtESInfo(es);
         NGLOG_VERBOSE("element %d %d deslen=%d", es->stream_type,es->pid,es->getLength());
@@ -185,7 +202,7 @@ int SDT::getServices(DVBService*services,bool own){
         s->eitPF=pd[2]&0x01;
         s->runStatus=pd[3]>>5;
         s->freeCAMode=(pd[3]>>4)&1;
-        s->setDescriptor(pd+5,(pd[3]&0x0F)<<8|pd[4],own);//des_length=(pd[3]&0x0F)<<8|pd[4];
+        s->setDescriptor(pd+5,(pd[3]&0x0F)<<8|pd[4],own);//length=(pd[3]&0x0F)<<8|pd[4];
         BYTE*p1=s->findDescriptor(TAG_SERVICE);
         if(p1)s->serviceType=p1[2];
         pd+=s->getLength()+5;//
@@ -249,7 +266,7 @@ int EIT::getEvents(EVENT*events,bool own){
          utc=pd[4]<<16|pd[5]<<8|pd[6];
          UTC2Time(mjd,utc,&e->start_time);
          e->duration=Hex2BCD(pd[7]<<16|pd[8]<<8|pd[9]);
-         e->setDescriptor(pd+12,((pd[10]&0x0f)<<8)|pd[11],own);//des_length=((pd[10]&0x0f)<<8)|pd[11];
+         e->setDescriptor(pd+12,((pd[10]&0x0f)<<8)|pd[11],own);//length=((pd[10]&0x0f)<<8)|pd[11];
          pd+=12+ e->getLength();
      }
      return e-events;
@@ -307,7 +324,7 @@ int NIT::getStreams(STREAM*ts,bool own ){
         ts->tsid=pd[0]<<8|pd[1];
         ts->netid=pd[2]<<8|pd[3];
         int slen=((pd[4]&0x0F)<<8)|pd[5];
-        ts->setDescriptor(pd+6,slen,own);//des_length=((pd[4]&0x0F)<<8)|pd[5];
+        ts->setDescriptor(pd+6,slen,own);//length=((pd[4]&0x0F)<<8)|pd[5];
         pd+=6+ts->getLength();
         tslen-=(6+ts->getLength());
     }

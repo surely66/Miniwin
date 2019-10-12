@@ -3,8 +3,7 @@
 
 namespace nglui{
 
-ToastWindow::ToastWindow(const std::string&txt,int w,int h,int timeout):Window(0,0,w,h){
-    addChildView(new TextField(txt,w,h));
+ToastWindow::ToastWindow(int w,int h,int timeout):Window(0,0,w,h){
     timeout_=timeout;
     clearFlag(Attr::ATTR_FOCUSABLE);
     sendMessage(WM_TIMER,TIMER_ID,0,timeout_);
@@ -18,15 +17,24 @@ bool ToastWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
     return Window::onMessage(msg,wp,lp);
 }
 
-ToastWindow*ToastWindow::makeText(const std::string&txt,int long timeout){
+ToastWindow*ToastWindow::makeWindow(int width,int height,int flags,OnCreateContentListener oncreate,UINT timeout){
+    ToastWindow*w=nullptr;
+    if(oncreate){
+         w=new ToastWindow(width,height,timeout);
+         oncreate(*w,flags);
+    }
+}
+
+ToastWindow*ToastWindow::makeText(const std::string&txt,UINT timeout){
     int sw,sh,tw,th;
     GraphDevice::getInstance()->getScreenSize(sw,sh);
     GraphDevice::getInstance()->getPrimaryContext()->set_font_size(20);
     GraphDevice::getInstance()->getPrimaryContext()->get_text_size(txt,&tw,&th);
     tw+=th*4;th+=th;
-    ToastWindow*w=new ToastWindow(txt,tw,th,timeout);
-    w->setPos((sw-tw)/2,10);
-    return w;
+    return makeWindow(tw,th,0,[&](Window&w,int){
+           w.addChildView(new TextField(txt,tw,th));
+           w.setPos((sw-tw)/2,10);
+       },timeout);
 }
-}
+}//namespace
 

@@ -48,7 +48,7 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     addChildView(new TextField("tpinfo",200,28))->setId(IDC_TPINFO).setPos(1000,630).setFontSize(20);
     chlst->setItemSelectListener([](AbsListView&lv,int index){
         ChannelItem*itm=(ChannelItem*)lv.getItem(index);
-        if(itm)DtvPlay(&itm->svc,nullptr);
+        //if(itm)DtvPlay(&itm->svc,nullptr);
         int lcn;char buf[8];
         DtvGetServiceItem(&itm->svc,SKI_LCN,&lcn);
         sprintf(buf,"%d",lcn);
@@ -114,6 +114,12 @@ bool ChannelsWindow::onKeyRelease(KeyEvent&k){
           tbfavs->setIndex(idx); 
           loadServices(favgroups[idx]);
           return true;
+   case NGL_KEY_ENTER:
+        {
+            int idx=chlst->getIndex();
+            ChannelItem*itm=(ChannelItem*)chlst->getItem(idx);
+            if(itm)DtvPlay(&itm->svc,nullptr); 
+        }break;
    case KEY_YELLOW:CreateChannelEditWindow();return true;
    default:return NTVWindow::onKeyRelease(k);
    }

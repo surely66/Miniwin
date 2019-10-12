@@ -66,11 +66,10 @@ INT GetPvrParamByEcmPID(NGLPVR_RECORD_PARAM*param){
     PMT pmt(pmtbuffer,false);
     rc=pmt.getElements(es,false);
     memset(param,0,sizeof(NGLPVR_RECORD_PARAM));
-    if(pmt.ecmPid()!=0x1FFF)ecmpids[num_ecm++]=pmt.ecmPid();
+    num_ecm+=pmt.getCAECM(NULL,ecmpids+num_ecm);;
     param->pcr_pid=pmt.pcrPid();
     for(i=0,audidx=0;i<rc;i++){
-        BYTE*p=es[i].findDescriptor(TAG_CA);
-        if(p)ecmpids[num_ecm++]=((p[4]&0x1F)<<8)|p[5];
+        num_ecm+=es[i].getCAECM(NULL,ecmpids+num_ecm);
         switch(es[i].stream_type){
         case 1:
         case 2: param->video_pid=es[i].pid;
@@ -92,10 +91,11 @@ DWORD VA_PVR_Start( DWORD  dwAcsId,int eRecordType,WORD sid){
     DtvGetCurrentService(&cur);
     DtvGetServicePmt(&cur,pmtbuffer);
     PMT pmt(pmtbuffer,false);
-    WORD pid=pmt.ecmPid();
-    NGLOG_DEBUG("service=%d.%d.%d ecmpid=%d",cur.netid,cur.tsid,cur.sid,pid);
-    if(pid!=0x1FFF)
-         return VA_PVR_OpenEcmChannel(dwAcsId,(tVA_PVR_RecordType)eRecordType,pid);
+    WORD pids[8]={0x1FFF};
+    int rc=pmt.getCAECM(NULL,pids);
+    NGLOG_DEBUG("service=%d.%d.%d ecmpid=%d",cur.netid,cur.tsid,cur.sid,pids[0]);
+    if(rc>0)
+         return VA_PVR_OpenEcmChannel(dwAcsId,(tVA_PVR_RecordType)eRecordType,pids[0]);
     return 0;
 }
 

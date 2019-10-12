@@ -157,6 +157,7 @@ public:
     USHORT pid;
     INT getCategory();
     INT getType();//convert to porting video/audio type
+    BOOL getCAECM(USHORT*caid,USHORT*ecmpid);
 }ELEMENTSTREAM;
 
 class PMT:public PSITable{
@@ -168,7 +169,7 @@ public:
 public:
      PMT(const BYTE*buf,bool deepcopy=true):PSITable(buf,deepcopy){}
      PMT(const PSITable&b,bool deepcopy=true):PSITable(b,deepcopy){}
-     USHORT ecmPid();
+     INT getCAECM(USHORT*caid,USHORT*ecmpid);
      USHORT pcrPid(){return ((data[8]&0x1F)<<8)|data[9];}
      int getElements(ELEMENTSTREAM*es,bool own=true);
      USHORT getProgramNumber(){return extTableId();}

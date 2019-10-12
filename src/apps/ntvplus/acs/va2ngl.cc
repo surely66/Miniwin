@@ -45,11 +45,11 @@ static void*ACSProc(void*p){
     NGLOG_DEBUG("VA_CTRL_Start...end");
 }
 
-static SERVICELOCATOR lastplayed;
-static WORD lastpids[32];
 static INT ACSStreamNOTIFY(DWORD dwStbStreamHandle, tVA_CTRL_StreamNotificationType eStreamNotificationType, tVA_CTRL_StreamNotificationInfo uStreamNotificationInfo){
     return kVA_OK;
 }
+static SERVICELOCATOR lastplayed;
+static WORD lastpids[32];
 static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*userdata){
     BYTE buffer[1024];
     int i,ne,rc;
@@ -85,12 +85,13 @@ static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*us
     case MSG_PMT_CHANGE:
         {
             PSITable table((BYTE*)lp,false);
+            VA_CTRL_PmtUpdated(0,wp,(BYTE*)lp);
             NGLOG_DEBUG("MSG_PMT_CHANGED %d.%d.%d sid:%x ver:%d",svc->netid,svc->tsid,svc->sid,table.extTableId(),table.version());
         }break;
     case MSG_CAT_CHANGE:
         {
             PSITable table((BYTE*)lp,false);
-            NGLOG_DEBUG("MSG_CAT_CHANGE ver:%d len:%d",table.version(),wp);
+            NGLOG_DEBUG("MSG_CAT_CHANGE len:%d ver:%d",wp,table.version());
             VA_CTRL_CatUpdated(0,wp,(BYTE*)lp);
         }break;
     default:break;
@@ -103,4 +104,39 @@ void  StartACS(){
     VA_DSCR_Init();
     pthread_create(&tid,NULL,ACSProc,NULL);
     DtvRegisterNotify(CANOTIFY,NULL);
+}
+
+extern "C" INT GetCurrentServiceEcmPids(USHORT*espids){
+    INT i,j,cnt,nes;
+    USHORT*ppid=espids;
+    USHORT tsecmpid=0x1FFF,tscaid=0xFFFF;
+    BYTE buffer[1024];
+    SERVICELOCATOR svc;
+    ELEMENTSTREAM es[32];
+    USHORT caids[16],ecmpids[16];
+    PMT pmt(buffer,false);
+    DtvGetCurrentService(&svc);
+    DtvGetServicePmt(&svc,buffer);
+    cnt=pmt.getCAECM(caids,ecmpids);
+    for(i=0;i<cnt;i++){
+         if(caids[i]==0x500){
+             tscaid=caids[i];
+             tsecmpid=ecmpids[i];
+             break;
+         }
+    }
+    nes=pmt.getElements(es,false);
+    for(i=0;i<nes;i++){
+        USHORT escaid=0xFFFF,esecmpid=0x1FFF;
+        cnt=es[i].getCAECM(caids,ecmpids);
+        if(tsecmpid!=0x1FFF||tscaid!=0xFFFF){//ts scrambled
+            escaid=tscaid;esecmpid=tscaid;
+        }
+        if(cnt){
+            escaid=caids[0];esecmpid=ecmpids[0];
+        }
+        if(escaid==tscaid||esecmpid==tscaid)
+            *ppid++=es[i].pid; 
+    }
+    return ppid-espids;
 }  

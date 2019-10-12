@@ -30,7 +30,7 @@ typedef struct{
    BOOL cwFlag;
 }NGLSCHIP_ContentKey;
 
-DWORD nglDscOpen(UINT16 pid);
+DWORD nglDscOpen(USHORT* pids,UINT cnt);
 DWORD nglDscClose(DWORD dwDescrambleID);
 DWORD nglDscSetParameters(DWORD dwDescrambleID,const NGLDSC_Param*param);
 DWORD nglDscSetKeys(DWORD  dwDescrambleID, const BYTE* pbOddKey, UINT32 bOddLength,const BYTE *pbEvenKey, UINT32 bEvenLength);
