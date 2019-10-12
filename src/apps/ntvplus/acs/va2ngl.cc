@@ -49,49 +49,72 @@ static INT ACSStreamNOTIFY(DWORD dwStbStreamHandle, tVA_CTRL_StreamNotificationT
     return kVA_OK;
 }
 static SERVICELOCATOR lastplayed;
-static WORD lastpids[32];
+static ELEMENTSTREAM lastES[32];
+static UINT num_elements=0;
+static INT ACSHasStream(ELEMENTSTREAM*es,unsigned int numes,int pid){
+    for(unsigned int i=0;i<numes;i++){
+         if(es[i].pid==pid)return 1;
+    }
+    return 0;
+}
+
 static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*userdata){
-    BYTE buffer[1024];
-    int i,ne,rc;
-    ELEMENTSTREAM es[32];
-    PMT pmt(buffer,false);
     switch(msg){
     case MSG_SERVICE_CHANGE:
-        rc=DtvGetServicePmt(svc,buffer);
-        NGLOG_ERROR_IF(rc==0,"PMT not found");
+        {
+            BYTE buffer[1024];
+            int i,rc=DtvGetServicePmt(svc,buffer);
+            PMT pmt(buffer,false);
+            NGLOG_ERROR_IF(rc==0,"PMT not found");
 
-        for(i=0;i<32&&lastpids[i]!=0;i++){
-           VA_CTRL_RemoveStream(lastpids[i]);
-        }
-        VA_CTRL_SwitchOffProgram(0);
-        if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid||(svc->tpid!=lastplayed.tpid)){
-           VA_CTRL_TsChanged(0);//VA_CTRL_TsChanged(1);
-        }
-        lastplayed=*svc;
-        //VA_CTRL_SwitchOffProgram(1);
-        NGLOG_DUMP("PMT",buffer,8);
-        VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
-        //VA_CTRL_SwitchOnProgram(1,pmt.sectionLength()+3,buffer);
-        ne=pmt.getElements(es,false);
-        memset(lastpids,0,sizeof(lastpids));
-        NGLOG_DEBUG("DtvGetServicePmt=%d PLAY %d.%d.%d pmtlen=%d  %d elements",rc,svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),ne);
-        for(i=0;i<ne;i++){
-            NGLOG_DEBUG("[%d] type=%d pid=%d",i,es[i].stream_type,es[i].pid);
-            VA_CTRL_AddStream(0,es[i].pid,es[i].pid,ACSStreamNOTIFY);
-            //VA_CTRL_AddStream(1,es[i].pid,es[i].pid,NULL);
-            lastpids[i]=es[i].pid;
-        }
-        break;
+            for(i=0;i<num_elements;i++){
+               VA_CTRL_RemoveStream(lastES[i].pid);
+               NGLOG_DEBUG("SERVICE_CHANGE::VA_CTRL_RemoveStream %d",lastES[i].pid);
+            }
+            VA_CTRL_SwitchOffProgram(0);
+            if(svc->netid!=lastplayed.netid||svc->tsid!=lastplayed.tsid||(svc->tpid!=lastplayed.tpid)){
+                VA_CTRL_TsChanged(0);
+                NGLOG_DEBUG("VA_CTRL_TsChanged");
+            }
+            lastplayed=*svc;
+            NGLOG_DUMP("VA_CTRL_SwitchOnProgram::PMT",buffer,8);
+            VA_CTRL_SwitchOnProgram(0,pmt.sectionLength()+3,buffer);
+            num_elements=pmt.getElements(lastES,false);
+            NGLOG_DEBUG("SERVICE_CHANGE::PLAY %d.%d.%d pmtlen=%d  %d elements",svc->netid,svc->tsid,svc->sid,pmt.sectionLength(),num_elements);
+            for(i=0;i<num_elements;i++){
+                VA_CTRL_AddStream(0,lastES[i].pid,lastES[i].pid,ACSStreamNOTIFY);
+                NGLOG_DEBUG("SERVICE_CHANGE::VA_CTRL_AddStream [%d] type=%d pid=%d",i,lastES[i].stream_type,lastES[i].pid);
+            }
+        }break;
     case MSG_PMT_CHANGE:
         {
-            PSITable table((BYTE*)lp,false);
+            int nes;
+            ELEMENTSTREAM newes[32];
+            PMT pmt((BYTE*)lp,false);
             VA_CTRL_PmtUpdated(0,wp,(BYTE*)lp);
-            NGLOG_DEBUG("MSG_PMT_CHANGED %d.%d.%d sid:%x ver:%d",svc->netid,svc->tsid,svc->sid,table.extTableId(),table.version());
+            nes=pmt.getElements(newes,false);
+            for(int i=0;i<num_elements;i++){
+                if(0==ACSHasStream(newes,nes,lastES[i].pid)){
+                    VA_CTRL_RemoveStream(lastES[i].pid);
+                    NGLOG_DEBUG("VA_CTRL_RemoveStream %d",lastES[i].pid);
+                }
+            }
+            for(int i=0;i<nes;i++){
+                int has=ACSHasStream(lastES,num_elements,newes[i].pid);
+                if(0==has)
+                    VA_CTRL_AddStream(0,newes[i].pid,newes[i].pid,ACSStreamNOTIFY);
+                else
+                    VA_CTRL_UpdateStream(newes[i].pid,newes[i].pid);
+                NGLOG_DEBUG("VA_CTRL_%sStream[%d] %d",(has?"Update":"Add"),i,newes[i].pid);
+            }
+            memcpy(lastES,newes,sizeof(lastES));
+            NGLOG_DEBUG("MSG_PMT_CHANGED %d.%d.%d ver:%d elements %d->%d",svc->netid,svc->tsid,svc->sid,pmt.version(),num_elements,nes);
+            num_elements=nes;
         }break;
     case MSG_CAT_CHANGE:
         {
-            PSITable table((BYTE*)lp,false);
-            NGLOG_DEBUG("MSG_CAT_CHANGE len:%d ver:%d",wp,table.version());
+            CAT cat((BYTE*)lp,false);
+            NGLOG_DEBUG("MSG_CAT_CHANGE len:%d ver:%d",wp,cat.version());
             VA_CTRL_CatUpdated(0,wp,(BYTE*)lp);
         }break;
     default:break;

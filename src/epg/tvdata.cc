@@ -80,9 +80,9 @@ int AddBATSection(const BAT&bat,int*pchanged){
 }
 
 STREAMDB*FindStream(USHORT nid,USHORT tsid){
-    for(auto ts:gStreams){
-        if( (ts.netid==nid) && (ts.tsid==tsid) )
-           return &ts;
+    for(STREAMLIST::iterator ts=gStreams.begin();ts!=gStreams.end();ts++){//auto ts:gStreams){
+        if( (ts->netid==nid) && (ts->tsid==tsid) )
+           return &(*ts);
     }
     return nullptr;
 }

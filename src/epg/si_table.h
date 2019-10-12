@@ -177,6 +177,8 @@ public:
 
 class CAT:public PSITable{
 public:
+     CAT(const BYTE*buf,bool deepcopy=true):PSITable(buf,deepcopy){}
+     CAT(const PSITable&b,bool deepcopy=true):PSITable(b,deepcopy){}
      BYTE*  getDescriptors(int&len);
      USHORT getEMMPID();//find in CA_Descriptor
 };

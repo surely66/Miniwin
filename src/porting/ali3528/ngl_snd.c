@@ -24,14 +24,14 @@ INT nglSndInit(){
 
 INT nglSndSetVolume(int idx,int vol){
     int rc=aui_snd_vol_set(snd_hdl,vol);
-    NGLOG_DEBUG("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
+    NGLOG_VERBOSE("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
     return NGL_OK;
 }
 
 INT nglSndGetColume(int idx){
     BYTE vol;
     int rc=aui_snd_vol_get(snd_hdl,&vol);
-    NGLOG_DEBUG("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
+    NGLOG_VERBOSE("snd_hdl=%p vol=%d rc=%d",snd_hdl,vol,rc);
     return vol;
 } 
 INT nglSndSetMute(int idx,BOOL mute){

@@ -35,11 +35,11 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     INT cnt=DtvGetServicePidInfo(sloc,es,&pcr);
     NGLOG_INFO("%d.%d.%d has %d elements lan=%s",sloc->netid,sloc->tsid,sloc->sid,cnt,lan);
     for(int i=0;i<cnt;i++){
-       NGLOG_DEBUG("\t pid=%d type=%d lan=%s",es[i].pid,es[i].getType(),lan);
+       NGLOG_DEBUG("\t pid=%d type=%d lan=%s",es[i].pid,es[i].getType(),es[i].iso639lan);
        switch(es[i].getCategory()){
        case ST_VIDEO:vi=i;break;
        case ST_AUDIO:
-           if((-1==ai)&&(es[i].iso639lan[0])&&(0==memcmp(es[i].iso639lan,lan,3)))
+           if((-1==ai)&&((0==lan[0])||(0==memcmp(es[i].iso639lan,lan,3)) ))
                ai=i;
            break;
        default:break;
@@ -56,8 +56,9 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
 static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
      PMT p1((BYTE*)UserData,false);
      PMT p2(Buffer,false);
-     if( (p1.version()!=p2.version()) || (p1.crc32()!=p2.crc32()) ) 
+     if( /*(p1.tableId()==p2.tableId()) &&*/((p1.version()!=p2.version())||(p1.crc32()!=p2.crc32()))){
          DtvNotify((Buffer[0]==TBID_PMT?MSG_PMT_CHANGE:MSG_CAT_CHANGE),&sCurrentService,BufferLength,(ULONG)Buffer);
+     }
      memcpy((BYTE*)UserData,Buffer,BufferLength);
 }
 
