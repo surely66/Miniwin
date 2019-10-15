@@ -6,8 +6,8 @@ namespace nglui{
 
 class ToastWindow:public Window{
 enum{
-    LENGTH_SHORT=1000,
-    LENGTH_LONG=3000
+    LENGTH_SHORT=2000,
+    LENGTH_LONG=4000
 };
 typedef std::function<void(Window&,int)>OnCreateContentListener;
 public:
@@ -18,6 +18,8 @@ public:
 private:
     const static int TIMER_ID=0x1000;
     DWORD timeout_;
+    DWORD time_elapsed;
+    virtual bool onKeyRelease(KeyEvent&k)override;
     DISALLOW_COPY_AND_ASSIGN(ToastWindow);
 };
 typedef ToastWindow  Toast;

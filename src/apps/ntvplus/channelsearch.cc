@@ -185,7 +185,7 @@ bool SearchWindow::onKeyRelease(KeyEvent&k){
                && (k.getKeyCode()==NGL_KEY_ENTER) ){
          std::vector<TRANSPONDER>tps;
          getSearchTransponders(tps);
-         int mode=(sch_mode&&sch_mode->getIndex()==1)?0:tps.size();
+         int mode=tps.size();//(sch_mode&&sch_mode->getIndex()==1)?0:tps.size();
          CreateSearchResultWindow(tps,mode);
          return true;
      }

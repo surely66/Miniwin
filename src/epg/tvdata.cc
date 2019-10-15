@@ -102,7 +102,7 @@ static size_t SaveSectionList(FILE*f,SECTIONLIST&seclst){
     size_t size=0;
     for(auto s:seclst){
          const BYTE*sec=s;
-         NGLOG_DUMP("TABLE",sec,4);
+         NGLOG_DUMP("TABLE",sec,8);
          size_t sz=fwrite(sec,s.sectionLength()+3,1,f);
          size+=sz;
     }
@@ -333,11 +333,32 @@ INT DtvGetServicePmt(const SERVICELOCATOR*sloc,BYTE*pmtbuf){
 }
 
 INT DtvGetServicePidInfo(const SERVICELOCATOR*sloc,ELEMENTSTREAM*es,USHORT*pcr){
-    BYTE pmtbuf[512];
+    BYTE pmtbuf[1024];
     if(DtvGetServicePmt(sloc,pmtbuf)>0){
         PMT pmt(pmtbuf);
         if(pcr)*pcr=pmt.pcrPid();
         return pmt.getElements(es,true);
+    }
+    return 0;
+}
+
+INT DtvGetServiceElements(const SERVICELOCATOR*sloc,INT type,ELEMENTSTREAM*es){
+    BYTE pmtbuf[1024];
+    if(DtvGetServicePmt(sloc,pmtbuf)>0){
+        PMT pmt(pmtbuf);
+        ELEMENTSTREAM ess[16];
+        int idx=0,cnt=pmt.getElements(ess,false);
+        for(int i=0;i<cnt;i++){
+            NGLOG_DEBUG("pid=%d type=%d cat=%d lan=%s",ess[i].pid,ess[i].stream_type,ess[i].getCategory(),ess[i].iso639lan);
+            if(ess[i].getCategory()==type){
+                es[idx].pid=ess[i].pid;
+                es[idx].stream_type=ess[i].stream_type;
+                memcpy(es[idx].iso639lan,ess[i].iso639lan,sizeof(ess[i].iso639lan));
+                es[idx++].setDescriptor((const BYTE*)ess+i,ess[i].getLength(),true);
+            }
+        }
+        NGLOG_DEBUG("%d/%d elements found with type %d ",idx,cnt,type);
+        return idx;
     }
     return 0;
 }

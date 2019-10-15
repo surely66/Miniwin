@@ -1,20 +1,33 @@
 #include <toastwindow.h>
 #include <windows.h>
+#include <ngl_log.h>
+NGL_MODULE(TOAST)
 
 namespace nglui{
 
 ToastWindow::ToastWindow(int w,int h,int timeout):Window(0,0,w,h){
     timeout_=timeout;
+    time_elapsed=0;
     clearFlag(Attr::ATTR_FOCUSABLE);
-    sendMessage(WM_TIMER,TIMER_ID,0,timeout_);
+    sendMessage(WM_TIMER,TIMER_ID,0,500);
 }
 
 bool ToastWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
     if(msg==WM_TIMER && wp==TIMER_ID){
-         sendMessage(WM_DESTROY,0,0);
+         time_elapsed+=500;
+         if(time_elapsed>=timeout_){
+             sendMessage(WM_DESTROY,0,0);
+             time_elapsed=0;
+         }
+         sendMessage(msg,wp,lp,500);
          return true;
     }
     return Window::onMessage(msg,wp,lp);
+}
+
+bool ToastWindow::onKeyRelease(KeyEvent&k){
+    time_elapsed=0;
+    return Window::onKeyRelease(k);
 }
 
 ToastWindow*ToastWindow::makeWindow(int width,int height,int flags,OnCreateContentListener oncreate,UINT timeout){

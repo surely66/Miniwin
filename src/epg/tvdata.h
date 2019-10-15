@@ -24,6 +24,7 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value);
 const DVBService*DtvGetServiceInfo(const SERVICELOCATOR*svc);
 INT DtvGetServiceByLCN(USHORT lcn,SERVICELOCATOR*loc);
 INT DtvGetServerPmtPid(const SERVICELOCATOR*sloc);
+INT DtvGetServiceElements(const SERVICELOCATOR*sloc,INT type,ELEMENTSTREAM*);
 typedef enum{
   LCN_FROM_NIT=1,
   LCN_FROM_BAT=2,

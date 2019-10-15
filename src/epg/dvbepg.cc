@@ -44,6 +44,7 @@ enum{
    STATE_IDLE,
    STATE_STARTED,
    STATE_TUNNING,
+   STATE_NIT_GETTING,
    STATE_PSI_GETTING,
    STATE_PSI_GETTED,
 };
@@ -101,7 +102,9 @@ static void SectionCBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *
          AddBATSection((BAT&)tbl,&changed);
          break;
     case TBID_NIT:
-    case TBID_NIT_OTHER:{NGLOG_DEBUG("===RCV NIT===");
+    case TBID_NIT_OTHER:
+         {
+             NGLOG_DEBUG("===RCV NIT===");
              SECTIONLIST*nitsecs=(SECTIONLIST*)UserData;
              itr=std::find(nitsecs->begin(),nitsecs->end(),tbl);
              if(itr==nitsecs->end())nitsecs->push_back(tbl);
@@ -186,7 +189,7 @@ static void  SearchProc(void*p)
     INT tunningIndex=0;
     INT searchByNIT=0;
     INT state=STATE_IDLE;
-    DWORD fltPAT,fltSDT;
+    DWORD fltPAT=0,fltSDT=0,fltNIT=0;
     struct timeval timeStart,timeEnd;//PSI/SI StartEnd time of TP search
     std::vector<DWORD>pmtfilters;
     SEARCHNOTIFY*notify=nullptr;
@@ -228,12 +231,12 @@ static void  SearchProc(void*p)
              }
              break;
         case MSG_LOCK://lock status
-             NGLOG_VERBOSE("MSG_LOCK");
+             NGLOG_VERBOSE("MSG_LOCK locked=%d",msg.param1);
              if(state!=STATE_IDLE){
                  if(msg.param1){//if frequency is locked
                      NGLOG_DEBUG("recv MSG_LOCK searchByNIT=%d",searchByNIT);
-                     if(nitsecs.size()==0&&searchByNIT){
-                         CreateFilter(PID_NIT,SectionCBK,&nitsecs,true,1,(0xFF00|TBID_NIT));
+                     if((nitsecs.size()==0) && searchByNIT &&(fltNIT==0)){
+                         fltNIT=CreateFilter(PID_NIT,SectionCBK,&nitsecs,true,1,(0xFF00|TBID_NIT));
                      }else
                          SENDMSG(MSG_SEARCH_TP,0,0);
                  }else{//tuning failed;
@@ -294,7 +297,10 @@ static void  SearchProc(void*p)
                 NGLOG_VERBOSE("RECV MSG_PMT_RECEIVED pmt.size=%d/%d state=%d",ts.pmt.size(),program_count,state);
                 nglFreeSectionFilter(msg.param2);
                 if( ts.pmt.size()==program_count){
-                    for(auto f:pmtfilters)nglFreeSectionFilter(f);
+                    for(auto f:pmtfilters){
+                        nglStopSectionFilter(f);
+                        nglFreeSectionFilter(f);
+                    }
                     pmtfilters.clear();
                     if(ts.sdt.size()){
                          SDT sdt(ts.sdt.back());

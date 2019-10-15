@@ -43,25 +43,34 @@ DWORD VA_DSCR_Init(){
 
 DWORD VA_DSCR_Open( DWORD dwStbStreamHandle )
 {
-    int i,pid_count=0;
     ACSDSC*dsc=NULL;
-    if(NULL!=dsc||dwStbStreamHandle>=0x1FFF)
+    if(dwStbStreamHandle>=0x1FFF)
         return  kVA_ILLEGAL_HANDLE;
-    for(i=0;i<sizeof(dscs)/sizeof(ACSDSC);i++){
+    for(int i=0;i<sizeof(dscs)/sizeof(ACSDSC);i++){
         if(0==dscs[i].pid){
            dsc=dscs+i;
            break;
         }
     }
     if(dsc){
-        USHORT pids[8];
+        USHORT pids[8],pid_count;
+        USHORT pid=(dwStbStreamHandle&0x1FFF);
         pid_count=GetCurrentServiceEcmPids(pids);        
         NGLOG_DEBUG("pid_count=%d",pid_count,pids[0],pids[1]);
-        if(pid_count==0){pids[0]=dwStbStreamHandle&0x1FFF;pid_count=1;}
+        if(pid_count==0){
+             pids[0]=pid;
+             pid_count=1;
+        }else{
+             for(int i=0;i<pid_count;i++){
+                 if(pids[i]==pid){
+                     pids[i]=pids[0];
+                     pids[0]=pid;
+                 }
+             }
+        }
         dsc->handle=nglDscOpen(pids,pid_count);
-        if(dsc->handle)dsc->pid=dwStbStreamHandle;
+        NGLOG_DEBUG("dsc=%p idx=%d nglhandle=%p pid=%d pid_count=%d",dsc,(dsc?dsc-dscs:-1),(dsc?dsc->handle:0),dwStbStreamHandle,pid_count);
     }
-    NGLOG_DEBUG("dsc=%p idx=%d nglhandle=%p pid=%d pid_count=%d",dsc,(dsc?dsc-dscs:-1),(dsc?dsc->handle:0),dwStbStreamHandle,pid_count);
     if(NULL==dsc||0==dsc->handle)return kVA_ILLEGAL_HANDLE;
     return (DWORD)dsc;
 }

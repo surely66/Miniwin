@@ -172,7 +172,7 @@ USHORT CAT::getEMMPID(){
 
 static void GetExtESInfo(ELEMENTSTREAM*es){
     BYTE*pd=es->findDescriptor(TAG_ISO639_LANGUAGE);
-    memset(es->iso639lan,0,3);
+    memset(es->iso639lan,0,sizeof(es->iso639lan));
     if(pd)
         memcpy(es->iso639lan,pd+2,3);
 }
@@ -181,12 +181,12 @@ int PMT::getElements(ELEMENTSTREAM*es,bool own){
     BYTE*des=getProgramDescriptors(len1);
     des+=len1;
     for(i=0;des<data+sectionLength()-1;i++){
+        char*l=es->iso639lan;
         es->stream_type=des[0];
         es->pid=(des[1]&0x1F)<<8|des[2];
         es->setDescriptor(des+5,(des[3]&0x0F)<<8|des[4],own);//es->length=(des[3]&0x0F)<<8|des[4];
         des+=es->getLength()+5;
         GetExtESInfo(es);
-        NGLOG_VERBOSE("element %d %d deslen=%d", es->stream_type,es->pid,es->getLength());
         es++;
     }
     return i;

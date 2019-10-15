@@ -13,6 +13,7 @@ typedef enum{
    NGL_KEY_MENU     =0x1007,
    NGL_KEY_EPG      =0x1008,
    NGL_KEY_SUBT     =0x1009,
+   NGL_KEY_AUDIO    =0x100A,
    NGL_KEY_HELP     =0x1010,
    NGL_KEY_VOL_INC  =0x1011,
    NGL_KEY_VOL_DEC  =0x1012,

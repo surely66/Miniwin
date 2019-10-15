@@ -33,14 +33,16 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
     ELEMENTSTREAM es[32];
     DtvTuneByService(sloc);    
     INT cnt=DtvGetServicePidInfo(sloc,es,&pcr);
-    NGLOG_INFO("%d.%d.%d has %d elements lan=%s",sloc->netid,sloc->tsid,sloc->sid,cnt,lan);
+    NGLOG_INFO("%d.%d.%d has %d elements lan=%c%c%c",sloc->netid,sloc->tsid,sloc->sid,cnt,lan[0],lan[1],lan[2]);
     for(int i=0;i<cnt;i++){
-       NGLOG_DEBUG("\t pid=%d type=%d lan=%s",es[i].pid,es[i].getType(),es[i].iso639lan);
+       char*pc=es[i].iso639lan;
+       NGLOG_DEBUG("\t pid=%d type=%d lan=%c%c%c",es[i].pid,es[i].getType(),pc[0],pc[1],pc[2]);
        switch(es[i].getCategory()){
        case ST_VIDEO:vi=i;break;
        case ST_AUDIO:
-           if((-1==ai)&&((0==lan[0])||(0==memcmp(es[i].iso639lan,lan,3)) ))
+           if(-1==ai)
                ai=i;
+           if((ai>=0)&&lan[0]&&(0==memcmp(es[i].iso639lan,lan,3)))ai=i;
            break;
        default:break;
        }

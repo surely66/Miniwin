@@ -106,8 +106,8 @@ DWORD nglDscClose(DWORD dwDescrambleID )
 {
     NGLDSC*dsc=(NGLDSC*)dwDescrambleID;
     CHECK(dsc);
-    NGLOG_DEBUG("%s dsc=%p hdl=%p hdl_kl=%p pid=%d",__FUNCTION__,dsc,dsc->hdl,dsc->hdl_kl,(dsc?dsc->pids[0]:0));
-    if(dsc->hdl!=NULL||0!=dsc->pid_cnt){
+    NGLOG_DEBUG("%s dsc=%p hdl=%p hdl_kl=%p pid=%d",__FUNCTION__,dsc,dsc->hdl,dsc->hdl_kl,(dsc?dsc->pid:0));
+    if((dsc->hdl!=NULL)||(0!=dsc->pid)){
         aui_dsc_deattach_key_by_pid(dsc->hdl,dsc->pid);
         int cnt=dscHandles[dsc->algo].pid_count;
         for(int i=0;i<cnt;i++){

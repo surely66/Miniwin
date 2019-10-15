@@ -153,7 +153,7 @@ public:
 typedef class MpegElement:public Descriptors{
 public:
     BYTE stream_type; 
-    char iso639lan[3];
+    char iso639lan[4];
     USHORT pid;
     INT getCategory();
     INT getType();//convert to porting video/audio type
