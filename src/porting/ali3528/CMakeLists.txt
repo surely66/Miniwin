@@ -7,7 +7,6 @@ set(SRCS_3528
    ngl_msgq.c
    ngl_dmx.c
    ngl_timer.c
-   ngl_dsc.c
    ngl_nvm.c
    ngl_tuner.c
    ngl_smc.c
@@ -19,6 +18,8 @@ set(SRCS_3528
    ngl_ir.cc
    ngl_graph.c
    ngl_mediaplayer.c
+#   ngl_descramble.c
+   ngl_dsc.c
 )
 
 add_library(ali3528 STATIC ${SRCS_3528})

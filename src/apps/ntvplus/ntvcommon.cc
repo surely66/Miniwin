@@ -1,6 +1,10 @@
 #include<ntvcommon.h>
 #include<app.h>
+#include <ngl_video.h>
 #include<ngl_timer.h>
+#include<ngl_log.h>
+
+NGL_MODULE(NTVCOMMON)
 
 namespace ntvplus{
 
@@ -221,6 +225,33 @@ const std::string GetTPString(const TRANSPONDER*tp){
     const char*polars[]={"H","V","L","R"};
     sprintf(buf,"%d/%s/%d",tp->u.s.frequency/1000,polars[tp->u.s.polar],tp->u.s.symbol_rate);
     return buf;
+}
+
+void ShowVolumeWindow(int timeout){
+    ToastWindow::makeWindow(400,20,0,[&](Window&w,int){
+           int vol=nglSndGetColume(0);
+           ProgressBar*p=new ProgressBar(390,10);
+           w.addChildView(p);
+           p->setProgress(vol);
+           w.setPos(400,600);
+       },timeout);
+}
+void ShowAudioSelector(int estype,int timeout){//ST_AUDIO
+    ToastWindow::makeWindow(400,100,0,[&](Window&w,int){
+           SERVICELOCATOR svc;
+           ELEMENTSTREAM es[16];
+           char str[16];
+           DtvGetCurrentService(&svc);
+           int cnt=DtvGetServiceElements(&svc,estype,es);
+           ListView*lst=new ListView(390,80);
+           for(int i=0;i<cnt;i++){
+               NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
+               if(es[i].iso639lan[0])
+                   lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
+           }
+           w.addChildView(lst);
+           w.setPos(400,600);
+       },timeout);
 }
 
 }//namespace

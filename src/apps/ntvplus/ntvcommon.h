@@ -82,6 +82,9 @@ void ChannelPainterLCN(AbsListView&lv,const ListView::ListItem&itm,int state,Gra
 
 void SettingPainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphContext&canvas);
 const std::string GetTPString(const TRANSPONDER*tp);
+void ShowVolumeWindow(int timeout);
+void ShowAudioSelector(int estype,int timeout);
+
 }//namespace
 
 #endif

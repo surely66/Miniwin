@@ -257,7 +257,7 @@ static void  SearchProc(void*p)
              gettimeofday(&timeStart,NULL);//nglGetTime(&timeStart);
              break;
         case MSG_FINISHED_TP:
-             NGLOG_VERBOSE("MSG_FINISHED_TP");
+             NGLOG_VERBOSE("MSG_FINISHED_TP wp=%d",msg.param1);
              std::sort(ts.pmt.begin(),ts.pmt.end(),[](PSITable&t1,PSITable&t2){return t1<t2;});//TableCompare);
              if(ts.sdt.size()){
                  SDT sdt(ts.sdt.back());
@@ -285,21 +285,30 @@ static void  SearchProc(void*p)
                 MpegProgramMap maps[64];
                 program_count=pat.getPrograms(maps,0);//dont care nit pid
                 nglStopSectionFilter(msg.param2);
-                for(int i=0;(program_count!=pmtfilters.size())&&(i<program_count);i++){
+                for(int i=0;i<program_count;i++){
                     DWORD flt=CreateFilter(maps[i].pmt_pid,SectionCBK,&ts,true,3,(0xFF00|TBID_PMT),0xFF00|(maps[i].program_number>>8),0xFF00|(maps[i].program_number&0xFF));
                     pmtfilters.push_back(flt);
-                    //NGLOG_VERBOSE("\tPATService[%02d] id=%04x pmtpid=0x%04x flt=%x",i,maps[i].program_number,maps[i].pmt_pid,flt);
+                    NGLOG_VERBOSE("\tPATService[%02d] id=%04x pmtpid=0x%04x flt=%x",i,maps[i].program_number,maps[i].pmt_pid,flt);
                 }
              }
              break;
         case MSG_PMT_RECEIVED:
-             {   
-                NGLOG_VERBOSE("RECV MSG_PMT_RECEIVED pmt.size=%d/%d state=%d",ts.pmt.size(),program_count,state);
-                nglFreeSectionFilter(msg.param2);
-                if( ts.pmt.size()==program_count){
+             {//todo no pmt ,will caused filter leak.
+                NGLOG_VERBOSE("RECV MSG_PMT_RECEIVED filter=%p pmt.size=%d/%d/%d state=%d",msg.param2,ts.pmt.size(),pmtfilters.size(),program_count,state);
+                for(size_t i=0;i<pmtfilters.size();i++){
+                    NGLOG_VERBOSE("\tpmtfilter[%d]=%p param2=%p",i,pmtfilters[i],msg.param2);
+                    if(pmtfilters[i]==msg.param2){
+                        nglStopSectionFilter(msg.param2);
+                        nglFreeSectionFilter(msg.param2);
+                        pmtfilters.erase(pmtfilters.begin()+i);
+                        NGLOG_VERBOSE("remove[%d] filt=%p pmtfilters.size=%d",i,msg.param2,pmtfilters.size());
+                        break;
+                    } 
+                }
+                if( ts.pmt.size()==program_count){NGLOG_VERBOSE("PMT ok free remained %d/%d filters",pmtfilters.size(),program_count);
                     for(auto f:pmtfilters){
                         nglStopSectionFilter(f);
-                        nglFreeSectionFilter(f);
+                        nglStopSectionFilter(f);
                     }
                     pmtfilters.clear();
                     if(ts.sdt.size()){

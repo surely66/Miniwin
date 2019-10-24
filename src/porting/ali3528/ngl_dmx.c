@@ -266,6 +266,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
+  NGLOG_VERBOSE("flt %p",flt);
   nglLockMutex(mtx_dmx);
   if(flt->tsBuffer)free(flt->tsBuffer);
   flt->tsBuffer=NULL;

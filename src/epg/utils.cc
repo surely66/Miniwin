@@ -4,6 +4,7 @@
 #include <string.h>
 #include <utils.h>
 #include <ngl_log.h>
+#include <ngl_os.h>
 #include <ctype.h>
 #include <errno.h>
 #include <dlfcn.h>
@@ -58,36 +59,45 @@ public:
 #else
         int rc=iconv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen);
 #endif
-        //CheckUTF8((BYTE*)ins,(unsigned char*)outbuf,lenin-outlen);
+        //CheckUTF8((BYTE*)ins,(BYTE*)outbuf,lenin-outlen);
         return lenin-outlen;
     }
    int CheckUTF8(BYTE*inbuf,BYTE*str,int len){
+/*1字节 0xxxxxxx
+  2字节 110xxxxx 10xxxxxx
+  3字节 1110xxxx 10xxxxxx 10xxxxxx
+  4字节 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  5字节 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+  6字节 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx */
        unsigned char*u8=str;
        int u8err=0;
        for(;u8-str<len;){
-           if (*u8<=0x7F){
-               u8++;
-               continue;
-           }else if((*u8&0xC0)==0xC0){   //str+=0xC0|((uni>6)&0x1F); str+=0x80|(uni&0x3F);
-               if((u8[1]&0x80)==0x80){
-                  u8+=2;
-                  continue;
-               }u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
-           }else if(*u8&0xE0==0xE0){    //str+=0xE0|(uni>>12); str+=0x80|((uni>>6)&0x3F);  str+=0x80|(uni&0x3F);
-               if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)){
-                  u8+=3;
-                  continue;
-               }
-               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
-           }else if(*u8&0xF0==0xF0){    //str+=0xF0|((uni>>18)&0x07);  str+=0x80|((uni>>12)&0x3F);     str+=0x80|((uni>>6)&0x3F);     str+=0x80|(uni&0x3F);
-               if(((u8[1]&0x80)==0x80)&&((u8[2]&0x80)==0x80)&&((u8[3]&0x80)==0x80)){
-                   u8+=4;
-                   continue;
-               }
-               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
+           int bytes=0;
+           if (*u8>>7==0x0){//1 BYTE
+               bytes=1;
+           }else if(*u8>>5==0x6){//2 BYTE
+               bytes=2;
+           }else if(*u8>>4==0x0E){//3 BYTE 
+               bytes=3;
+           }else if(*u8>>3==0x1E){//4 BYTE
+               bytes=4;
+           }else if(*u8>>2==0x3E){//5 BYTE
+               bytes=5;
+           }else if(*u8>>1==0x7E){//6 BYTE
+               bytes=6;
            }else{
-               u8++;u8err++;NGLOG_DEBUG("error at %d",u8-str);
+               NGLOG_ERROR("CHAR:0x%02x error at %d %s",*u8,u8-str,str);
+               NGLOG_DUMP("STR",str,len);
+               nglSleep(1000);
            }
+           for(int i=1;i<bytes;i++){
+               if(u8[i]&0x80!=0x80){
+                   NGLOG_ERROR("error at %d  bytes=%d",u8+i-str,bytes);
+               }
+               NGLOG_DUMP("STR",str,len);
+               nglSleep(1000);
+           }
+           u8+=bytes;
       }
       if(u8err){
            NGLOG_DEBUG("Invalid UTF8:%s  \r\naddr%p %d errs",str,str,u8err);

@@ -24,6 +24,10 @@ DWORD VA_DSCR_Init();
 #include <dvbepg.h>
 NGL_MODULE(VA2NGL)
 
+static SERVICELOCATOR lastplayed;
+static ELEMENTSTREAM lastES[32];
+static UINT num_elements=0;
+
 static void*ACSProc(void*p){
     int i,ret;
     tVA_CTRL_ConfigurationParameters param;
@@ -35,6 +39,7 @@ static void*ACSProc(void*p){
     param.aAcs->stDescrambler.uiMaxNumberOfChannels =4;
     //param.stStbInformation.
     NGLOG_DEBUG("VA_CTRL_Init calling...");
+    VA_DSCR_Init();
     ret = VA_CTRL_Init(&param);
     NGLOG_DEBUG("VA_CTRL_Init=%d",ret);
     NGLOG_DEBUG("VA_CTRL_Start...");
@@ -48,9 +53,6 @@ static void*ACSProc(void*p){
 static INT ACSStreamNOTIFY(DWORD dwStbStreamHandle, tVA_CTRL_StreamNotificationType eStreamNotificationType, tVA_CTRL_StreamNotificationInfo uStreamNotificationInfo){
     return kVA_OK;
 }
-static SERVICELOCATOR lastplayed;
-static ELEMENTSTREAM lastES[32];
-static UINT num_elements=0;
 static INT ACSHasStream(ELEMENTSTREAM*es,unsigned int numes,int pid){
     for(unsigned int i=0;i<numes;i++){
          if(es[i].pid==pid)return 1;
@@ -122,9 +124,7 @@ static void CANOTIFY(UINT msg,const SERVICELOCATOR*svc,DWORD wp,ULONG lp,void*us
 }
 
 void  StartACS(){
-    int i;
     pthread_t tid;
-    VA_DSCR_Init();
     pthread_create(&tid,NULL,ACSProc,NULL);
     DtvRegisterNotify(CANOTIFY,NULL);
 }

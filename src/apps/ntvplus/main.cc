@@ -14,32 +14,6 @@ extern "C"{
 NGL_MODULE(MAIN)
 using namespace ntvplus;
 
-static void ShowVolumeWindow(int timeout){
-    ToastWindow::makeWindow(400,20,0,[&](Window&w,int){
-           int vol=nglSndGetColume(0);
-           ProgressBar*p=new ProgressBar(390,10);
-           w.addChildView(p);
-           p->setProgress(vol);
-           w.setPos(400,600);
-       },timeout);
-}
-static void ShowAudioSelector(int estype,int timeout){//ST_AUDIO
-    ToastWindow::makeWindow(400,100,0,[&](Window&w,int){
-           SERVICELOCATOR svc;
-           ELEMENTSTREAM es[16];
-           char str[16];
-           DtvGetCurrentService(&svc);
-           int cnt=DtvGetServiceElements(&svc,estype,es);
-           ListView*lst=new ListView(390,80);
-           for(int i=0;i<cnt;i++){
-               NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
-               if(es[i].iso639lan[0])
-                   lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
-           }
-           w.addChildView(lst);
-           w.setPos(400,600);
-       },timeout);
-}
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
     Desktop*desktop=new Desktop();

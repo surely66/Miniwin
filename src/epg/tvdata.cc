@@ -8,6 +8,8 @@
 #include <ngl_dmx.h>
 #include <favorite.h>
 #include <map>
+#include <mutex>
+#include <thread>
 
 NGL_MODULE(TVDATA)
 
@@ -24,8 +26,10 @@ static SECTIONLIST epgpf;
 static SECTIONLIST bats;
 static cache::lru_cache<SERVICELOCATOR ,SECTIONLIST* >epgsCache(64);
 static STREAMLIST gStreams;
+static std::mutex mtx_seclist;
 
 int AddEITPFSection(const EIT&eit,int *pchanged){
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     SECTIONLIST::iterator itr=std::find(epgpf.begin(),epgpf.end(),eit);
     int changed=(itr==epgpf.end());
     if(changed){
@@ -40,8 +44,9 @@ int AddEITSSection(const EIT &eit,int*pchanged){
     const SERVICELOCATOR loc=eit;
     SECTIONLIST* secs=nullptr;
     int changed;
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     try{
-         secs=epgsCache.get(loc);
+         secs=epgsCache.get(loc,0);
          SECTIONLIST::iterator itr=std::find(secs->begin(),secs->end(),eit);
          changed=(itr==secs->end());
          if(changed){
@@ -65,6 +70,7 @@ int AddEITSSection(const EIT &eit,int*pchanged){
 }
 
 int AddBATSection(const BAT&bat,int*pchanged){
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     SECTIONLIST::iterator itr=std::find(bats.begin(),bats.end(),bat);
     bool changed=(itr==bats.end());
     if(changed){
@@ -80,6 +86,7 @@ int AddBATSection(const BAT&bat,int*pchanged){
 }
 
 STREAMDB*FindStream(USHORT nid,USHORT tsid){
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(STREAMLIST::iterator ts=gStreams.begin();ts!=gStreams.end();ts++){//auto ts:gStreams){
         if( (ts->netid==nid) && (ts->tsid==tsid) )
            return &(*ts);
@@ -88,6 +95,7 @@ STREAMDB*FindStream(USHORT nid,USHORT tsid){
 }
 int AddStreamDB(const STREAMDB&ts){
     STREAMDB*find=FindStream(ts.netid,ts.tsid);
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     if(find){
          NGLOG_ERROR("stream %d.%d exists! add failed",ts.netid,ts.tsid);
          return NGL_ERROR;
@@ -162,6 +170,7 @@ int DtvSaveProgramsData(const char*fname){
     const char *header="NGL.DATA";
     int stream_count=gStreams.size();
     int section_end=0xFFFFFFFF;
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     if(NULL==f)return 0;
     fwrite(header,8,1,f);
     fwrite(&stream_count,sizeof(int),1,f);
@@ -184,6 +193,7 @@ int DtvSaveProgramsData(const char*fname){
 #define ISDVBS(x) (((x)==DELIVERY_S)||((x)==DELIVERY_S2))
 INT DtvGetTPByService(const SERVICELOCATOR*loc,TRANSPONDER*tp){
     memset(tp,0,sizeof(NGLTunerParam));
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(auto t:gStreams){
          if( (t.netid==loc->netid) &&(t.tsid==loc->tsid) &&
             ((ISDVBS(t.tune.delivery_type)&&(t.tune.u.s.tpid==loc->tpid))||!ISDVBS(t.tune.delivery_type))){
@@ -211,6 +221,7 @@ INT DtvTuneByService(const SERVICELOCATOR*loc){
 
 
 INT DtvRemoveStreamByTP(int tpid){
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(auto t=gStreams.begin();t!=gStreams.end();t++){
         if( (t->tune.delivery_type==DELIVERY_S||t->tune.delivery_type==DELIVERY_S2) && t->tune.u.s.tpid==tpid){
             gStreams.erase(t);
@@ -288,6 +299,7 @@ static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
 
 INT DtvGetServerPmtPid(const SERVICELOCATOR*sloc){
     USHORT pmtpid=0;
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(auto itr_ts:gStreams ){
         if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
              PAT pat(itr_ts.pat.front());
@@ -305,6 +317,7 @@ INT DtvGetServicePmt(const SERVICELOCATOR*sloc,BYTE*pmtbuf){
     if(NULL==sloc||NULL==pmtbuf)return 0;
     NGLOG_DEBUG("%d.%d.%d streams.size=%d",sloc->netid,sloc->tsid,sloc->sid,gStreams.size());
     pmtpid=DtvGetServerPmtPid(sloc);
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(auto itr_ts:gStreams ){
         if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
              rc++;   ts=&itr_ts;
@@ -345,7 +358,7 @@ INT DtvGetServicePidInfo(const SERVICELOCATOR*sloc,ELEMENTSTREAM*es,USHORT*pcr){
 INT DtvGetServiceElements(const SERVICELOCATOR*sloc,INT type,ELEMENTSTREAM*es){
     BYTE pmtbuf[1024];
     if(DtvGetServicePmt(sloc,pmtbuf)>0){
-        PMT pmt(pmtbuf);
+        PMT pmt(pmtbuf,false);
         ELEMENTSTREAM ess[16];
         int idx=0,cnt=pmt.getElements(ess,false);
         for(int i=0;i<cnt;i++){
@@ -366,6 +379,7 @@ INT DtvGetServiceElements(const SERVICELOCATOR*sloc,INT type,ELEMENTSTREAM*es){
 INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*p){
     int rc=0;
     int flags[3]={0,1,3};
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     for(auto itr:epgpf){
         EIT eit(itr);
         if(sloc->netid==eit.getNetId()&&sloc->tsid==eit.getStreamId()&&sloc->sid==eit.getServiceId()){
@@ -382,6 +396,7 @@ INT DtvGetPFEvent(const SERVICELOCATOR*sloc,DVBEvent*p){
 }
 
 INT DtvGetEvents(const SERVICELOCATOR*loc,std::vector<DVBEvent>&evts){
+    std::unique_lock<std::mutex> lck(mtx_seclist); 
     try{
        int rc=0;
        SECTIONLIST*secs=epgsCache.get(*loc);
@@ -403,9 +418,10 @@ INT DtvGetEvents(const SERVICELOCATOR*loc,std::vector<DVBEvent>&evts){
 }
 
 INT DtvGetEvents(const SERVICELOCATOR*loc,DVBEvent*evts,int evt_size){
+   std::unique_lock<std::mutex> lck(mtx_seclist); 
    try{
        int rc=0;
-       SECTIONLIST*secs=epgsCache.get(*loc);
+       SECTIONLIST*secs=epgsCache.get(*loc,1);
        NGLOG_VERBOSE("EITS %d.%d.%d secs=%d ",loc->netid,loc->tsid,loc->sid,secs->size());
        for(auto t:*secs){
            EIT eit(t);

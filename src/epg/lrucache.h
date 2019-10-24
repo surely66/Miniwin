@@ -42,12 +42,12 @@ public:
 		}
 	}
 	
-	const value_t& get(const key_t& key) {
+	const value_t& get(const key_t& key,int lru=0) {
 		auto it = _cache_items_map.find(key);
 		if (it == _cache_items_map.end()) {
 			throw std::range_error("There is no such key in cache");
 		} else {
-			_cache_items_list.splice(_cache_items_list.begin(), _cache_items_list, it->second);
+			if(lru)_cache_items_list.splice(_cache_items_list.begin(), _cache_items_list, it->second);
 			return it->second->second;
 		}
 	}
