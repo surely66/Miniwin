@@ -14,23 +14,14 @@ class TVChannel:public nglui::ChannelBar{
 public:
    SERVICELOCATOR svc;
    int update=0;
+   BOOL isHD;
 public:
    TVChannel(const std::string&txt,const SERVICELOCATOR*svc_):ChannelBar(txt){
        svc=*svc_;
        update=0;
    }
 };
-static INT SVC_CBK2(const SERVICELOCATOR*loc,const DVBService*svc,void*userdata)
-{
-   char servicename[128];
-   svc->getServiceName(servicename);   
-   ChannelEpgView*lv=(ChannelEpgView*)userdata;
-   lv->addItem(new TVChannel(servicename,loc));
-   SERVICELOCATOR cur;
-   DtvGetCurrentService(&cur);
-   if(cur==*loc)lv->setIndex(lv->getItemCount()-1);
-   return 1;
-}
+
 #define MSG_EPGS_UPDATE 1010
 class TVWindow:public NTVWindow{
 public:
@@ -53,10 +44,41 @@ public:
        c.draw_rect(0,0,320,240);
        NTVWindow::onDraw(c);
    }
+   int loadServices(UINT favid);
    virtual void onEITS(const SERVICELOCATOR*svc)override;
    virtual bool onKeyRelease(KeyEvent&k)override;
    virtual bool onMessage(DWORD msg,DWORD wp,ULONG lp)override;
 };
+int TVWindow::loadServices(UINT favid){
+     char name[128];
+     size_t count=FavGetServiceCount(favid);
+     SERVICELOCATOR*svcs=new SERVICELOCATOR[count];
+     FavGetGroupName(favid,name);
+     NGLOG_DEBUG("%x[%s] has %d svc",favid,name,count);
+     lv->clearAllItems();
+     SERVICELOCATOR cur;
+     DtvGetCurrentService(&cur);
+     for(size_t i=0;i<count;i++){
+          SERVICELOCATOR svc;
+          FavGetService(favid,&svc,i);
+          const DVBService*info=DtvGetServiceInfo(&svc);
+          if(NULL==info)continue;
+          info->getServiceName(name);
+          TVChannel*ch=new TVChannel(name,&svc);//info->freeCAMode);
+          INT lcn;
+          DtvGetServiceItem(&svc,SKI_LCN,&lcn);
+          ch->setValue(lcn);
+          ch->isHD=ISHDVIDEO(info->serviceType);
+          NGLOG_VERBOSE("    %d %d.%d.%d.%d:%s  %p hd=%d type=%d",i,svc.netid,svc.tsid,svc.sid,svc.tpid,name,info,ch->isHD,info->serviceType);
+          lv->addItem(ch);
+          if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
+             lv->setIndex(i);
+     }
+     lv->sort([](const ListView::ListItem&a,const ListView::ListItem&b)->int{
+                            return a.getValue()-b.getValue()<0;
+                       },false);
+     delete svcs;
+}
 
 void TVWindow::onEITS(const SERVICELOCATOR*svc){
     NGLOG_VERBOSE("EITS %d.%d.%d",svc->netid,svc->tsid,svc->sid);
@@ -139,7 +161,7 @@ Window*CreateTVGuide(){
        TVChannel*itm=(TVChannel*)lv.getItem(index);
        if(itm)DtvPlay(&itm->svc,nullptr);
     });
-    DtvEnumService(SVC_CBK2,w->lv);
+    w->loadServices(FAV_GROUP_AV);//DtvEnumService(SVC_CBK2,w->lv);
     w->show();
     return w; 
 }

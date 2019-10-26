@@ -188,7 +188,7 @@ static void first_i_frame_deocded(void * p_user_hld, unsigned int parm1, unsigne
 }
 static void frame_rate_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){
     struct aui_decv_info_cb *new_info = (struct aui_decv_info_cb *)parm1;
-    NGLOG_DEBUG("video_info_change_cb,width =%d,height =%d ,frame_rate =%d \n",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
+    NGLOG_DEBUG("video_info_change_cb,width =%d,height =%d ,frame_rate =%d",new_info->pic_width,new_info->pic_height,new_info->frame_rate);
 }
 
 static void play_status_info_change(void * p_user_hld, unsigned int parm1, unsigned parm2){

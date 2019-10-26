@@ -1,4 +1,4 @@
-#include<json/json.h>
+#include <json/json.h>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -6,9 +6,9 @@
 typedef std::function<void(void)>VOIDFUN;
 
 int main(int argc,char*argv[]){
-    Json::CharReaderBuilder builder;
     Json::Value root;
     Json::String errs;
+    Json::CharReaderBuilder builder;
     builder["collectComments"] = false;
     std::ifstream sin(argv[1]);
     bool rc=Json::parseFromStream(builder,sin, &root, &errs);//reader.parse(data,data+size,root);

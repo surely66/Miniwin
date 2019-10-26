@@ -10,6 +10,7 @@
 #include <aui_tsi.h>
 #include <aui_nim.h>
 #include <strings.h>
+#include <tsreceiver.h>
 
 #define MASK_LEN 16 
 #define MAX_CHANNEL 64
@@ -44,6 +45,7 @@ typedef struct{
   BYTE reverse[MASK_LEN];
   BYTE*tsBuffer;
 }NGLDMXFILTER;
+static aui_hdl tsg_hdl;
 static NGLMutex mtx_dmx=0;
 static DMXCHANNEL Channels[MAX_CHANNEL];
 static NGLDMXFILTER  Filters[MAX_FILTER];
@@ -107,26 +109,48 @@ static long AuiPesCBK(void *p_user_hdl,unsigned char* pbuf,unsigned long ul_size
     if(flt&&flt->CallBack)
         flt->CallBack((DWORD)flt,pbuf,ul_size,flt->userdata); 
 }
-
+static void TS_CBK(void*data,int len,void*p){
+    struct aui_attr_tsg attr;
+    unsigned char buffer[2560];
+    memcpy(buffer,data,len);
+    aui_hdl hdl=(aui_hdl)p;
+    bzero(&attr,sizeof(attr));
+    attr.ul_addr = (unsigned char *)buffer;
+    data=buffer;
+    attr.ul_pkg_cnt = len/188;
+    attr.uc_sync_mode = 1;
+    int rc=aui_tsg_send(hdl,&attr);
+}
 static void TSInjectProc(void*p)
 {//tsg will caused higher cpu usage above 50%
-    unsigned char buffer[256*188];
-    char*tsgfile=getenv("TSINJECT_FILE");
-    FILE *file = fopen(tsgfile, "rb");
-    struct aui_attr_tsg attr;
+    char*tsgfile=getenv("TSINJECT");
     aui_hdl tsg_hdl=(aui_hdl)p;
-    bzero(&attr,sizeof(attr));
-    NGLOG_DEBUG("TSInjectProc $TSINJECT_FILE=%s file=%p  tsg_hdl=%p",tsgfile,file,tsg_hdl);
-    if(file==NULL)return;
-    while(1){
-        unsigned long pkt_in_tsg;
-        int cnt=fread(buffer,188,256,file);
-        attr.ul_addr = (unsigned char *)buffer;
-        attr.ul_pkg_cnt = cnt;
-        attr.uc_sync_mode = 1;//AUI_TSG_XFER_SYNC;
-        int ret = aui_tsg_send(tsg_hdl, &attr);
-        if(ret!=0)NGLOG_DEBUG("aui_tsg_send failed");
-        if(feof(file))fseek(file,0,SEEK_SET);
+    NGLOG_DEBUG("TSINJECT=%s",tsgfile);
+    if(tsgfile==NULL)return;
+    if(strchr(tsgfile,':')==NULL){
+       unsigned char buffer[256*188];
+       FILE *file = fopen(tsgfile, "rb");
+       struct aui_attr_tsg attr;
+       bzero(&attr,sizeof(attr));
+       NGLOG_DEBUG("TSInjectProc $TSINJECT_FILE=%s file=%p  tsg_hdl=%p",tsgfile,file,tsg_hdl);
+       if(file==NULL)return;
+       while(1){
+           unsigned long pkt_in_tsg;
+           int cnt=fread(buffer,188,256,file);
+           attr.ul_addr = (unsigned char *)buffer;//must be 16byte align
+           attr.ul_pkg_cnt = cnt;
+           attr.uc_sync_mode = 1;//AUI_TSG_XFER_SYNC;
+           int ret = aui_tsg_send(tsg_hdl, &attr);
+           if(ret!=0)NGLOG_DEBUG("aui_tsg_send failed");
+           if(feof(file))fseek(file,0,SEEK_SET);
+       }
+    }else{
+        TSReceiver rcv;
+        char*ip=strtok(tsgfile,":");
+        char*port=strtok(tsgfile,":");
+        rcv.InitSock(ip,18800);//atoi(port));
+        rcv.SetCallback(TS_CBK,(void*)tsg_hdl);
+        rcv.StartReceive();
     }
 }
 struct aui_tsi_config {
@@ -143,13 +167,13 @@ DWORD nglDmxInit(){
     static int sDMX_INITED=0;
     struct aui_attr_tsg attr_tsg;
     struct aui_attr_tsi attr_tsi;
-    aui_hdl tsg_hdl;
-    aui_hdl tsi_hdl;
+    aui_hdl tsi_hdl=NULL;
     if(mtx_dmx)return 0;
     NGLOG_DEBUG("nglDmxInit");
     aui_dmx_init(NULL,NULL);
     aui_log_priority_set(AUI_MODULE_DMX,AUI_LOG_PRIO_ERR);
     nglCreateMutex(&mtx_dmx);
+#if 1
 #define MAX_TSI_DEVICE 4 
 #define MAX_TSI_CNT 4
     struct aui_tsi_config tsi_cfg[MAX_TSI_DEVICE];/* If use MAX_TSI_CNT, array bounds will happen */
@@ -174,15 +198,14 @@ DWORD nglDmxInit(){
 	    if(tsi_cfg[i].ul_hw_init_val==0)break;
 			
             attr_tsi.ul_init_param = tsi_cfg[i].ul_hw_init_val;
-            int rc=aui_tsi_src_init(tsi_hdl, tsi_cfg[i].ul_input_src, &attr_tsi);
+            int rc=aui_tsi_src_init(tsi_hdl, (aui_tsi_input_id)tsi_cfg[i].ul_input_src, &attr_tsi);
             NGLOG_DEBUG("aui_tsi_src_init=%d",rc);
            
-            rc=aui_tsi_route_cfg(tsi_hdl,tsi_cfg[i].ul_input_src, tsi_channel_id[i],dmx_id[i]);
+            rc=aui_tsi_route_cfg(tsi_hdl,(aui_tsi_input_id)tsi_cfg[i].ul_input_src, tsi_channel_id[i],dmx_id[i]);
             NGLOG_DEBUG("aui_tsi_route_cfg=%d",rc);
         }
     }
- 
-#if 1 
+#endif
     NGLOG_DEBUG("tsi_hdl=%p",tsi_hdl);
 
     aui_tsg_init(NULL,NULL);
@@ -197,10 +220,9 @@ DWORD nglDmxInit(){
     attr_tsi.ul_init_param = AUI_TSI_IN_CONF_ENABLE |AUI_TSI_IN_CONF_VALID_SIG_POL |AUI_TSI_IN_CONF_SYNC_SIG_POL;
     aui_tsi_src_init(tsi_hdl,AUI_TSI_INPUT_TSG,&attr_tsi);
     aui_tsi_route_cfg(tsi_hdl,AUI_TSI_INPUT_TSG,AUI_TSI_CHANNEL_1,AUI_TSI_OUTPUT_DMX_1);
-   memset(Channels,0,sizeof(Channels));
-   memset(Filters,0,sizeof(Filters));
+    memset(Channels,0,sizeof(Channels));
+    memset(Filters,0,sizeof(Filters));
     nglCreateThread(&thid,0,4096,TSInjectProc,tsg_hdl);
-#endif
    return 0;
 EXIT_FAIL:
    return -1;
@@ -218,7 +240,7 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
        return 0;
     nglLockMutex(mtx_dmx);
     DMXCHANNEL*ch=GetChannel(wPid);
-    NGLOG_DEBUG("TOTAL FILTER=%d pid %d'sfilter=%d ch=%p",GetCountByPid(0xFFFF),wPid,GetCountByPid(wPid),ch);
+    NGLOG_VERBOSE("TOTAL FILTER=%d pid %d'sfilter=%d ch=%p",GetCountByPid(0xFFFF),wPid,GetCountByPid(wPid),ch);
     if(ch==NULL){
         ch=GetFreeChannel();
         ch->pid=wPid;
@@ -250,7 +272,7 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
     }
     rc=aui_dmx_filter_open(ch->channel,&flt->attr,&flt->hfilter);
 
-    NGLOG_DEBUG("aui_dmx_filter_open=%d filter=%p nghdl=%p ch=%p/%p dmxtype=%d",rc,flt,flt->hfilter,ch,ch->channel,dmxtype);
+    NGLOG_VERBOSE("aui_dmx_filter_open=%d filter=%p nghdl=%p ch=%p/%p dmxtype=%d",rc,flt,flt->hfilter,ch,ch->channel,dmxtype);
     ch->num_filt++;
     flt->CallBack=cbk;
     flt->userdata=userdata;

@@ -106,6 +106,34 @@ int AddStreamDB(const STREAMDB&ts){
     return NGL_OK;
 }
 
+int UpdateStreamData(SERVICELOCATOR*svc,BYTE*sec){
+    STREAMDB*ts=FindStream(svc->netid,svc->tsid);
+    SECTIONLIST::iterator itr;
+    PSITable tbl(sec);
+    std::unique_lock<std::mutex> lck(mtx_seclist);
+    switch(sec[0]){
+    case TBID_PAT:
+        itr=std::find(ts->pat.begin(),ts->pat.end(),tbl);
+        if(itr==ts->pat.end())
+           ts->pat.push_back(tbl);
+        else *itr=tbl;
+        break;
+    case TBID_PMT:
+        itr=std::find(ts->pmt.begin(),ts->pmt.end(),tbl);
+        if(itr==ts->pat.end())
+           ts->pmt.push_back(tbl);
+        else *itr=tbl;
+        break;
+    case TBID_SDT:
+        itr=std::find(ts->sdt.begin(),ts->sdt.end(),tbl);
+        if(itr==ts->sdt.end())
+           ts->sdt.push_back(tbl);
+        else *itr=tbl;
+        break;
+    dwefault:break;
+    }
+}
+
 static size_t SaveSectionList(FILE*f,SECTIONLIST&seclst){
     size_t size=0;
     for(auto s:seclst){

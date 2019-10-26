@@ -57,7 +57,7 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
         TextField*tpinfo=(TextField*)lv.getParent()->findViewById(IDC_TPINFO);
         TRANSPONDER tp; 
         int rc=DtvGetTPByService(&itm->svc,&tp);
-        NGLOG_DEBUG("DtvGetTPByService=%d tpinfo=%p",rc,tpinfo);
+        NGLOG_VERBOSE("DtvGetTPByService=%d tpinfo=%p",rc,tpinfo);
         tpinfo->setText(GetTPString(&tp)); 
     });
     if(favgroups.size())loadServices(favgroups[0]);
@@ -85,14 +85,14 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     setMessageListener([this](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
         if(msg==1000){
              DVBEvent pf[2];
-             NGLOG_DEBUG("Get Event P/F to ui");
+             NGLOG_VERBOSE("Get Event P/F to ui");
              char name[256],des[256];
              ListView*lv=(ListView*)v.findViewById(IDC_CHANNELS);
              int idx=lv->getIndex();
              if(idx<0)return false;
              ChannelItem*itm=(ChannelItem*)lv->getItem(idx);
              int rc=DtvGetPFEvent(&itm->svc,pf);
-             NGLOG_DEBUG("DtvGetPFEvent=%d",rc); 
+             NGLOG_VERBOSE("DtvGetPFEvent=%d",rc); 
                        
              if(rc&1){pf[0].getShortName(name,des);namep->setText(name);descp->setText(des);}
              if(rc&2){pf[1].getShortName(name,des);namef->setText(name);descf->setText(des);}           

@@ -5,7 +5,7 @@ project(ali3528 C CXX)
 set(SRCS_3528 
    ngl_os.c
    ngl_msgq.c
-   ngl_dmx.c
+   ngl_dmx.cc
    ngl_timer.c
    ngl_nvm.c
    ngl_tuner.c

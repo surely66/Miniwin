@@ -10,7 +10,13 @@
 
 NGL_MODULE(DTVPLAYER)
 
+#define MSG_PLAY         1
+#define MSG_PMTUPDATE    2
+#define MSG_SWITCH_TRACK 3
+
 typedef struct{
+    UINT msgid;
+    UINT lParam;
     SERVICELOCATOR loc;
     char lan[3];
 }MSGPLAY;
@@ -21,19 +27,20 @@ typedef struct {
 }DTVNOTIFY;
 
 static DWORD msgQPlayer=0;
-static SERVICELOCATOR sCurrentService;
+static SERVICELOCATOR cur_svc;
 static std::vector<DTVNOTIFY>gNotifies;
 
 extern void DtvNotify(UINT,const SERVICELOCATOR*,DWORD wp,ULONG lp);
 extern DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
 
-static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
+static INT PlayService(BYTE*pmtbuff,const char*lan){
     USHORT pcr;
     INT vi=-1,ai=-1;
+    PMT pmt(pmtbuff,false);
     ELEMENTSTREAM es[32];
-    DtvTuneByService(sloc);    
-    INT cnt=DtvGetServicePidInfo(sloc,es,&pcr);
-    NGLOG_INFO("%d.%d.%d has %d elements lan=%c%c%c",sloc->netid,sloc->tsid,sloc->sid,cnt,lan[0],lan[1],lan[2]);
+    INT cnt=pmt.getElements(es);
+    pcr=pmt.pcrPid();
+    NGLOG_INFO("%d elements lan=%c%c%c",cnt,lan[0],lan[1],lan[2]);
     for(int i=0;i<cnt;i++){
        char*pc=es[i].iso639lan;
        NGLOG_DEBUG("\t pid=%d type=%d lan=%c%c%c",es[i].pid,es[i].getType(),pc[0],pc[1],pc[2]);
@@ -47,47 +54,61 @@ static INT PlayService(SERVICELOCATOR*sloc,const char*lan){
        default:break;
        }
     }
-    sCurrentService=*sloc;
     if(vi<0&&ai<0)return -1;
     else if(vi<0) nglAvPlay(0,0x1FFF,DECV_INVALID,es[ai].pid,es[ai].getType(),pcr);
     else if(ai<0) nglAvPlay(0,es[vi].pid,es[vi].getType(),0x1FFF,DECA_INVALID,pcr);
     else          nglAvPlay(0,es[vi].pid,es[vi].getType(),es[ai].pid,es[ai].getType(),pcr);
-    DtvNotify(MSG_SERVICE_CHANGE,sloc,0,0);
 }
 
 static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
      PMT p1((BYTE*)UserData,false);
      PMT p2(Buffer,false);
-     if( /*(p1.tableId()==p2.tableId()) &&*/((p1.version()!=p2.version())||(p1.crc32()!=p2.crc32()))){
-         DtvNotify((Buffer[0]==TBID_PMT?MSG_PMT_CHANGE:MSG_CAT_CHANGE),&sCurrentService,BufferLength,(ULONG)Buffer);
+     if( (p1.tableId()==p2.tableId()) &&((p1.version()!=p2.version())||(p1.crc32()!=p2.crc32()))){
+         memcpy((BYTE*)UserData,Buffer,BufferLength);
+         if(Buffer[0]==TBID_PMT){
+             MSGPLAY msg={MSG_PMTUPDATE};
+             nglMsgQSend(msgQPlayer,&msg,sizeof(MSGPLAY),1000);
+             DtvNotify(MSG_PMT_CHANGE,&cur_svc,BufferLength,(ULONG)Buffer);
+         }else
+             DtvNotify(MSG_CAT_CHANGE,&cur_svc,BufferLength,(ULONG)Buffer);
      }
-     memcpy((BYTE*)UserData,Buffer,BufferLength);
 }
 
 static void PlayProc(void*param){
-    MSGPLAY msg={{(USHORT)0,(USHORT)0,(USHORT)0xFFFF}};//0xFFFF  is an invalid serviceid
-    SERVICELOCATOR lastplayed={0,0,(USHORT)0xFFFF};
+    MSGPLAY msg;//0xFFFF  is an invalid serviceid
     DWORD flt_pmt=0;
     DWORD flt_cat=0;
     BYTE PMT[1024];
     BYTE CAT[1024];
-    int pmtpid;
+    USHORT pmtpid;
+    char lan[4];
     flt_cat=CreateFilter(PID_CAT,SectionMonitor,CAT,true,1,0xFF01);
     while(1){
-        UINT count;
-        int rc=NGL_ERROR;
-        do{
-            rc=nglMsgQReceive(msgQPlayer,&msg,sizeof(MSGPLAY),1000);
-            nglMsgQGetCount(msgQPlayer,&count);
-        }while( count && (rc==NGL_OK) );
-        if(msg.loc.sid!=lastplayed.sid){
-            lastplayed=msg.loc;
-            DtvGetServicePmt(&lastplayed,PMT);
-            DtvGetServiceItem(&lastplayed,SKI_PMTPID,&pmtpid);
-            nglStopSectionFilter(flt_pmt);
-            nglFreeSectionFilter(flt_pmt);
-            flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,PMT,true,3,0xFF02,(0xFF00|(lastplayed.sid>>8)),(0xFF00|(lastplayed.sid&0xFF)));
-            PlayService(&msg.loc,msg.lan);
+        if(NGL_OK!=nglMsgQReceive(msgQPlayer,&msg,sizeof(MSGPLAY),1000))
+            continue;
+         switch(msg.msgid){
+         case MSG_PLAY:
+            if(msg.loc.sid!=cur_svc.sid){
+                memcpy(lan,msg.lan,3);
+                DtvTuneByService(&msg.loc);
+                DtvGetServicePmt(&msg.loc,PMT);
+                pmtpid=(USHORT)msg.lParam;
+                nglStopSectionFilter(flt_pmt);
+                nglFreeSectionFilter(flt_pmt);
+                cur_svc=msg.loc; 
+                flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,PMT,true,3,0xFF02,(0xFF00|(cur_svc.sid>>8)),(0xFF00|(cur_svc.sid&0xFF)));
+                NGLOG_INFO("PLAY %d.%d.%d lan=%c%c%c",cur_svc.netid,cur_svc.tsid,cur_svc.sid,lan[0],lan[1],lan[2]);
+                PlayService(PMT,msg.lan);
+                DtvNotify(MSG_SERVICE_CHANGE,&cur_svc,0,0);
+            }break;
+        case MSG_PMTUPDATE:
+            NGLOG_DEBUG("PMTUPDATE %d.%d.%d",cur_svc.netid,cur_svc.tsid,cur_svc.sid);
+            UpdateStreamData(&cur_svc,PMT);
+            PlayService(PMT,lan);
+            break;
+        case MSG_SWITCH_TRACK:
+            break;
+        default:break;
         }
     }
 }
@@ -95,18 +116,22 @@ static void PlayProc(void*param){
 static void Init(){
     if(0==msgQPlayer){
         DWORD thid;
-        memset(&sCurrentService,0,sizeof(sCurrentService));
+        memset(&cur_svc,0,sizeof(cur_svc));
         msgQPlayer=nglMsgQCreate(10,sizeof(MSGPLAY));
         nglCreateThread(&thid,0,4096,PlayProc,NULL);
     }
 }
 
 void DtvGetCurrentService(SERVICELOCATOR*sloc){
-    if(sloc)*sloc=sCurrentService;
+    if(sloc)*sloc=cur_svc;
 }
 
 INT DtvPlay(SERVICELOCATOR*loc,const char*lan){
     MSGPLAY msg;
+    INT pmtpid;
+    DtvGetServiceItem(loc,SKI_PMTPID,&pmtpid);
+    msg.msgid=MSG_PLAY;
+    msg.lParam=pmtpid;
     msg.loc=*loc;
     memset(msg.lan,0,3);
     if(lan)memcpy(msg.lan,lan,3);

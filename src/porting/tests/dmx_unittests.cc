@@ -22,7 +22,7 @@ class DMX:public testing::Test{
       tp.u.s.frequency=10750*1000;
       nglTunerInit();
       //nglTunerSetLNB(0,1);    nglTunerSet22K(0,1);
-      nglTunerLock(0,&tp);
+      //nglTunerLock(0,&tp);
       nglDmxInit();
       flt=0;
       data=(BYTE*)nglMalloc(4096);

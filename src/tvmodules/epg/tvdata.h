@@ -10,6 +10,7 @@ int AddEITPFSection(const EIT&eit,int*changed);
 int AddEITSSection(const EIT &eit,int*changed);
 int AddBATSection(const BAT&bat,int*changed);
 int AddStreamDB(const STREAMDB&ts);
+int UpdateStreamData(SERVICELOCATOR*svc,BYTE*sec);
 int DtvLoadProgramsData(const char*fname);
 int DtvSaveProgramsData(const char*fname);
 INT DtvEnumTSService(const STREAMDB&ts,DTV_SERVICE_CBK cbk,void*userdata);

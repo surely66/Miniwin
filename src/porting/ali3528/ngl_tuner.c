@@ -1287,176 +1287,173 @@ AUI_RTN_CODE nim_init_cb(void *pv_param)
 			| QPSK_CONFIG_FREQ_OFFSET;
 	
 #elif (defined BOARD_CFG_M3528)
-               struct aui_tuner_dvbs_config *tuner;
-                struct aui_demod_dvbs_config *demod;
+        struct aui_tuner_dvbs_config *tuner;
+        struct aui_demod_dvbs_config *demod;
 #ifdef SUPPORT_RDA5815M_TUNER
-                                /* first NIM : DVB-S with internal demod and ALi RDA5815M tuner */
-                                nim = nim_config + index;
-                                tuner = &nim->config.dvbs.tuner;
-                                demod = &nim->config.dvbs.demod;
+        /* first NIM : DVB-S with internal demod and ALi RDA5815M tuner */
+        nim = nim_config + index;
+        tuner = &nim->config.dvbs.tuner;
+        demod = &nim->config.dvbs.demod;
 
-                                tuner->freq_low = 900;
-                                tuner->freq_high = 2200;
-                                tuner->i2c_type_id = I2C_TYPE_SCB1;
-                                tuner->i2c_base_addr = 0x18;
-                                tuner->id = AUI_RDA5815M;
+        tuner->freq_low = 900;
+        tuner->freq_high = 2200;
+        tuner->i2c_type_id = I2C_TYPE_SCB1;
+        tuner->i2c_base_addr = 0x18;
+        tuner->id = AUI_RDA5815M;
 
-                                nim->id = AUI_NIM_ID_C3505_0;
-
-                                // Internal demodulator does not need reset GPIO
-                                nim->nim_reset_gpio.position = AUI_GPIO_NONE;
-                        //      nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-                        //      nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
-
-                                nim->lnb_power_gpio.position = 92;
-                                nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-                                nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
-
-                                //demod->i2c_type_id =  I2C_TYPE_SCB0;
-                                //demod->i2c_base_addr = 0xe6;
-                                //QPSK_Config: 0xfd (1111 1101)
-                                demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
-                                                | QPSK_CONFIG_NEW_AGC1
-                                                | QPSK_CONFIG_POLAR_REVERT
-                                                | QPSK_CONFIG_I2C_THROUGH
-                                                | QPSK_CONFIG_IQ_SWAP
-                                                | QPSK_CONFIG_FREQ_OFFSET;
-#else
-
-                /* first NIM : DVB-S with internal demod and ALi M3031 tuner */
-                nim = nim_config + index;
-                tuner = &nim->config.dvbs.tuner;
-                demod = &nim->config.dvbs.demod;
-
-                tuner->freq_low = 900;
-                tuner->freq_high = 2200;
-                tuner->i2c_type_id = I2C_TYPE_SCB1;
-
-                #if 0//def SUPPORT_RDA5815M_TUNER
-                tuner->i2c_base_addr = 0x18;
-                tuner->id = AUI_RDA5815M;
-                #else
-                tuner->i2c_base_addr = 0x40;
-                tuner->id = AUI_M3031;
-                #endif
-
-                nim->id = AUI_NIM_ID_C3505_0;
-
-                // Internal demodulator does not need reset GPIO
-                nim->nim_reset_gpio.position = AUI_GPIO_NONE;
+        nim->id = AUI_NIM_ID_C3505_0;
+        // Internal demodulator does not need reset GPIO
+        nim->nim_reset_gpio.position = AUI_GPIO_NONE;
         //      nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
         //      nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
 
-               nim->lnb_power_gpio.position = 92;
-                nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-                nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
+        nim->lnb_power_gpio.position = 92;
+        nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+        nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
 
-                demod->i2c_base_addr = 0xe6;
-                //QPSK_Config: 0xf9 (1111 1001)
-                demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
-                                | QPSK_CONFIG_NEW_AGC1
-                        #if 0//def SUPPORT_RDA5815M_TUNER
-                                | QPSK_CONFIG_IQ_SWAP
-                        #endif
-                                | QPSK_CONFIG_POLAR_REVERT
-                                | QPSK_CONFIG_I2C_THROUGH
-                                | QPSK_CONFIG_FREQ_OFFSET;
-        #endif
+        //demod->i2c_type_id =  I2C_TYPE_SCB0;
+        //demod->i2c_base_addr = 0xe6;
+        //QPSK_Config: 0xfd (1111 1101)
+        demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
+                             | QPSK_CONFIG_NEW_AGC1
+                             | QPSK_CONFIG_POLAR_REVERT
+                             | QPSK_CONFIG_I2C_THROUGH
+                             | QPSK_CONFIG_IQ_SWAP
+                             | QPSK_CONFIG_FREQ_OFFSET;
+#else
 
-                /* second NIM : with external demod M3501 and ALi M3031 tuner */
-                INC_INDEX(index);
-                nim = nim_config + index;
-                tuner = &nim->config.dvbs.tuner;
-                demod = &nim->config.dvbs.demod;
+       /* first NIM : DVB-S with internal demod and ALi M3031 tuner */
+       nim = nim_config + index;
+       tuner = &nim->config.dvbs.tuner;
+       demod = &nim->config.dvbs.demod;
 
-                tuner->freq_low = 900;
-                tuner->freq_high = 2200;
-                tuner->i2c_type_id = I2C_TYPE_SCB1;
-                tuner->i2c_base_addr = 0x42;
-                tuner->id = AUI_M3031;
+       tuner->freq_low = 900;
+       tuner->freq_high = 2200;
+       tuner->i2c_type_id = I2C_TYPE_SCB1;
 
-                nim->id = AUI_NIM_ID_M3501_1;
+       #if 0//def SUPPORT_RDA5815M_TUNER
+       tuner->i2c_base_addr = 0x18;
+       tuner->id = AUI_RDA5815M;
+       #else
+       tuner->i2c_base_addr = 0x40;
+       tuner->id = AUI_M3031;
+       #endif
 
-                nim->nim_reset_gpio.position = 86;
-                nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-                nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+       nim->id = AUI_NIM_ID_C3505_0;
+       // Internal demodulator does not need reset GPIO
+       nim->nim_reset_gpio.position = AUI_GPIO_NONE;
+       //      nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+       //      nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+       nim->lnb_power_gpio.position = 92;
+       nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+       nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
 
-                nim->lnb_power_gpio.position = 71;
-                nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-                nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
+       demod->i2c_base_addr = 0xe6;
+       //QPSK_Config: 0xf9 (1111 1001)
+       demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
+                       | QPSK_CONFIG_NEW_AGC1
+                   #if 0//def SUPPORT_RDA5815M_TUNER
+                       | QPSK_CONFIG_IQ_SWAP
+                   #endif
+                       | QPSK_CONFIG_POLAR_REVERT
+                       | QPSK_CONFIG_I2C_THROUGH
+                       | QPSK_CONFIG_FREQ_OFFSET;
+#endif
 
-                demod->i2c_type_id =  I2C_TYPE_SCB1;
-                demod->i2c_base_addr = 0xA6;
-                //QPSK_Config: 0x79 (0111 1001)
-                demod->QPSK_Config = QPSK_CONFIG_MODE_2BIT
-                                | QPSK_CONFIG_NEW_AGC1
-                                | QPSK_CONFIG_POLAR_REVERT
-                                | QPSK_CONFIG_I2C_THROUGH
-                                | QPSK_CONFIG_FREQ_OFFSET;
+       /* second NIM : with external demod M3501 and ALi M3031 tuner */
+       INC_INDEX(index);
+       nim = nim_config + index;
+       tuner = &nim->config.dvbs.tuner;
+       demod = &nim->config.dvbs.demod;
+
+       tuner->freq_low = 900;
+       tuner->freq_high = 2200;
+       tuner->i2c_type_id = I2C_TYPE_SCB1;
+       tuner->i2c_base_addr = 0x42;
+       tuner->id = AUI_M3031;
+
+       nim->id = AUI_NIM_ID_M3501_1;
+
+       nim->nim_reset_gpio.position = 86;
+       nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+       nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+
+       nim->lnb_power_gpio.position = 71;
+       nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+       nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
+
+       demod->i2c_type_id =  I2C_TYPE_SCB1;
+       demod->i2c_base_addr = 0xA6;
+       //QPSK_Config: 0x79 (0111 1001)
+       demod->QPSK_Config = QPSK_CONFIG_MODE_2BIT
+                            | QPSK_CONFIG_NEW_AGC1
+                            | QPSK_CONFIG_POLAR_REVERT
+                            | QPSK_CONFIG_I2C_THROUGH
+                            | QPSK_CONFIG_FREQ_OFFSET;
 	
 
 #elif (defined BOARD_CFG_M3529)
 
-	struct aui_tuner_dvbs_config *tuner;
-	struct aui_demod_dvbs_config *demod;
+      struct aui_tuner_dvbs_config *tuner;
+      struct aui_demod_dvbs_config *demod;
 
-	/* first NIM : DVB-S with internal demod and ALi M3031 tuner */
-	nim = nim_config + index;
-	tuner = &nim->config.dvbs.tuner;
-	demod = &nim->config.dvbs.demod;
+      /* first NIM : DVB-S with internal demod and ALi M3031 tuner */
+      nim = nim_config + index;
+      tuner = &nim->config.dvbs.tuner;
+      demod = &nim->config.dvbs.demod;
 
-	tuner->freq_low = 900;
-	tuner->freq_high = 2200;
-	tuner->i2c_type_id = I2C_TYPE_SCB1;
-	tuner->i2c_base_addr = 0x40;
-	tuner->id = AUI_M3031;
+      tuner->freq_low = 900;
+      tuner->freq_high = 2200;
+      tuner->i2c_type_id = I2C_TYPE_SCB1;
+      tuner->i2c_base_addr = 0x40;
+      tuner->id = AUI_M3031;
 
-	nim->id = AUI_NIM_ID_C3505_0;
+      nim->id = AUI_NIM_ID_C3505_0;
 
-	// Internal demodulator does not need reset GPIO
-	nim->nim_reset_gpio.position = AUI_GPIO_NONE;
-//	nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-//	nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+      // Internal demodulator does not need reset GPIO
+      nim->nim_reset_gpio.position = AUI_GPIO_NONE;
+      // nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+      // nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
 
-	nim->lnb_power_gpio.position = 6;
-	nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-	nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
+      nim->lnb_power_gpio.position = 6;
+      nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+      nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
 
-	//demod->i2c_type_id =  I2C_TYPE_SCB0;
-	//demod->i2c_base_addr = 0xe6;
-	//QPSK_Config: 0xf9 (1111 1001)
-	demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
-			| QPSK_CONFIG_NEW_AGC1
-			| QPSK_CONFIG_POLAR_REVERT
-			| QPSK_CONFIG_I2C_THROUGH
-			| QPSK_CONFIG_FREQ_OFFSET;
+      //demod->i2c_type_id =  I2C_TYPE_SCB0;
+      //demod->i2c_base_addr = 0xe6;
+      //QPSK_Config: 0xf9 (1111 1001)
+      demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
+		| QPSK_CONFIG_NEW_AGC1
+		| QPSK_CONFIG_POLAR_REVERT
+		| QPSK_CONFIG_I2C_THROUGH
+		| QPSK_CONFIG_FREQ_OFFSET;
 
-	/* second NIM : with external demod M3501 and ALi M3031 tuner */
-	INC_INDEX(index);
-	nim = nim_config + index;
-	tuner = &nim->config.dvbs.tuner;
-	demod = &nim->config.dvbs.demod;
+     /* second NIM : with external demod M3501 and ALi M3031 tuner */
+     INC_INDEX(index);
+     nim = nim_config + index;
+     tuner = &nim->config.dvbs.tuner;
+     demod = &nim->config.dvbs.demod;
 
-	tuner->freq_low = 900;
-	tuner->freq_high = 2200;
-	tuner->i2c_type_id = I2C_TYPE_SCB3;
-	tuner->i2c_base_addr = 0x40;
-	tuner->id = AUI_M3031;
+     tuner->freq_low = 900;
+     tuner->freq_high = 2200;
+     tuner->i2c_type_id = I2C_TYPE_SCB3;
+     tuner->i2c_base_addr = 0x40;
+     tuner->id = AUI_M3031;
 
-	nim->id = AUI_NIM_ID_M3501_1;
+     nim->id = AUI_NIM_ID_M3501_1;
 
-	nim->nim_reset_gpio.position = 92;
-	nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-	nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+     nim->nim_reset_gpio.position = 92;
+     nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+     nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
 
-	nim->lnb_power_gpio.position = 6;
-	nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-	nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
+     nim->lnb_power_gpio.position = 6;
+     nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+     nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
 
-	demod->i2c_type_id =  I2C_TYPE_SCB3;
-	demod->i2c_base_addr = 0x66;
-	//QPSK_Config: 0x79 (0111 1001)
-	demod->QPSK_Config = QPSK_CONFIG_MODE_2BIT
+     demod->i2c_type_id =  I2C_TYPE_SCB3;
+     demod->i2c_base_addr = 0x66;
+     //QPSK_Config: 0x79 (0111 1001)
+     demod->QPSK_Config = QPSK_CONFIG_MODE_2BIT
 			| QPSK_CONFIG_NEW_AGC1
 			| QPSK_CONFIG_POLAR_REVERT
 			| QPSK_CONFIG_I2C_THROUGH
@@ -1464,86 +1461,85 @@ AUI_RTN_CODE nim_init_cb(void *pv_param)
 
 #elif (defined BOARD_CFG_M3627)
 #ifdef SUPPORT_TWO_TUNER
-	struct aui_tuner_dvbs_config *tuner;
-	struct aui_demod_dvbs_config *demod;
+     struct aui_tuner_dvbs_config *tuner;
+     struct aui_demod_dvbs_config *demod;
 
-	/* first NIM : DVB-S with internal demod and ALi M3031 tuner */
-	nim = nim_config + index;
-	tuner = &nim->config.dvbs.tuner;
-	demod = &nim->config.dvbs.demod;
+     /* first NIM : DVB-S with internal demod and ALi M3031 tuner */
+     nim = nim_config + index;
+     tuner = &nim->config.dvbs.tuner;
+     demod = &nim->config.dvbs.demod;
+     tuner->freq_low = 900;
+     tuner->freq_high = 2200;
+     tuner->i2c_type_id = I2C_TYPE_SCB1;
+     tuner->i2c_base_addr = 0x40;
+     tuner->id = AUI_M3031;
 
-	tuner->freq_low = 900;
-	tuner->freq_high = 2200;
-	tuner->i2c_type_id = I2C_TYPE_SCB1;
-	tuner->i2c_base_addr = 0x40;
-	tuner->id = AUI_M3031;
+     nim->id = AUI_NIM_ID_C3505_0;
 
-	nim->id = AUI_NIM_ID_C3505_0;
+     // Internal demodulator does not need reset GPIO
+     nim->nim_reset_gpio.position = AUI_GPIO_NONE;
+     //nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+     //nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
 
-	// Internal demodulator does not need reset GPIO
-	nim->nim_reset_gpio.position = AUI_GPIO_NONE;
-//	nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-//	nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+     nim->lnb_power_gpio.position = 71;
+     nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+     nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
 
-	nim->lnb_power_gpio.position = 71;
-	nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-	nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_HIGH;
-
-	//demod->i2c_type_id =  I2C_TYPE_SCB0;
-	//demod->i2c_base_addr = 0xe6;
-	//QPSK_Config: 0xf9 (1111 1001)
-	demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
+     //demod->i2c_type_id =  I2C_TYPE_SCB0;
+     //demod->i2c_base_addr = 0xe6;
+     //QPSK_Config: 0xf9 (1111 1001)
+     demod->QPSK_Config = QPSK_CONFIG_MODE_8BIT
 			| QPSK_CONFIG_NEW_AGC1
 			| QPSK_CONFIG_POLAR_REVERT
 			| QPSK_CONFIG_I2C_THROUGH
 			| QPSK_CONFIG_FREQ_OFFSET;
 
-	/* second NIM : DVB-T2 with external demod and CXD2872 tuner */
-	INC_INDEX(index);
+     /* second NIM : DVB-T2 with external demod and CXD2872 tuner */
+     INC_INDEX(index);
 #endif	
-	nim = nim_config + index;
+     nim = nim_config + index;
 
-	struct aui_tuner_dvbt_config *dvbt_tuner = &nim->config.dvbt.tuner;
-	struct aui_demod_dvbt_config *dvbt_demod = &nim->config.dvbt.demod;
+     struct aui_tuner_dvbt_config *dvbt_tuner = &nim->config.dvbt.tuner;
+     struct aui_demod_dvbt_config *dvbt_demod = &nim->config.dvbt.demod;
 
-	dvbt_demod->i2c_base_addr = 0xD8;
-	dvbt_demod->i2c_type_id = I2C_TYPE_SCB3;
+     dvbt_demod->i2c_base_addr = 0xD8;
+     dvbt_demod->i2c_type_id = I2C_TYPE_SCB3;
 
-	dvbt_tuner->freq_low = 40; // KHz
-	dvbt_tuner->freq_high = 900; // KHz
-	dvbt_tuner->id = AUI_CXD2872;
-	dvbt_tuner->agc_ref = 0x63;
-	//dvbt_tuner->rf_agc_min = 0x2A; // ?
-	//dvbt_tuner->rf_agc_max = 0xBA; // ?
-	dvbt_tuner->if_agc_max = 0xC3;
-	dvbt_tuner->if_agc_min = 0x00;
-	dvbt_tuner->tuner_crystal = 16;
-	//dvbt_tuner->tuner_special_config = 0x01; // ?
-	dvbt_tuner->wtuner_if_freq = 5000;
-	//dvbt_tuner->tuner_ref_divratio = 64; // ?
-	dvbt_tuner->tuner_agc_top = 252;
-	//dvbt_tuner->tuner_step_freq = 62.5; // ?
-	dvbt_tuner->i2c_type_id = I2C_TYPE_SCB3;
-	dvbt_tuner->i2c_base_addr = 0xC0;
-	dvbt_tuner->chip = tuner_chip_maxlinear;
+     dvbt_tuner->freq_low = 40; // KHz
+     dvbt_tuner->freq_high = 900; // KHz
+     dvbt_tuner->id = AUI_CXD2872;
+     dvbt_tuner->agc_ref = 0x63;
+     //dvbt_tuner->rf_agc_min = 0x2A; // ?
+     //dvbt_tuner->rf_agc_max = 0xBA; // ?
+     dvbt_tuner->if_agc_max = 0xC3;
+     dvbt_tuner->if_agc_min = 0x00;
+     dvbt_tuner->tuner_crystal = 16;
+     //dvbt_tuner->tuner_special_config = 0x01; // ?
+     dvbt_tuner->wtuner_if_freq = 5000;
+     //dvbt_tuner->tuner_ref_divratio = 64; // ?
+     dvbt_tuner->tuner_agc_top = 252;
+     //dvbt_tuner->tuner_step_freq = 62.5; // ?
+     dvbt_tuner->i2c_type_id = I2C_TYPE_SCB3;
+     dvbt_tuner->i2c_base_addr = 0xC0;
+     dvbt_tuner->chip = tuner_chip_maxlinear;
 
-	nim->id = AUI_NIM_ID_CXD2837_0;
+     nim->id = AUI_NIM_ID_CXD2837_0;
 
-	nim->nim_reset_gpio.position = 95;
-	nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
-	nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
-	nim->lnb_power_gpio.position = 96;
-	nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
-	nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+     nim->nim_reset_gpio.position = 95;
+     nim->nim_reset_gpio.io = AUI_GPIO_O_DIR;
+     nim->nim_reset_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
+     nim->lnb_power_gpio.position = 96;
+     nim->lnb_power_gpio.io = AUI_GPIO_O_DIR;
+     nim->lnb_power_gpio.gpio_val = AUI_GPIO_VALUE_LOW;
 
 #elif (defined BOARD_CFG_M3626)
 
 #elif (defined BOARD_CFG_M3727) || (defined BOARD_CFG_M3712)|| (defined BOARD_CFG_M3712L)
-	// Untested: Linux AUI NIM settints
-	/* first NIM : DVB-C with internal demod and MxL603 tuner */
-	nim = nim_config + 0;
-	struct aui_tuner_dvbc_config *dvbc_tuner = &nim->config.dvbc.tuner;
-	//struct aui_demod_dvbc_config *dvbc_demod = &nim->config.dvbc.demod;
+     // Untested: Linux AUI NIM settints
+     /* first NIM : DVB-C with internal demod and MxL603 tuner */
+     nim = nim_config + 0;
+     struct aui_tuner_dvbc_config *dvbc_tuner = &nim->config.dvbc.tuner;
+     //struct aui_demod_dvbc_config *dvbc_demod = &nim->config.dvbc.demod;
 
 	dvbc_tuner->id = AUI_MXL603;
 	dvbc_tuner->rf_agc_max = 0xBA;

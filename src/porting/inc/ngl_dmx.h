@@ -270,6 +270,7 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle);
 */
 INT nglStopSectionFilter(DWORD  dwStbFilterHandle);
 INT nglGetFilterPid(DWORD  dwStbFilterHandle);
+INT nglSetSectionFilterOneshot(DWORD dwStbFilterHandle,BOOL onshort);
 /** @} */
 /** @} */
 NGL_END_DECLS
