@@ -96,9 +96,11 @@ TEST_F(CONTROLS,ProgressBar){
     w->setLayout(new LinearLayout());
     w->addChildView(new ProgressBar(800,20))->setId(100);
     w->addChildView(new ProgressBar(30,200))->setId(101);
+    w->addChildView(new ProgressBar(200,200))->setId(102);
     for(int i=0;i<=100;i+=5){
        ((ProgressBar*)w->findViewById(100))->setProgress(i);
        ((ProgressBar*)w->findViewById(101))->setProgress(i);
+       ((ProgressBar*)w->findViewById(102))->setProgress(i);
        nglSleep(100);
     }
     nglSleep(1000);

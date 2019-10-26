@@ -8,8 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
-add_subdirectory(src/epg)
 add_subdirectory(src/porting)
 add_subdirectory(src/apps)
 add_subdirectory(src/3rdparty)
-
+add_subdirectory(src/tvmodules)

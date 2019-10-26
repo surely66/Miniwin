@@ -40,7 +40,7 @@ void ProgressBar::onDraw(GraphContext&canvas){
     RECT rect=getClientRect();
     canvas.set_color(getBgColor());
     canvas.draw_rect(rect);
-
+    
     canvas.set_color(getFgColor());
     canvas.rectangle(rect);
     canvas.stroke();
@@ -55,8 +55,19 @@ void ProgressBar::onDraw(GraphContext&canvas){
         r.height=r.height*progress_/(max_-min_);
         r.offset(0,h-r.height);
     } 
-    canvas.set_source_rgb(.0,.0,1.);
-    canvas.draw_rect(r);
+    if(getWidth()!=getHeight()){
+        canvas.set_source_rgb(.0,.0,1.);
+        canvas.draw_rect(r);
+    }else{
+#define ANGLE(x) (3.1415926f*2*(x)/(max_-min_))
+        canvas.set_source_rgb(.0,.0,1.);
+        canvas.set_line_width(5.);
+        canvas.arc_negative(r.width/2,r.height/2,r.width/2,ANGLE(min_),ANGLE(progress_));//ANGLE(progress_));//arc(double xc, double yc, double radius, double angle1, double angle2) 
+        canvas.stroke();
+        canvas.set_source_rgb(1.,.0,1.);
+        canvas.arc_negative(r.width/2,r.height/2,r.width/2,ANGLE(progress_),ANGLE(max_));//arc(double xc, double yc, double radius, double angle1, double angle2) 
+        canvas.fill();
+    }
 }
 
 }//end namespace
