@@ -112,9 +112,17 @@ void View::resetClip(){
 }
 
 void View::onDraw(GraphContext&canvas){
-    canvas.set_color(getBgColor());
+    if(bg_pattern_)
+       canvas.set_source(bg_pattern_);
+    else
+       canvas.set_color(getBgColor());
     RECT r=getClientRect();
     canvas.draw_rect(r);
+    if(hasFlag(Attr::ATTR_BORDER)){
+         canvas.set_color(255,0,0);
+         canvas.rectangle(r);
+         canvas.stroke();
+    }
 }
 
 View::AnimState View::getAnimateState() {
@@ -191,6 +199,12 @@ const RECT View::getClientRect(){
     return r;
 }
 
+View& View::setBgPattern(const RefPtr<const Pattern>& source){
+    bg_pattern_=source; 
+}
+RefPtr<const Pattern>View::getBgPattern(){
+    return bg_pattern_;
+}
 View& View::setFgColor(UINT color){
     fg_color_=color;
     return *this;
@@ -309,10 +323,11 @@ void View::invalidate_inner(const RECT*rect){
     }
 }
 // Layout
-void View::setLayout(Layout* layout){
+Layout* View::setLayout(Layout* layout){
     layout_.reset(layout);
     if(children_.size())
         onLayout();
+    return layout;
 }
 
 
@@ -371,7 +386,10 @@ void View::removeChildView(View* view){
         }
     }
 }
-
+void View::removeChildren(){
+    children_.clear();
+    onLayout();
+}
 void View::removeChildView(size_t idx){
     View* pView = getChildView(idx);
     removeChildView(pView);     

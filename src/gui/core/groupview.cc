@@ -50,13 +50,7 @@ void GroupView::onDraw(GraphContext& canvas) {
     // Draw the background color, if enabled
     canvas.reset_clip();
     clip(canvas);
-    if(hasFlag(Attr::ATTR_BORDER)){
-         canvas.set_color(255,0,0);
-         canvas.rectangle(getClientRect());
-         canvas.stroke();
-    }
-    canvas.set_color(getBgColor());
-    canvas.draw_rect(getClientRect());
+    INHERITED::onDraw(canvas);
     for(auto child : children_){
         RECT rect=child->getBound();
         cairo_rectangle_int_t r={rect.x,rect.y,rect.width,rect.height};

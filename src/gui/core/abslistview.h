@@ -33,7 +33,7 @@ protected:
 public:
    AbsListView(int w,int h);
    AbsListView(const std::string&txt,int w,int h);
-   virtual void sort(ItemCompare ,bool reert=false);
+   virtual void sort(ItemCompare ,bool reverse=false);
    virtual int getIndex();
    virtual int getTop();
    virtual void setIndex(int idx);

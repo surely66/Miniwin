@@ -61,8 +61,7 @@ void ListView::setIndex(int idx){
 
 void ListView::onDraw(GraphContext&canvas){
     RECT rect=getClientRect();
-    canvas.set_color(getBgColor());
-    canvas.draw_rect(rect);
+    INHERITED::onDraw(canvas);
     RECT r;
     r.set(0,0,getWidth(),0);
     canvas.set_font_size(getFontSize());

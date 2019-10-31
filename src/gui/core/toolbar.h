@@ -1,6 +1,7 @@
 #ifndef __TOOLBAR_H__
 #define __TOOLBAR_H__
-#include<widget.h>
+#include <widget.h>
+#include <groupview.h>
 namespace nglui{
 class ToolBar:public Widget{
 protected:

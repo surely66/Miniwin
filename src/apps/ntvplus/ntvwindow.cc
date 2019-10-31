@@ -20,7 +20,14 @@ NTVWindow::NTVWindow(int x,int y,int w,int h):Window(x,y,w,h){
     clearFlag(Attr::ATTR_VISIBLE);
     setFgColor(0xFFFFFFFF);
     setBgColor(0xFF000000);
-
+    
+    /*RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 200, w/2, h/2, 200));
+    radpat->add_color_stop_rgba( 0, 1.0, 0.8, 0.8,.0);
+    radpat->add_color_stop_rgba( .4, 0.9, 0.0, 0.0,.2);
+    radpat->add_color_stop_rgba( .6, 1.0, 0.8, 0.8,.0);
+    radpat->add_color_stop_rgba( 1., 0.9, 0.0, 0.0,.2);
+    setBgPattern(radpat);*/
+ 
     titlebar=nullptr;
     sig_strength=sig_quality=nullptr;
 
@@ -41,7 +48,7 @@ void NTVWindow::initContent(int styles){
         sendMessage(WM_GETSIGNAL,0,0,500);
     }
     if(styles&NWS_TOOLTIPS){
-        toolbar=new NTVToolBar(getWidth(),38);
+        toolbar=CreateNTVToolBar(getWidth(),38);
         toolbar->setPos(0,getHeight()-60);
         addChildView(toolbar);
     }

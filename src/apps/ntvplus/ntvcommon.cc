@@ -86,33 +86,6 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     canvas.draw_text(rect,sweek+"\n"+sdate,DT_CENTER|DT_VCENTER|DT_MULTILINE);
 }
 
-NTVToolBar::NTVToolBar(int w,int h):ToolBar(w,h){
-   setBgColor(0);
-}
-
-void NTVToolBar::onDraw(GraphContext&canvas){
-    RECT rect=getClientRect();
-    if(getBgColor()==0){
-        RefPtr<LinearGradient>pat=LinearGradient::create(0,0,rect.width,rect.height);
-        pat->add_color_stop_rgba(.0,.0,.0,.0,1.);
-        pat->add_color_stop_rgba(.5,.6,.6,.6,1.);
-        pat->add_color_stop_rgba(1.,.0,.0,.0,1.);
-        canvas.set_source(pat);
-    }else canvas.set_color(getBgColor());
-    canvas.rectangle(0,0,rect.width,rect.height);
-    canvas.fill();
-    for(int i=0;i<buttons.size();i++){
-        BUTTON&b=buttons[i];
-        rect.x=b.pos;
-         if(b.image){
-             canvas.draw_image(b.image,b.pos,(getHeight()-b.image->get_height())/2);
-             rect.x+=b.image->get_width()+4;
-         }
-         canvas.set_font_size(getFontSize()+(i==index_?6:0));
-         canvas.set_color(i==index_?getFgColor():0xFFAAAAAA);
-         canvas.draw_text(rect,b.text,DT_LEFT|DT_VCENTER);
-    }
-}
 
 NTVSelector::NTVSelector(const std::string&txt,int w,int h):Selector(txt,w,h){
     setBgColor(0xFF000000);
@@ -184,7 +157,13 @@ static void ChannelPainterInner(AbsListView&lv,const ListView::ListItem&itm,int 
     ChannelItem&ch=(ChannelItem&)itm;
     RECT r=itm.rect;
     r.inflate(0,-1);
-    canvas.set_color(state?0xFF008000:lv.getBgColor());
+    if(state)
+         canvas.set_color(0xFF008000);
+    else{
+         if(lv.getBgPattern())
+            canvas.set_source(lv.getBgPattern());
+         else canvas.set_color(lv.getBgColor());
+    }
     canvas.draw_rect(r);
     canvas.set_color(lv.getFgColor());
     
@@ -220,6 +199,15 @@ void  ChannelPainter(AbsListView&lv,const ListView::ListItem&itm,int state,Graph
     ChannelPainterInner(lv,itm,state,canvas,false);
 }
 
+ToolBar*CreateNTVToolBar(int w,int h){
+    ToolBar*toolbar=new ToolBar(w,h);
+    RefPtr<LinearGradient>pat=LinearGradient::create(0,0,w,h);
+    pat->add_color_stop_rgba(.0,.0,.0,.0,1.);
+    pat->add_color_stop_rgba(.5,.6,.6,.6,1.);
+    pat->add_color_stop_rgba(1.,.0,.0,.0,1.);
+    toolbar->setBgPattern(pat);
+    return toolbar;
+}
 const std::string GetTPString(const TRANSPONDER*tp){
     char buf[128];
     const char*polars[]={"H","V","L","R"};

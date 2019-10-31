@@ -32,13 +32,20 @@ public:
 ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     initContent(NWS_TITLE|NWS_TOOLTIPS);
     setText("ChannelList");
-    tbfavs=new NTVToolBar(1280,38);
+    tbfavs=CreateNTVToolBar(1280,38);
+
     tbfavs->setPos(0,70);
     loadGroups();
     addChildView(tbfavs);
 
+    RefPtr<Gradient>pat=LinearGradient::create(0,0,0,520);
+    pat->add_color_stop_rgba(.0,.2,.2,.2,.2);
+    pat->add_color_stop_rgba(.5,1.,1.,1.,1.);
+    pat->add_color_stop_rgba(1.,.2,.2,.2,.2);
+
     chlst=new ListView(400,520);
     chlst->setPos(50,110);
+    chlst->setBgPattern(pat);
     chlst->setBgColor(getBgColor());
     chlst->setFgColor(getFgColor());
     chlst->setFlag(View::Attr::ATTR_SCROLL_VERT);

@@ -32,6 +32,7 @@ DWORD nglIrInit(){
     aui_log_priority_set(AUI_MODULE_INPUT,AUI_LOG_PRIO_DEBUG);    
     aui_log_priority_set(AUI_MODULE_PANEL,AUI_LOG_PRIO_DEBUG);    
     //REGIST_KEY(KEY_LEFT);it the same as keynames["KEY_LEFT"]=NGL_KEY_LEFT;
+    REGIST_KEY(KEY_POWER);
     REGIST_KEY(KEY_BACKSPACE);
     REGIST_KEY(KEY_ESCAPE);
     REGIST_KEY(KEY_ENTER);
@@ -130,7 +131,7 @@ DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
     NGL_RunTime rt;
     nglGetRunTime(&rt);
     key->event_time=rt.uiMilliSec;
-    NGLOG_VERBOSE_IF(rc==0,"key_code=0x%x state=%d  repeat=%d keyname=%s",key->key_code,
+    NGLOG_VERBOSE_IF(rc==0,"key_code=0x%x<--0x%x state=%d  repeat=%d keyname=%s",key->key_code,info.n_key_code,
          key->state,key->repeat, key2name[key->key_code].c_str());
     key->state=(NGLKEYSTATE)info.e_status;
     return rc==0?NGL_OK:NGL_ERROR;

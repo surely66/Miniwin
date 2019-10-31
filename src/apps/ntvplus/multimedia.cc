@@ -102,7 +102,8 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     player=0;
     sort_revert=false;
     initContent(NWS_TITLE|NWS_TOOLTIPS);
-    mdtype=new NTVToolBar(1200,30);
+    mdtype=CreateNTVToolBar(1200,30);
+
     mdtype->setPos(40,70);
     mdtype->addButton("Movie",-1,120);
     mdtype->addButton("Music",-1,120);
@@ -111,7 +112,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     mdtype->setIndex(0);
     addChildView(mdtype);
 
-    header=new NTVToolBar(1200,30);
+    header=new ToolBar(1200,30);
     header->setBgColor(0xFF000000);
     header->setPos(40,100);
     header->addButton("NO.",-1,W_ID);

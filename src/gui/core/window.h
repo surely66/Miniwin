@@ -29,9 +29,7 @@ public:
   virtual void hide();
   virtual View& setPos(int x,int y)override;
   virtual View& setSize(int cx,int cy)override;
-//  virtual void onDraw(GraphContext& canvas) override;
   virtual bool onKeyRelease(KeyEvent& evt) override;
-//  virtual void onMessage(DWORD msgid,DWORD wParam,ULONG lParam)override;
   virtual void sendMessage(DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;
   virtual void sendMessage(std::shared_ptr<View>w,DWORD msgid,DWORD wParam,ULONG lParam,DWORD delayedtime=0)override;
  protected:

@@ -28,12 +28,6 @@ public:
 };
 
 
-class NTVToolBar:public ToolBar{
-public:
-   NTVToolBar(int w,int h);
-   void onDraw(GraphContext&canvas);
-};
-
 class NTVSelector :public Selector{
 public:
    NTVSelector(const std::string&txt,int w,int h);
@@ -45,6 +39,7 @@ public:
    NTVProgressBar(int w,int h);
    virtual void onDraw(GraphContext&canvas)override;
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 #define CHANNEL_LIST_ITEM_HEIGHT 40
 class ChannelItem:public ListView::ListItem{
@@ -77,6 +72,7 @@ public:
    TransponderItem(const TRANSPONDER&t);
 };
 
+ToolBar*CreateNTVToolBar(int w,int h);
 void ChannelPainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphContext&canvas);
 void ChannelPainterLCN(AbsListView&lv,const ListView::ListItem&itm,int state,GraphContext&canvas);
 
@@ -84,7 +80,6 @@ void SettingPainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphC
 const std::string GetTPString(const TRANSPONDER*tp);
 void ShowVolumeWindow(int timeout);
 void ShowAudioSelector(int estype,int timeout);
-
 }//namespace
 
 #endif

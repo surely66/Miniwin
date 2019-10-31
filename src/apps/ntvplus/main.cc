@@ -23,7 +23,6 @@ int main(int argc,const char*argv[]){
     app.setOpacity(app.getArgAsInt("alpha",255));
     app.getString("mainmenu",app.getArg("language","eng"));
     desktop->setKeyListener([&](int key)->bool{
-         printf("rcv key:%x \r\n",key);
          switch(key){
          case NGL_KEY_MENU:CreateMainMenu();return true;
          case NGL_KEY_ENTER:CreateChannelList();return true;
@@ -36,7 +35,7 @@ int main(int argc,const char*argv[]){
                  return true;
          case NGL_KEY_AUDIO:
              ShowAudioSelector(ST_AUDIO,4000);return true;
-         case NGL_KEY_ESCAPE:exit(0);
+         case NGL_KEY_POWER:exit(0);
          case NGL_KEY_VOL_INC:
          case NGL_KEY_VOL_DEC:
               {

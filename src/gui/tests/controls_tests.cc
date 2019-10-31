@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 #include <ngl_os.h>
+#include<channelepgview.h>
+#include<ngl_timer.h>
 
 using namespace nglui;
 #define ID_OK 10
@@ -150,8 +152,6 @@ TEST_F(CONTROLS,ListView){
     nglSleep(28000);
 }
 
-#include<channelepgview.h>
-#include<ngl_timer.h>
 
 TEST_F(CONTROLS,ChannelEPGView){
     Window*w=new MyWindow(100,100,800,620);

@@ -102,14 +102,15 @@ public:
 };
 PVRWindow::PVRWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     initContent(NWS_TITLE|NWS_TOOLTIPS);
-    mdtype=new NTVToolBar(1200,30);
+    mdtype=CreateNTVToolBar(1200,30);
+
     mdtype->setPos(40,70);
     mdtype->addButton("PVR",-1,120);
     mdtype->addButton("Record Schedule",-1,320);
     mdtype->setIndex(0);
     addChildView(mdtype);
 
-    header=new NTVToolBar(1200,30);
+    header=new ToolBar(1200,30);
     header->setBgColor(0xFF000000);
     header->setPos(40,100);
     addChildView(header);

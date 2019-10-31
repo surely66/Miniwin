@@ -140,10 +140,13 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
      const char*ptxt=text.c_str();
      const char*pword=ptxt;
      TextExtents extents,te;
+     FontExtents ftext;
      std::vector<std::string>lines;
      std::string line;
      double x,y;
      double total_width=0, total_height=0;
+     get_font_extents(ftext);
+     NGLOG_VERBOSE("ascent=%.3f descent=%.3f height=%.3f xy_advance=%.3f/%.3f",ftext.ascent,ftext.descent,ftext.height,ftext.max_x_advance,ftext.max_x_advance);
      if( text_alignment&DT_MULTILINE){
          for(int i=0; i<text.length();i++){
              switch(brks[i]){
@@ -163,8 +166,8 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
                pword=ptxt+i+1;
              }
              break;
-            case WORDBREAK_NOBREAK:NGLOG_VERBOSE("%d",i);break;
-            case WORDBREAK_INSIDEACHAR:NGLOG_VERBOSE("%d",i);break;
+            case WORDBREAK_NOBREAK:    break;
+            case WORDBREAK_INSIDEACHAR:break;
             default:break;
             }
         }
@@ -178,9 +181,9 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
         get_text_extents(text,te);
         y=rect.y;
         switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.y-te.y_bearing;break;
-        case DT_VCENTER:y=rect.y+(rect.height-te.height)/2-te.y_bearing;break;
-        case DT_BOTTOM:y=rect.y+rect.height-te.height-te.y_bearing;break;
+        case DT_TOP:y=rect.y-te.y_bearing+ftext.descent;break;
+        case DT_VCENTER:y=rect.y+(rect.height-(ftext.ascent-ftext.descent))/2-te.y_bearing;break;
+        case DT_BOTTOM:y=rect.y+rect.height-ftext.height-te.y_bearing+ftext.descent;break;
         }
         switch(text_alignment&0x0F){
         case DT_LEFT:x=rect.x;break;

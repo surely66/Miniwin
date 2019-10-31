@@ -48,7 +48,8 @@ public:
 
 ChannelEditorWindow::ChannelEditorWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     
-    header=new NTVToolBar(1280,40);
+    header=CreateNTVToolBar(1280,40);
+
     header->addButton("Edit Channels",60,200);
     header->addButton("Set Favorites",-1,200);
     addChildView(header)->setPos(0,70);

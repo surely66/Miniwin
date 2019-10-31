@@ -7,16 +7,20 @@ LinearLayout::LinearLayout()
   : Layout() {;
 }
 
-LinearLayout::LinearLayout(const RECT& margin)
-  : Layout(margin) {
-}
-
 LinearLayout::~LinearLayout() {
 }
 
+static void LayoutLine(View*parent,std::vector<View*>vs){
+    int x=parent->getWidth();
+    for(auto v:vs){
+        v->setPos(x-v->getWidth(),v->getY());
+        NGLOG_DEBUG("setx=%d y=%d", x-v->getWidth(),v->getY());
+        x-=v->getWidth();
+    }
+}
 void LinearLayout::onLayout(View* view) {
-    int x = DELIMITER;
-    int y = DELIMITER;
+    int x = getPaddingLeft();
+    int y = getPaddingTop();
     int w = view->getWidth();
     int h = view->getHeight();
     int e_x = x + w;
@@ -24,25 +28,26 @@ void LinearLayout::onLayout(View* view) {
     int dx = x;
     int dy = y;
     int max_height = 0;
-
+    std::vector<View*>crow;
+    NGLOG_VERBOSE("%p x=%d y=%d",view,dx,dy);
     for (int i=0;i<view->getChildrenCount();i++){
         View*child=view->getChildView(i);
         // Get its prefer size
         SIZE size = child->getPreferSize();
-
+        crow.push_back(child);
         // Check the required size of the view, must be smaller/equal to,
         // and then skip it
         if(child->isVisible()==false)continue;
         if (size.width() > w || size.height() > h) {
             child->setBound(0, 0, 0, 0);
-            NGLOG_ERROR("Size is too large, shrink to 0");
+            NGLOG_ERROR("Size (%dx%d)is too large(%dx%d), shrink to 0",size.width(),size.height(),w,h);
             continue;
         }
 
         // If not wide enough, move to next line
         if (dx + size.width() > e_x) {
             dx = x;
-            dy += (max_height + DELIMITER);
+            dy += (max_height + getMarginTop());
             max_height=size.height();
         }
 
@@ -63,15 +68,20 @@ void LinearLayout::onLayout(View* view) {
 
         NGLOG_VERBOSE("layout %p Child %p id=%d/%d pos(%d,%d-%d,%d)",this,child,child->getId(),i, dx,dy,size.x,size.y);
         // Move to next X position
-        dx += (size.width() + DELIMITER);
+        dx += (size.width() + getMarginRight());
 
         // If X has exceeded the boundary, then move to next line
         if (dx >= e_x) {
             dx = x;
-            dy += (max_height + DELIMITER);
-            max_height = 0;
+            dy += (max_height + getMarginBottom());
+            max_height = 0; 
+            if(getGravity()==GRAVITY::RIGHT)
+                LayoutLine(view,crow);
+            crow.clear();
         }
     }
+    if(getGravity()==GRAVITY::RIGHT)
+        LayoutLine(view,crow);
 }//  endof onLayout
 
 }//endof namespace

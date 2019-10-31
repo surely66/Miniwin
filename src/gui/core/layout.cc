@@ -3,22 +3,19 @@
 namespace nglui{
 
 Layout::Layout() {
-   margin_.set(0,0,0,0);
-}
-
-Layout::Layout(const RECT& margin) {
-  margin_ = margin;
+   gravity_=GRAVITY::LEFT;
+   setMargins(0);
+   setPaddings(0);
 }
 
 Layout::~Layout() {
 }
 
-void Layout::setMargins(int thickness) {
-   margin_.set(thickness,thickness,thickness,thickness);
+void Layout::setMargins(int v) {
+    for(int i=0;i<4;i++)margins_[i]=v;
 }
-
-void Layout::setMargins(const RECT& margin) {
-  margin_ = margin;
+void Layout::setPaddings(int v){
+    for(int i=0;i<4;i++)paddings_[i]=v;
 }
 
 }//endof namespace

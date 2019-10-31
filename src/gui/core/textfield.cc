@@ -71,7 +71,7 @@ void TextField::onDraw(GraphContext& canvas) {
 }
 
 const SIZE& TextField::getPreferSize() {
-  prefer_size_.set(getWidth() + 3, getHeight() + 3);
+  prefer_size_.set(getWidth(), getHeight());
   return prefer_size_;
 }
 

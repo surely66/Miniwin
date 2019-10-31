@@ -10,7 +10,7 @@ typedef struct{
    UINT c2;
    USHORT w;
    USHORT h;
-   char*text;
+   const char*text;
 }KEYDEF;
 extern KEYDEF US[];
 

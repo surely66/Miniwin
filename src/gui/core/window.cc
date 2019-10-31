@@ -89,10 +89,6 @@ Window::~Window() {
     NGLOG_VERBOSE("%p",this);
 }
 
-/*void Window::onDraw(GraphContext&canvas) {
-    INHERITED::onDraw(canvas);
-}*/
-
 bool Window::onKeyRelease(KeyEvent& evt){
     if(INHERITED::onKeyRelease(evt))
         return true;

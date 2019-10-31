@@ -76,6 +76,7 @@ protected:
     int font_size_;
     int fg_color_;
     int bg_color_;
+    RefPtr<const Pattern> bg_pattern_;
     AnimState anim_state_; 
     Attr attr_;
     View*parent_;
@@ -110,6 +111,8 @@ public:
     virtual void setClickListener(ClickListener ls);
     virtual void setMessageListener(MessageListener ls);
   // Foreground color
+    virtual View& setBgPattern(const RefPtr<const Pattern>& source);
+    virtual RefPtr<const Pattern>getBgPattern();
     virtual View& setFgColor(UINT color);
     virtual UINT getFgColor() const;
 
@@ -127,7 +130,7 @@ public:
     virtual View& setFontSize(int32_t sz);
 
     // Layout
-    virtual void setLayout(Layout* layout);
+    virtual Layout* setLayout(Layout* layout);
     virtual Layout* getLayout() const;
     virtual void onLayout();
  
@@ -152,6 +155,7 @@ public:
     virtual View* addChildView(View* view);
     virtual void removeChildView(View* view);
     virtual void removeChildView(size_t idx);
+    virtual void removeChildren();
     virtual size_t getChildrenCount() const;
 
     virtual void onResize(SIZE& size);

@@ -22,22 +22,18 @@ StackLayout::StackLayout()
   : INHERITED() {;
 }
 
-StackLayout::StackLayout(const RECT& margin)
-  : INHERITED(margin) {
-}
-
 StackLayout::~StackLayout() {
 }
 
 void StackLayout::onLayout(View* view) {
-    int y = DELIMITER;
-    int x = DELIMITER;
+    int y = getPaddingTop();
+    int x = getPaddingLeft();
 
     for (int i=0;i<view->getChildrenCount();i++){
          View* child=view->getChildView(i);
         SIZE size = child->getPreferSize();
         child->setPos(x, y);
-        y += (size.height() + DELIMITER);
+        y += (size.height() + getMarginTop());
     }
 }
 

@@ -27,7 +27,6 @@ class StackLayout : public Layout {
   static constexpr int32_t DELIMITER = 5;
 
   StackLayout();
-  explicit StackLayout(const RECT& margin);
   virtual ~StackLayout();
 
   virtual void onLayout(View* view) override;

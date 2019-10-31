@@ -12,7 +12,6 @@ public:
    static constexpr int32_t DELIMITER = 5;
 
    LinearLayout();
-   explicit LinearLayout(const RECT& margin);
 
    virtual ~LinearLayout();
 

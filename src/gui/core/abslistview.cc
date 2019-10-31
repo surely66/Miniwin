@@ -36,12 +36,12 @@ void AbsListView::setItemSelectListener( ItemSelectListener listener){
     item_select_listener_=listener;    
 }
 
-void AbsListView::sort(ItemCompare cmp,bool revert){
+void AbsListView::sort(ItemCompare cmp,bool reverse){
 #if 1//std::sort myb caused crash :( if function cmp has logical error.
      std::sort(list_.begin(),list_.end(),
           [&](std::shared_ptr<ListItem>a, std::shared_ptr<ListItem> b)->bool{
                  bool rc=cmp(*a,*b);
-                 return (revert==false)?rc:(!rc);
+                 return (reverse==false)?rc:(!rc);
           });
 #else //popsort 
     for(size_t i=0;i<list_.size();i++){
