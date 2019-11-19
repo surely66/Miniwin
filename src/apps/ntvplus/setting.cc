@@ -31,9 +31,9 @@ public:
            setText(buf);
        }
        if(v.isMember("value")&&v["value"].isInt())
-            setValue(v["value"].asInt());
+            setId(v["value"].asInt());
        if(v.isMember("value")&&v["value"].isBool())
-            setValue(v["value"].asBool());
+            setId(v["value"].asBool());
        value=v;
    }
    virtual void onGetSize(AbsListView&lv,int* w,int* h)override{
@@ -57,9 +57,9 @@ public :
    void ItemChangeListener(AbsListView&lv,int index){
        //EditableWindow*w=(EditableWindow*)lv.getParent();
        AbsListView::ListItem*itm=lv.getItem(index);
-       NGLOG_DEBUG("index=%d value=%d",index,itm->getValue());
-       pref->setValue(getText(),lv.getText(),itm->getValue());
-       NTVSettingChanged(id,lv,itm->getValue());
+       NGLOG_DEBUG("index=%d value=%d",index,itm->getId());
+       pref->setValue(getText(),lv.getText(),itm->getId());
+       NTVSettingChanged(id,lv,itm->getId());
    }
    void OnTextChanged(EditBox&e){
        NTVSettingChanged(id,e,-1);
@@ -197,7 +197,7 @@ void SettingWindow::loadUIItems(EditableWindow*w,Json::Value root,int y){
                 for(int j=0;j<values.size();j++){
                     SettingItem*itm=new SettingItem(values[j]);
                     s->addItem(itm);
-                    if(itm->getValue()==vsaved)
+                    if(itm->getId()==vsaved)
                         s->setIndex(j);
                 } 
             }

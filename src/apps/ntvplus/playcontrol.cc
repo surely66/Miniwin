@@ -1,6 +1,7 @@
 #include<appmenus.h>
 #include<ntvwindow.h>
 #include<ngl_mediaplayer.h>
+#include<docview.h>
 namespace ntvplus{
 
 #define MSG_CURPOS 1010
@@ -9,7 +10,7 @@ protected:
    std::vector<std::string>files;
    int cur_index;
    DWORD player;
-   View*videovv;
+   DocumentView*vv;
    ProgressBar*progress;
 public:
    ControlWindow(int x,int y,int w ,int h);
@@ -17,6 +18,8 @@ public:
        if(player)nglMPClose(player);
    }
    void play(const std::string&url){
+        if(vv->loadDocument(url))
+            return;
         if(player){
             nglMPStop(player);
             nglMPClose(player);
@@ -43,11 +46,11 @@ ControlWindow::ControlWindow(int x,int y,int w ,int h)
   :NTVWindow(x,y,w,h){
     initContent(NWS_TITLE|NWS_TOOLTIPS);
     
-    videovv=new TextField(std::string(),1280,600);
-    videovv->setFlag(View::Attr::ATTR_BORDER);
-    videovv->setPos(0,70);
-    videovv->setBgColor(0x0000).setFgColor(0xFFFF0000);
-    addChildView(videovv);
+    vv=new DocumentView(1280,600);
+    vv->setFlag(View::Attr::ATTR_BORDER);
+    vv->setPos(0,70);
+    vv->setBgColor(0x0000).setFgColor(0xFFFF0000);
+    addChildView(vv);
   
     progress=new NTVProgressBar(1280,8);
     addChildView(progress)->setPos(0,660);

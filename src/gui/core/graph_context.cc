@@ -174,6 +174,8 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
         free(brks);
         total_height+=extents.height;
         lines.push_back(line);
+        //NGLOG_DEBUG("multilines lines=%d height=%.3f/%.3f totalhight=%.3f",lines.size(),ftext.height,extents.height,total_height);
+        total_height=lines.size()*ftext.height;
     }
     //rectangle(rect.x,rect.y,rect.width,rect.height);
     //clip(); 
@@ -197,9 +199,9 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
     }else {
         y=rect.y;
         switch(text_alignment&0xF0){
-        case DT_TOP:y=rect.y;break;
-        case DT_VCENTER:y=rect.y+(rect.height-total_height)/2;break;
-        case DT_BOTTOM:y=rect.y+rect.height-total_height;break;
+        case DT_TOP:y=rect.y+ftext.descent;break;
+        case DT_VCENTER:y=rect.y+(rect.height-total_height)/2+ftext.descent;break;
+        case DT_BOTTOM:y=rect.y+rect.height-total_height+ftext.descent;break;
         }
         for(auto line:lines){
             get_text_extents(line,te);
@@ -209,7 +211,7 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
             case DT_RIGHT:x=rect.x+rect.width-te.x_advance;break;
             }
             move_to(x+te.x_bearing,y-te.y_bearing);
-            y+=te.height;
+            y+=ftext.height;
             show_text(line);
         }
     }
@@ -258,7 +260,7 @@ void GraphContext::draw_image(const RefPtr<ImageSurface>&img,const RECT*dst,cons
              y=dst->y-(rs.height/scale - dst->height)*.5f;
           }
           set_source(img,x,y);
-          img->set_device_scale(scale,scale);//cairo_surface_set_device_scale
+          img->set_device_scale(scale,scale);//cairo_surface_scale
           break;
     case ST_CENTER_INSIDE://ok
           scale =MAX(scalex,scaley);//(float) rs.height / (float) dst->height;
@@ -305,7 +307,7 @@ void GraphContext::draw_image(const RefPtr<ImageSurface>&img,const RECT*dst,cons
     NGLOG_VERBOSE("ScaleType:%s x=%d y=%d / dstrect.size=%dx%d imgsize=%d,%d  scale=%f/%f/%f",scaleNames[st],
          x,y,dst->width,dst->height,rs.width,rs.height,scale,scalex,scaley);
     /*cairo_set_source_surface(cr,img->surface,dst->x,dst->y);
-    cairo_surface_set_device_scale(img->surface,rs.width/dst->width,rs.height/dst->height);*/
+    cairo_surface_scale(img->surface,rs.width/dst->width,rs.height/dst->height);*/
     rectangle(dst->x,dst->y,dst->width,dst->height);
     fill();
 

@@ -25,12 +25,10 @@ public:
 class ChannelEpgView:public ListView{
 public:
     enum{
-      RULER_BG,
       RULER_FG,
-      CHANNEL_BG,
       CHANNEL_FG,
-      CHANNEL_BAR,
       CHANNEL_FOCUSED,
+      BORDER,
       EVENT_POST,
       EVENT_NOW,
       EVENT_NEXT,

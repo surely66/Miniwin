@@ -30,7 +30,8 @@ add_custom_command(TARGET tvhal POST_BUILD
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Copy NGL Porting Header Files")
 
+file(GLOB HAL_HEADERS  ${PROJECT_SOURCE_DIR}/inc/*.h)
 
 install (TARGETS tvhal  DESTINATION lib)
 install (TARGETS tvhal_static  DESTINATION lib)
-
+install (FILES ${HAL_HEADERS} DESTINATION include/porting/)

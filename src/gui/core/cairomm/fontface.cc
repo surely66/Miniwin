@@ -81,12 +81,12 @@ FontType FontFace::get_type() const
 
 // 'Toy' fonts
 RefPtr<ToyFontFace>
-ToyFontFace::create(const std::string& family, FontSlant slant, FontWeight weight)
+ToyFontFace::create(const std::string& family, Slant slant, Weight weight)
 {
-  return RefPtr<ToyFontFace>(new ToyFontFace(family, slant, weight));
+  return make_refptr_for_instance<ToyFontFace>(new ToyFontFace(family, slant, weight));
 }
 
-ToyFontFace::ToyFontFace(const std::string& family, FontSlant slant, FontWeight weight) :
+ToyFontFace::ToyFontFace(const std::string& family, Slant slant, Weight weight) :
   FontFace(cairo_toy_font_face_create (family.c_str(),
                                        static_cast<cairo_font_slant_t>(slant),
            	                            static_cast<cairo_font_weight_t>(weight)),
@@ -100,14 +100,14 @@ std::string ToyFontFace::get_family() const
   return std::string(cairo_toy_font_face_get_family(m_cobject));
 }
 
-FontSlant ToyFontFace::get_slant() const
+ToyFontFace::Slant ToyFontFace::get_slant() const
 {
-  return FontSlant(cairo_toy_font_face_get_slant(m_cobject));
+  return Slant(cairo_toy_font_face_get_slant(m_cobject));
 }
 
-FontWeight ToyFontFace::get_weight() const
+ToyFontFace::Weight ToyFontFace::get_weight() const
 {
-  return FontWeight(cairo_toy_font_face_get_weight(m_cobject));
+  return Weight(cairo_toy_font_face_get_weight(m_cobject));
 }
 
 
@@ -142,8 +142,8 @@ UserFontFace::init_cb(cairo_scaled_font_t* scaled_font,
   {
     try
     {
-      return instance->init(RefPtr<ScaledFont>(new ScaledFont(scaled_font)),
-                            RefPtr<Context>(new Context(cr)),
+      return instance->init(make_refptr_for_instance<ScaledFont>(new ScaledFont(scaled_font)),
+                            make_refptr_for_instance<Context>(new Context(cr)),
                             static_cast<FontExtents&>(*metrics));
     }
     catch(const std::exception& ex)
@@ -189,7 +189,7 @@ UserFontFace::unicode_to_glyph_cb(cairo_scaled_font_t *scaled_font,
   {
     try
     {
-      return instance->unicode_to_glyph(RefPtr<ScaledFont>(new ScaledFont(scaled_font)),
+      return instance->unicode_to_glyph(make_refptr_for_instance<ScaledFont>(new ScaledFont(scaled_font)),
                                         unicode, *glyph);
     }
     catch(const std::exception& ex)
@@ -242,7 +242,7 @@ UserFontFace::text_to_glyphs_cb(cairo_scaled_font_t *scaled_font,
       auto local_flags = static_cast<TextClusterFlags>(0);
 
       auto status =
-        instance->text_to_glyphs(RefPtr<ScaledFont>(new
+        instance->text_to_glyphs(make_refptr_for_instance<ScaledFont>(new
                                                     ScaledFont(scaled_font)),
                                  utf8_str, glyph_v, cluster_v, local_flags);
 
@@ -335,8 +335,8 @@ UserFontFace::render_glyph_cb(cairo_scaled_font_t  *scaled_font,
   {
     try
     {
-      return instance->render_glyph(RefPtr<ScaledFont>(new ScaledFont(scaled_font)),
-                                    glyph, RefPtr<Context>(new Context(cr)),
+      return instance->render_glyph(make_refptr_for_instance<ScaledFont>(new ScaledFont(scaled_font)),
+                                    glyph, make_refptr_for_instance<Context>(new Context(cr)),
                                     static_cast<TextExtents&>(*metrics));
     }
     catch(const std::exception& ex)
@@ -380,7 +380,7 @@ UserFontFace::~UserFontFace()
 RefPtr<FtFontFace>
 FtFontFace::create(FT_Face face, int load_flags)
 {
-  return RefPtr<FtFontFace>(new FtFontFace(face, load_flags));
+  return make_refptr_for_instance<FtFontFace>(new FtFontFace(face, load_flags));
 }
 
 FtFontFace::FtFontFace(FT_Face face, int load_flags) :
@@ -394,7 +394,7 @@ FtFontFace::FtFontFace(FT_Face face, int load_flags) :
 RefPtr<FtFontFace>
 FtFontFace::create(FcPattern* pattern)
 {
-  return RefPtr<FtFontFace>(new FtFontFace(pattern));
+  return make_refptr_for_instance<FtFontFace>(new FtFontFace(pattern));
 }
 
 FtFontFace::FtFontFace(FcPattern* pattern) :

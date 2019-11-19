@@ -38,7 +38,7 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     loadGroups();
     addChildView(tbfavs);
 
-    RefPtr<Gradient>pat=LinearGradient::create(0,0,0,520);
+    RefPtr<Gradient>pat=LinearGradient::create(0,0,w,h);
     pat->add_color_stop_rgba(.0,.2,.2,.2,.2);
     pat->add_color_stop_rgba(.5,1.,1.,1.,1.);
     pat->add_color_stop_rgba(1.,.2,.2,.2,.2);
@@ -46,7 +46,6 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     chlst=new ListView(400,520);
     chlst->setPos(50,110);
     chlst->setBgPattern(pat);
-    chlst->setBgColor(getBgColor());
     chlst->setFgColor(getFgColor());
     chlst->setFlag(View::Attr::ATTR_SCROLL_VERT);
     chlst->setFlag(View::Attr::ATTR_BORDER);
@@ -69,18 +68,18 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     });
     if(favgroups.size())loadServices(favgroups[0]);
     namep=new TextField("NOW",400,36);
-    addChildView(namep)->setId(IDC_NAMEP).setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,110);
+    addChildView(namep)->setId(IDC_NAMEP).setBgPattern(pat).setFgColor(0xFFFFFFFF).setPos(455,110);
 
     descp=new TextField(std::string(),800,220);
     descp->setAlignment(DT_LEFT|DT_TOP|DT_MULTILINE);
-    addChildView(descp)->setPos(455,148).setId(IDC_DESCP).setBgColor(0xFF444444);
+    addChildView(descp)->setPos(455,148).setId(IDC_DESCP).setBgPattern(pat);
 
     namef=new TextField("NEXT",400,36);
-    addChildView(namef)->setId(IDC_NAMEF).setBgColor(0xFF222222).setFgColor(0xFFFFFFFF).setPos(455,370);
+    addChildView(namef)->setId(IDC_NAMEF).setBgPattern(pat).setFgColor(0xFFFFFFFF).setPos(455,370);
 
     descf=new TextField(std::string(),800,220);
     descf->setAlignment(DT_LEFT|DT_TOP|DT_MULTILINE);
-    addChildView(descf)->setPos(455,408).setId(IDC_DESCF).setBgColor(0xFF222222);
+    addChildView(descf)->setPos(455,408).setId(IDC_DESCF).setBgPattern(pat);
 
     
     addTipInfo("help_icon_4arrow.png","Navigation",50,160);
@@ -140,7 +139,7 @@ int ChannelsWindow::loadGroups(){
           FavGetGroupInfo(i,&favid,name);
           favgroups.push_back(favid);
           tbfavs->addButton(name,(i==0?80:-1),200);
-          NGLOG_VERBOSE("%x %s",favid,name);
+          NGLOG_VERBOSE("%x %s %d services",favid,name,FavGetServiceCount(favid));
      }
      tbfavs->setIndex(0);
      return count;
@@ -164,15 +163,16 @@ int ChannelsWindow::loadServices(UINT favid){
           ChannelItem*ch=new ChannelItem(name,&svc,info->freeCAMode); 
           INT lcn;
           DtvGetServiceItem(&svc,SKI_LCN,&lcn);
-          ch->setValue(lcn);
+          ch->setId(lcn);
           ch->isHD=ISHDVIDEO(info->serviceType);
           NGLOG_VERBOSE("    %d %d.%d.%d.%d:%s  %p hd=%d type=%d",i,svc.netid,svc.tsid,svc.sid,svc.tpid,name,info,ch->isHD,info->serviceType);
           chlst->addItem(ch);
           if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
              chlst->setIndex(i);
      }
+     NGLOG_DEBUG("%d services loaded CUR:%d.%d.%d index=%d",chlst->getItemCount(),cur.netid,cur.tsid,cur.sid,chlst->getIndex());
      chlst->sort([](const ListView::ListItem&a,const ListView::ListItem&b)->int{
-                            return a.getValue()-b.getValue()<0;
+                            return a.getId()-b.getId()<0;
                        },false);
      delete svcs;
 }

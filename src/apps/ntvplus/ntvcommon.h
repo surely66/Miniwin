@@ -50,9 +50,13 @@ public:
 public :
     ChannelItem(const std::string&txt,const SERVICELOCATOR*loc,bool camd=false):ListView::ListItem(txt){
         svc=*loc;camode=camd;
+        setId((svc.tsid<<16)|svc.sid);
     }
     virtual void onGetSize(AbsListView&lv,int* w,int* h)override{
         if(h)*h=CHANNEL_LIST_ITEM_HEIGHT;
+    }
+    virtual bool operator==(const ListView::ListItem&b)const{
+        return svc==((const ChannelItem&)b).svc;
     }
 };
 
@@ -61,7 +65,7 @@ public :
    int id;
    SATELLITE satellite;
    SatelliteItem(const SATELLITE&sat,int id_)
-         :AbsListView::ListItem(sat.name){
+         :AbsListView::ListItem(sat.name,id){
         satellite=sat;       id=id_;
    }
 };

@@ -86,7 +86,7 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
 TEST_F(CONTEXT,Bitmap){
     RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(800,600));
     RefPtr<BasicBitmap>bmp(BasicBitmap::LoadBmp("Im_win_bodyright_l.bmp",BasicBitmap::A8R8G8B8));
-    RefPtr<ImageSurface>img=ImageSurface::create(bmp->Bits(),FORMAT_ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());
+    RefPtr<ImageSurface>img=ImageSurface::create(bmp->Bits(),Surface::Format::ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());
     RECT rect={0,0,800,600};
     for(int i=0;i<10;i++){
       ctx->set_color(0xFF000000|(i*20<<16));
@@ -331,7 +331,7 @@ TEST_F(CONTEXT,HOLE2){
      ctx->dump2png("hole2.png");
 }
 TEST_F(CONTEXT,HOLE3){
-     RefPtr<ImageSurface>img=ImageSurface::create(FORMAT_ARGB32,1280,720);
+     RefPtr<ImageSurface>img=ImageSurface::create(Surface::Format::ARGB32,1280,720);
      RefPtr<Context>ctx=Context::create(img);
      ctx->set_source_rgb(1,0.5,1);
      ctx->rectangle(0,0,1280,720);

@@ -50,6 +50,25 @@ private:
   Region(const RectangleInt *rects, int count);
 
 public:
+  //TODO: Documentation
+  enum class Overlap
+  {
+      /**
+       * Completely inside region
+       */
+      IN = CAIRO_REGION_OVERLAP_IN,
+
+      /**
+       * Completely outside region
+       */
+      OUT = CAIRO_REGION_OVERLAP_OUT,
+
+      /**
+       * Partly inside region
+       */
+      REGION_OVERLAP_PART = CAIRO_REGION_OVERLAP_PART
+  };
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -85,7 +104,7 @@ public:
   /** Checks whether @a rectangle is inside, outside, or partially contained in
    * the region
    */
-  RegionOverlap contains_rectangle(const RectangleInt& rectangle) const;
+  Overlap contains_rectangle(const RectangleInt& rectangle) const;
 
   /** Checks whether (x,y) is contained in the region */
   bool contains_point(int x, int y) const;

@@ -48,8 +48,7 @@ void TextField::setImage(int dir,const std::string&resname){
 
 void TextField::onDraw(GraphContext& canvas) {
     RECT rcimg,rect=getClientRect();
-    canvas.set_color(getBgColor());
-    canvas.draw_rect(rect);
+    INHERITED::onDraw(canvas);
     // Border
     if(hasFlag(Attr::ATTR_BORDER)){
         canvas.set_color(getFgColor());

@@ -69,12 +69,12 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      if(ext=="svg"){
          //img=nano_loadSVG((const char*)closure.data,closure.size);
          //img=loadSVG((const char*)closure.data,closure.size);
-     }else if(ext=="png")
+     }else if(ext=="png"){
          img=ImageSurface::create_from_png(pak_read,&closure);
-     else if(ext=="jpg"||ext=="jpeg"){
+     }else if(ext=="jpg"||ext=="jpeg"){
          img=ImageSurface::create_from_jpg(pak_read,&closure);
      }else if(ext=="bmp"){
-         RefPtr<BasicBitmap>bmp(BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL));//
+         /*RefPtr<BasicBitmap>bmp=make_refptr_for_instance<BasicBitmap>(BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL));//
          NGLOG_VERBOSE("bmp size=%dx%d fmt=%d pitch=%d",bmp->Width(),bmp->Height(),bmp->Format(),bmp->Pitch());
          if(bmp->Format()!=BasicBitmap::A8R8G8B8){
             RefPtr<BasicBitmap>cvt(new BasicBitmap(bmp->Width(), bmp->Height(),BasicBitmap::A8R8G8B8));
@@ -84,7 +84,7 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
          }
 
          NGLOG_DUMP("BMP",bmp->Bits(),8);
-         img=ImageSurface::create(bmp->Bits(),FORMAT_ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());
+         img=ImageSurface::create(bmp->Bits(),Surface::Format::ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());*/
      }
      if(cache)
          images.insert(std::map<const std::string,RefPtr<ImageSurface> >::value_type(resname,img));

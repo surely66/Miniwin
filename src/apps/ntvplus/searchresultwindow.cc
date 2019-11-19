@@ -34,13 +34,17 @@ public:
          NGLOG_DEBUG("search %d tp searmode=%d(0 for NIT search)",transponders.size(),schmode);
          DtvSearch(transponders.data(),schmode,&notify);
     }
+    void onSearchingTP(const TRANSPONDER*tp){
+         txt_tp->setText("Transponder:"+GetTPString(tp));
+    }
     void onReceivedService(const SERVICELOCATOR*loc,const DVBService*svc){
          char servicename[256],providername[256];
          svc->getServiceName(servicename,providername);
-         switch(svc->serviceType){
-         case SVC_VIDEO:left->addItem(new ChannelItem(servicename,loc));break;
-         case SVC_AUDIO:right->addItem(new ChannelItem(servicename,loc));break;
-         }
+         if(ISVIDEO(svc->serviceType))
+             left->addItem(new ChannelItem(servicename,loc));
+         else if (ISAUDIO(svc->serviceType))
+             right->addItem(new ChannelItem(servicename,loc));
+         
          NGLOG_DEBUG("rcv service %d.%d.%d %d[%s]",loc->netid,loc->tsid,loc->sid,svc->serviceType,servicename);
     }
     void onFinishedTP(const TRANSPONDER*tp,int idx,int tp_count){
@@ -78,7 +82,7 @@ SearchResultWindow::SearchResultWindow(int x,int y,int w,int h)
      txt_sat=new TextField("SatelliteName",200,25);
      addChildView(txt_sat)->setPos(50,480);
 
-     txt_tp=new TextField("Transponderxxx",200,25);
+     txt_tp=new TextField("Transponderxxx",300,25);
      addChildView(txt_tp)->setPos(50,506);
 
      addChildView(new TextField("Strength",120,25))->setPos(50,535);
@@ -123,6 +127,7 @@ static INT SVC_CBK(const SERVICELOCATOR*loc,const DVBService*svc,void*userdata){
 }
 static void NEW_TP(const TRANSPONDER*tp,int,int,void*userdata){
     SearchResultWindow*w=(SearchResultWindow*)userdata;
+    w->onSearchingTP(tp);
     NGLOG_DEBUG("Searching TP freq:%d",tp->u.s.frequency);
 }
 

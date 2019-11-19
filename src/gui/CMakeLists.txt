@@ -3,26 +3,33 @@ project(gui C CXX)
 add_subdirectory(tests)
 add_subdirectory(tools)
 
+option( LUA_BINDINGS "UI Lua script bindings" OFF)
+
 aux_source_directory(core SRCS_GUICORE)
 aux_source_directory(core/svg SRCS_SVG)
 aux_source_directory(core/cairomm   SRCS_CAIROMM)
 
+message("UI Lua script bindings is ${LUA_BINDINGS}")
+message("=======CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
+if ( LUA_BINDINGS )
+aux_source_directory(luabinding SRCS_LUABIND)
+list(APPEND EXT_LIBS lua)
+endif ()
 
-add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ) #${SRCS_SVG})
+add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND}) #${SRCS_SVG})
 
 include_directories(
-    ./core ./core/svg 
-    ${CMAKE_SOURCE_DIR}/include
+    ./core ./core/svg ./luabinding 
+    ${CMAKE_BINARY_DIR}/include/
+    ${CMAKE_BINARY_DIR}/include/cairo
+    ${CMAKE_BINARY_DIR}/include/porting
+    #${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/porting/inc
-    ${CMAKE_SOURCE_DIR}/include/cairo
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libjpeg/
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libpng/
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src/
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvgtiny/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/bx/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
 )
@@ -30,11 +37,13 @@ include_directories(
 
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
-
-link_directories(${CMAKE_BINARY_DIR}/src/3rdparty/libpng/)
+link_directories(
+    ${CMAKE_BINARY_DIR}/src/3rdparty/libpng/
+    ${CMAKE_BINARY_DIR}/src/3rdparty/lua 
+    ${CMAKE_BINARY_DIR}/lib)
 
 target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype
-       	tvhal jsoncpp_lib unibreak usbmanager
+       	tvhal jsoncpp_lib unibreak usbmanager ${EXT_LIBS}
 	#svg cairosvg
 )
 

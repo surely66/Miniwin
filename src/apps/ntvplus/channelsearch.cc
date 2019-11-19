@@ -6,7 +6,7 @@ NGL_MODULE(CHANNELSEARCH)
 
 namespace ntvplus{
 
-TransponderItem::TransponderItem(const TRANSPONDER&t):AbsListView::ListItem(std::string()){
+TransponderItem::TransponderItem(const TRANSPONDER&t):AbsListView::ListItem(std::string(),tp.u.c.frequency){
     const char*polars[]={"H","V","L","R"};
     char buf[64];
     int pol=t.u.s.polar;

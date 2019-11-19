@@ -38,11 +38,13 @@ void AbsListView::setItemSelectListener( ItemSelectListener listener){
 
 void AbsListView::sort(ItemCompare cmp,bool reverse){
 #if 1//std::sort myb caused crash :( if function cmp has logical error.
+     ListItem*cur=getItem(index_);
      std::sort(list_.begin(),list_.end(),
           [&](std::shared_ptr<ListItem>a, std::shared_ptr<ListItem> b)->bool{
                  bool rc=cmp(*a,*b);
                  return (reverse==false)?rc:(!rc);
           });
+     if(cur)index_=find(*cur);
 #else //popsort 
     for(size_t i=0;i<list_.size();i++){
         for(size_t j=i+1;j<list_.size();j++){
@@ -55,6 +57,13 @@ void AbsListView::sort(ItemCompare cmp,bool reverse){
         }
     }
 #endif
+}
+
+int AbsListView::find(const ListItem&a){
+    for(auto i=list_.begin();i!=list_.end();i++){
+       if(*(*i)==a)return i-list_.begin();
+    }
+    return -1;
 }
 
 void AbsListView::setIndex(int idx){
@@ -134,7 +143,7 @@ void AbsListView::clearAllItems(){
 
 AbsListView::ListItem::ListItem(const std::string&txt,int v)
   :text_(txt){
-  value_=v;
+  id_=v;
 }
 
 AbsListView::ListItem::~ListItem(){

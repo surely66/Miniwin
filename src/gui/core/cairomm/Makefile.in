@@ -139,7 +139,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(cairomm_includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libcairomm_1_0_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libcairomm_1_16_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = context.lo context_surface_quartz.lo \
 	context_surface_win32.lo context_surface_xlib.lo device.lo \
 	exception.lo fontface.lo fontoptions.lo matrix.lo path.lo \
@@ -147,15 +147,15 @@ am__objects_1 = context.lo context_surface_quartz.lo \
 	region.lo scaledfont.lo script.lo script_surface.lo surface.lo \
 	win32_font.lo win32_surface.lo xlib_surface.lo
 am__objects_2 =
-am_libcairomm_1_0_la_OBJECTS = $(am__objects_1) $(am__objects_2)
-libcairomm_1_0_la_OBJECTS = $(am_libcairomm_1_0_la_OBJECTS)
+am_libcairomm_1_16_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+libcairomm_1_16_la_OBJECTS = $(am_libcairomm_1_16_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libcairomm_1_0_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+libcairomm_1_16_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(AM_CXXFLAGS) $(CXXFLAGS) $(libcairomm_1_0_la_LDFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS) $(libcairomm_1_16_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -209,8 +209,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libcairomm_1_0_la_SOURCES)
-DIST_SOURCES = $(libcairomm_1_0_la_SOURCES)
+SOURCES = $(libcairomm_1_16_la_SOURCES)
+DIST_SOURCES = $(libcairomm_1_16_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -291,7 +291,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
-HAVE_CXX11 = @HAVE_CXX11@
+HAVE_CXX14 = @HAVE_CXX14@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -443,10 +443,10 @@ cairomm_private_h = \
 
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I. $(CAIROMM_CFLAGS)
 AM_CXXFLAGS = $(CAIROMM_WXXFLAGS)
-lib_LTLIBRARIES = libcairomm-1.0.la
-libcairomm_1_0_la_SOURCES = $(cairomm_cc) $(cairomm_private_h)
-libcairomm_1_0_la_LDFLAGS = -no-undefined -version-info $(CAIROMM_SO_VERSION)
-libcairomm_1_0_la_LIBADD = $(CAIROMM_LIBS)
+lib_LTLIBRARIES = libcairomm-1.16.la
+libcairomm_1_16_la_SOURCES = $(cairomm_cc) $(cairomm_private_h)
+libcairomm_1_16_la_LDFLAGS = -no-undefined -version-info $(CAIROMM_SO_VERSION)
+libcairomm_1_16_la_LIBADD = $(CAIROMM_LIBS)
 cairomm_includedir = $(includedir)/$(CAIROMM_MODULE_NAME)/cairomm
 cairomm_include_HEADERS = $(cairomm_public_h)
 all: all-am
@@ -519,8 +519,8 @@ clean-libLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
-libcairomm-1.0.la: $(libcairomm_1_0_la_OBJECTS) $(libcairomm_1_0_la_DEPENDENCIES) $(EXTRA_libcairomm_1_0_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(libcairomm_1_0_la_LINK) -rpath $(libdir) $(libcairomm_1_0_la_OBJECTS) $(libcairomm_1_0_la_LIBADD) $(LIBS)
+libcairomm-1.16.la: $(libcairomm_1_16_la_OBJECTS) $(libcairomm_1_16_la_DEPENDENCIES) $(EXTRA_libcairomm_1_16_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(libcairomm_1_16_la_LINK) -rpath $(libdir) $(libcairomm_1_16_la_OBJECTS) $(libcairomm_1_16_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

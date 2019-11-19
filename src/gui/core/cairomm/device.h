@@ -86,6 +86,43 @@ public:
     RefPtr<Device> m_device;
   };
 
+
+  /**
+   * @since 1.10
+   */
+  enum class DeviceType
+  {
+      /**
+       *
+       */
+      DRM = CAIRO_DEVICE_TYPE_DRM,
+
+      /**
+       *
+       */
+      GL = CAIRO_DEVICE_TYPE_GL,
+
+      /**
+       *
+       */
+      SCRIPT = CAIRO_DEVICE_TYPE_SCRIPT,
+
+      /**
+       *
+       */
+      XCB = CAIRO_DEVICE_TYPE_XCB,
+
+      /**
+       *
+       */
+      XLIB = CAIRO_DEVICE_TYPE_XLIB,
+
+      /**
+       *
+       */
+      XML = CAIRO_DEVICE_TYPE_XML
+  };
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.

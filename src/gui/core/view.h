@@ -75,7 +75,7 @@ protected:
     int id_;
     int font_size_;
     int fg_color_;
-    int bg_color_;
+    //int bg_color_;
     RefPtr<const Pattern> bg_pattern_;
     AnimState anim_state_; 
     Attr attr_;

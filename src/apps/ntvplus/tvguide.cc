@@ -13,12 +13,12 @@ namespace ntvplus{
 class TVChannel:public nglui::ChannelBar{
 public:
    SERVICELOCATOR svc;
-   int update=0;
+   int update;
    BOOL isHD;
 public:
    TVChannel(const std::string&txt,const SERVICELOCATOR*svc_):ChannelBar(txt){
        svc=*svc_;
-       update=0;
+       update=1;
    }
 };
 
@@ -44,6 +44,7 @@ public:
        c.draw_rect(0,0,320,240);
        NTVWindow::onDraw(c);
    }
+   int loadEvents(TVChannel*ch);
    int loadServices(UINT favid);
    virtual void onEITS(const SERVICELOCATOR*svc)override;
    virtual bool onKeyRelease(KeyEvent&k)override;
@@ -67,15 +68,17 @@ int TVWindow::loadServices(UINT favid){
           TVChannel*ch=new TVChannel(name,&svc);//info->freeCAMode);
           INT lcn;
           DtvGetServiceItem(&svc,SKI_LCN,&lcn);
-          ch->setValue(lcn);
+          ch->setId(lcn);
           ch->isHD=ISHDVIDEO(info->serviceType);
           NGLOG_VERBOSE("    %d %d.%d.%d.%d:%s  %p hd=%d type=%d",i,svc.netid,svc.tsid,svc.sid,svc.tpid,name,info,ch->isHD,info->serviceType);
           lv->addItem(ch);
+          loadEvents(ch);
           if(svc.sid==cur.sid&&svc.tsid==cur.tsid&&cur.netid==svc.netid)
              lv->setIndex(i);
      }
+     NGLOG_DEBUG("%d services loaded CUR:%d.%d.%d index=%d",lv->getItemCount(),cur.netid,cur.tsid,cur.sid,lv->getIndex());
      lv->sort([](const ListView::ListItem&a,const ListView::ListItem&b)->int{
-                            return a.getValue()-b.getValue()<0;
+                            return a.getId()-b.getId()<0;
                        },false);
      delete svcs;
 }
@@ -91,22 +94,24 @@ void TVWindow::onEITS(const SERVICELOCATOR*svc){
     }
 }
 
+int TVWindow::loadEvents(TVChannel*ch){
+    char sname[256],des[256];
+    ch->clearEvents();
+    std::vector<DVBEvent>evts;
+    DtvGetEvents(&ch->svc,evts);
+    for(auto e:evts){
+       e.getShortName(sname,des);
+       ch->addEvent(sname,e.start_time,e.duration);
+    }
+    return evts.size();
+}
 bool TVWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
     if(msg!=MSG_EPGS_UPDATE)
         return NTVWindow::onMessage(msg,wp,lp);
     for(int i=0;i<lv->getItemCount();i++){
         TVChannel*ch=(TVChannel*)lv->getItem(i);
-        if(ch->update){
-             char sname[256],des[256];
-             ch->update==0;
-             ch->clearEvents();
-             std::vector<DVBEvent>evts;
-             DtvGetEvents(&ch->svc,evts);
-             for(auto e:evts){
-                 e.getShortName(sname,des);
-                 ch->addEvent(sname,e.start_time,e.duration);
-             }
-        }
+        if(ch->update)
+            loadEvents(ch);
     }
     sendMessage(MSG_EPGS_UPDATE,0,0,2000);
     return true;

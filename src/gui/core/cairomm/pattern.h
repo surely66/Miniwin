@@ -50,6 +50,75 @@ protected:
 
 public:
 
+  /**
+   * Type is used to describe the type of a given pattern.
+   *
+   * The pattern type can be queried with Pattern::get_type().
+   *
+   * New entries may be added in future versions.
+   *
+   * @since 1.2
+   **/
+  enum class Type
+  {
+      /**
+       * The pattern is a solid (uniform) color. It may be opaque or translucent.
+       */
+      SOLID = CAIRO_PATTERN_TYPE_SOLID,
+
+      /**
+       * The pattern is a based on a surface (an image)
+       */
+      SURFACE = CAIRO_PATTERN_TYPE_SURFACE,
+
+      /**
+       * The pattern is a linear gradient.
+       */
+      LINEAR = CAIRO_PATTERN_TYPE_LINEAR,
+
+      /**
+       * The pattern is a radial gradient.
+       */
+      RADIAL = CAIRO_PATTERN_TYPE_RADIAL
+  };
+
+  /**
+   * Cairo::Extend is used to describe how pattern color/alpha will be determined
+   * for areas "outside" the pattern's natural area, (for example, outside the
+   * surface bounds or outside the gradient geometry).
+   *
+   * Mesh patterns are not affected by the extend mode.
+   *
+   * The default extend mode is Cairo::Pattern::Extend::NONE for surface patterns and
+   * Cairo::Pattern::Extend::PAD for gradient patterns.
+   *
+   * New entries may be added in future versions.
+   **/
+  enum class Extend
+  {
+      /**
+       * Pixels outside of the source pattern are fully transparent
+       */
+      NONE = CAIRO_EXTEND_NONE,
+
+      /**
+       * The pattern is tiled by repeating
+       */
+      REPEAT = CAIRO_EXTEND_REPEAT,
+
+      /**
+       * The pattern is tiled by reflecting at the edges (Implemented for surface
+       * patterns since 1.6)
+       */
+      REFLECT = CAIRO_EXTEND_REFLECT,
+
+      /**
+       * Pixels outside of the pattern copy the closest pixel from the source
+       * (Since 1.2; but only implemented for surface patterns since 1.6)
+       */
+      PAD = CAIRO_EXTEND_PAD
+  };
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -100,23 +169,19 @@ public:
    */
   Matrix get_matrix() const;
 
-  /* To keep 1.6.x ABI  */
-  void set_matrix(const cairo_matrix_t& matrix);
-  void get_matrix(cairo_matrix_t& matrix) const;
-
   /**
    * Returns the type of the pattern
    *
    * @since 1.2
    */
-  PatternType get_type() const;
+  Type get_type() const;
 
   /**
    * Sets the mode to be used for drawing outside the area of a pattern. See
    * Cairo::Extend for details on the semantics of each extend strategy.
    *
-   * The default extend mode is Cairo::EXTEND_NONE for surface patterns and
-   * Cairo::EXTEND_PAD for gradient patterns.
+   * The default extend mode is Cairo::Pattern::Extend::NONE for surface patterns and
+   * Cairo::Pattern::Extend::PAD for gradient patterns.
    *
    * @param Cairo::Extend describing how the area outsize of the pattern will
    *   be drawn
@@ -215,6 +280,47 @@ protected:
 
 public:
 
+  /**
+   * Filter is used to indicate what filtering should be applied when
+   * reading pixel values from patterns. See Cairo::SurfacePattern::set_filter()
+   * for indicating the desired filter to be used with a particular pattern.
+   */
+  enum class Filter
+  {
+      /**
+       * A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST
+       */
+      FAST = CAIRO_FILTER_FAST,
+
+      /**
+       * A reasonable-performance filter, with quality similar to
+       * Cairo::BILINEAR
+       */
+      GOOD = CAIRO_FILTER_GOOD,
+
+      /**
+       * The highest-quality available, performance may not be suitable for
+       * interactive use.
+       */
+      BEST = CAIRO_FILTER_BEST,
+
+      /**
+       * Nearest-neighbor filtering
+       */
+      NEAREST = CAIRO_FILTER_NEAREST,
+
+      /**
+       * Linear interpolation in two dimensions
+       */
+      BILINEAR = CAIRO_FILTER_BILINEAR,
+
+      /**
+       * This filter value is currently unimplemented, and should not be used in
+       * current code.
+       */
+      GAUSSIAN = CAIRO_FILTER_GAUSSIAN
+  };
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -237,18 +343,6 @@ public:
    * Create a new Cairo::Pattern for the given surface.
    */
   static RefPtr<SurfacePattern> create(const RefPtr<Surface>& surface);
-
-#ifndef CAIROMM_DISABLE_DEPRECATED
-  /**
-   * @deprecated Use Pattern::set_extend() instead.
-   */
-  void set_extend(Extend extend);
-
-  /**
-   *@deprecated Use Pattern::set_extend() instead.
-   */
-  Extend get_extend() const;
-#endif //CAIROMM_DISABLE_DEPRECATED
 
   /**
    * Sets the filter to be used for resizing when using this pattern.

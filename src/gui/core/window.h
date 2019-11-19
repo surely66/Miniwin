@@ -38,6 +38,7 @@ public:
   typedef GroupView INHERITED;
   DISALLOW_COPY_AND_ASSIGN(Window);
 };
+void closeWindow(Window*w);
 
 }  // namespace nglui
 

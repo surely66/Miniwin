@@ -32,8 +32,8 @@ ScaledFont::ScaledFont(cobject* cobj, bool has_reference)
     m_cobject = cairo_scaled_font_reference(cobj);
 }
 
-ScaledFont::ScaledFont(const RefPtr<FontFace>& font_face, const cairo_matrix_t& font_matrix,
-                       const cairo_matrix_t& ctm, const FontOptions& options)
+ScaledFont::ScaledFont(const RefPtr<FontFace>& font_face, const Matrix& font_matrix,
+                       const Matrix& ctm, const FontOptions& options)
 : m_cobject(nullptr)
 {
   m_cobject =
@@ -53,18 +53,7 @@ ScaledFont::~ScaledFont()
 RefPtr<ScaledFont> ScaledFont::create(const RefPtr<FontFace>& font_face, const Matrix& font_matrix,
     const Matrix& ctm, const FontOptions& options)
 {
-  return RefPtr<ScaledFont>(new ScaledFont(font_face, font_matrix, ctm, options));
-}
-
-RefPtr<ScaledFont> ScaledFont::create(const RefPtr<FontFace>& font_face, const cairo_matrix_t& font_matrix,
-    const cairo_matrix_t& ctm, const FontOptions& options)
-{
-  return RefPtr<ScaledFont>(new ScaledFont(font_face, font_matrix, ctm, options));
-}
-
-void ScaledFont::extents(FontExtents& extents) const
-{
-  get_extents(extents);
+  return make_refptr_for_instance<ScaledFont>(new ScaledFont(font_face, font_matrix, ctm, options));
 }
 
 void ScaledFont::get_extents(FontExtents& extents) const
@@ -73,34 +62,11 @@ void ScaledFont::get_extents(FontExtents& extents) const
   check_object_status_and_throw_exception(*this);
 }
 
-void ScaledFont::text_extents(const std::string& utf8, TextExtents& extents) const
-{
-  cairo_scaled_font_text_extents(m_cobject, utf8.c_str(), static_cast<cairo_text_extents_t*>(&extents));
-  check_object_status_and_throw_exception(*this);
-}
-
-void ScaledFont::glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents)
-{
-  // copy the data from the vector to a standard C array.  I don't believe
-  // this will be a frequently used function so I think the performance hit is
-  // more than offset by the increased flexibility of the STL interface.
-  
-  // Use new to allocate memory as MSCV complains about non-const array size with
-  // Glyph glyph_array[glyphs.size()]
-  Glyph* glyph_array= new Glyph[glyphs.size()];
-  std::copy(glyphs.begin(), glyphs.end(), glyph_array);
-
-  cairo_scaled_font_glyph_extents(m_cobject, glyph_array, glyphs.size(),
-      static_cast<cairo_text_extents_t*>(&extents));
-  check_object_status_and_throw_exception(*this);
-  delete[] glyph_array;
-}
-
 RefPtr<FontFace> ScaledFont::get_font_face() const
 {
   auto face = cairo_scaled_font_get_font_face(m_cobject);
   check_object_status_and_throw_exception(*this);
-  return RefPtr<FontFace>(new FontFace(face, false /* returned face doesn't have a reference */));
+  return make_refptr_for_instance<FontFace>(new FontFace(face, false /* returned face doesn't have a reference */));
 }
 
 void ScaledFont::get_font_options(FontOptions& options) const
@@ -116,20 +82,7 @@ void ScaledFont::get_font_matrix(Matrix& font_matrix) const
   check_object_status_and_throw_exception(*this);
 }
 
-void ScaledFont::get_font_matrix(cairo_matrix_t& font_matrix) const
-{
-  cairo_scaled_font_get_font_matrix(m_cobject,
-                                    &font_matrix);
-  check_object_status_and_throw_exception(*this);
-}
-
 void ScaledFont::get_ctm(Matrix& ctm) const
-{
-  cairo_scaled_font_get_ctm(m_cobject, &ctm);
-  check_object_status_and_throw_exception(*this);
-}
-
-void ScaledFont::get_ctm(cairo_matrix_t& ctm) const
 {
   cairo_scaled_font_get_ctm(m_cobject, &ctm);
   check_object_status_and_throw_exception(*this);
@@ -195,7 +148,7 @@ FtScaledFont::create(const RefPtr<FtFontFace>& font_face,
                      const Matrix& font_matrix, const Matrix& ctm,
                      const FontOptions& options)
 {
-  return RefPtr<FtScaledFont>(new FtScaledFont(font_face, font_matrix, ctm, options));
+  return make_refptr_for_instance<FtScaledFont>(new FtScaledFont(font_face, font_matrix, ctm, options));
 }
 
 FT_Face FtScaledFont::lock_face()

@@ -133,7 +133,7 @@ void FontOptions::set_hint_style(HintStyle hint_style)
   check_object_status_and_throw_exception(*this);
 }
 
-HintStyle FontOptions::get_hint_style() const
+FontOptions::HintStyle FontOptions::get_hint_style() const
 {
   const auto result = static_cast<HintStyle>(cairo_font_options_get_hint_style(m_cobject));
   check_object_status_and_throw_exception(*this);
@@ -147,7 +147,7 @@ void FontOptions::set_hint_metrics(HintMetrics hint_metrics)
   check_object_status_and_throw_exception(*this);
 }
 
-HintMetrics FontOptions::get_hint_metrics() const
+FontOptions::HintMetrics FontOptions::get_hint_metrics() const
 {
   const auto result =
       static_cast<HintMetrics>(cairo_font_options_get_hint_metrics(m_cobject));

@@ -28,7 +28,6 @@
 #include <cairomm/path.h>
 #include <cairomm/scaledfont.h>
 #include <cairomm/types.h>
-#include <cairomm/context.h>
 #include <valarray>
 #include <vector>
 #include <cairo.h>
@@ -55,6 +54,176 @@ protected:
   explicit Context(const RefPtr<Surface>& target);
 
 public:
+
+  /**
+   * Operator is used to set the compositing operator for all cairo
+   * drawing operations.
+   *
+   * The default operator is Cairo::Operator::OVER.
+   *
+   * The operators marked as @a unbounded modify their destination even outside
+   * of the mask layer (that is, their effect is not bound by the mask layer).
+   * However, their effect can still be limited by way of clipping.
+   *
+   * To keep things simple, the operator descriptions here document the behavior
+   * for when both source and destination are either fully transparent or fully
+   * opaque. The actual implementation works for translucent layers too. For a
+   * more detailed explanation of the effects of each operator, including the
+   * mathematical definitions, see
+   * <a href="http://cairographics.org/operators/">this</a>
+   *
+   **/
+  enum class Operator
+  {
+      /**
+       * Clear destination layer (bounded)
+       */
+      CLEAR = CAIRO_OPERATOR_CLEAR,
+
+      /**
+       * Replace destination layer (bounded)
+       */
+      SOURCE = CAIRO_OPERATOR_SOURCE,
+
+      /**
+       * Draw source layer on top of destination layer (bounded)
+       */
+      OVER = CAIRO_OPERATOR_OVER,
+
+      /**
+       * Draw source where there was destination content (unbounded)
+       */
+      IN = CAIRO_OPERATOR_IN,
+
+      /**
+       * Draw source where there was no destination content (unbounded)
+       */
+      OUT = CAIRO_OPERATOR_OUT,
+
+      /**
+       * Draw source on top of destination content and only there
+       */
+      ATOP = CAIRO_OPERATOR_ATOP,
+
+      /**
+       * Ignore the source
+       */
+      DEST = CAIRO_OPERATOR_DEST,
+
+      /**
+       * Draw destination on top of source
+       */
+      DEST_OVER = CAIRO_OPERATOR_DEST_OVER,
+
+      /**
+       * Leave destination only where there was source content (unbounded)
+       */
+      DEST_IN = CAIRO_OPERATOR_DEST_IN,
+
+      /**
+       * Leave destination only where there was no source content
+       */
+      DEST_OUT = CAIRO_OPERATOR_DEST_OUT,
+
+      /**
+       * Leave destination on top of source content and only there (unbounded)
+       */
+      DEST_ATOP = CAIRO_OPERATOR_DEST_ATOP,
+
+      /**
+       * Source and destination are shown where there is only one of them
+       */
+      XOR = CAIRO_OPERATOR_XOR,
+
+      /**
+       * Source and destination layers are accumulated
+       */
+      ADD = CAIRO_OPERATOR_ADD,
+
+      /**
+       * Like over, but assuming source and dest are disjoint geometries
+       */
+      SATURATE = CAIRO_OPERATOR_SATURATE
+  };
+
+  /**
+   * FillRule is used to select how paths are filled. For both fill rules,
+   * whether or not a point is included in the fill is determined by taking a ray
+   * from that point to infinity and looking at intersections with the path. The
+   * ray can be in any direction, as long as it doesn't pass through the end
+   * point of a segment or have a tricky intersection such as intersecting
+   * tangent to the path. (Note that filling is not actually implemented in this
+   * way. This is just a description of the rule that is applied.)
+   *
+   * The default fill rule is Cairo::FillRule::WINDING.
+   *
+   * New entries may be added in future versions.
+   **/
+  enum class FillRule
+  {
+      /**
+       * If the path crosses the ray from left-to-right, counts +1. If the path
+       * crosses the ray from right to left, counts -1. (Left and right are
+       * determined from the perspective of looking along the ray from the
+       * starting point.) If the total count is non-zero, the point will be
+       * filled.
+       */
+      WINDING = CAIRO_FILL_RULE_WINDING,
+
+      /**
+       * Counts the total number of intersections, without regard to the
+       * orientation of the contour. If the total number of intersections is odd,
+       * the point will be filled.
+       */
+      EVEN_ODD = CAIRO_FILL_RULE_EVEN_ODD
+  };
+
+  /**
+   * Specifies how to render the endpoints of the path when stroking.
+   *
+   * The default line cap style is Cairo::LineCap::BUTT.
+   **/
+  enum class LineCap
+  {
+      /**
+       * Start(stop) the line exactly at the start(end) point
+       */
+      BUTT = CAIRO_LINE_CAP_BUTT,
+
+      /**
+       * Use a round ending, the center of teh circle is teh end point
+       */
+      ROUND = CAIRO_LINE_CAP_ROUND,
+
+      /**
+       * Use squared ending, the center of teh square is the end point
+       */
+      SQUARE = CAIRO_LINE_CAP_SQUARE
+  };
+
+  /**
+   * Specifies how to render the junction of two lines when stroking.
+   *
+   * The default line join style is Cairo::LineJoin::MITER.
+   */
+  enum class LineJoin
+  {
+      /**
+       * Use a sharp (angled) corner, see Context::set_miter_limit()
+       */
+      MITER = CAIRO_LINE_JOIN_MITER,
+
+      /**
+       * Use a rounded join, the center of teh circle is the joint point
+       */
+      ROUND = CAIRO_LINE_JOIN_ROUND,
+
+      /**
+       * Use cut-off join, the join is cut off at half the line width from the
+       * join point
+       */
+      BEVEL = CAIRO_LINE_JOIN_BEVEL
+  };
 
   /** Create a C++ wrapper for the C instance. This C++ instance should then be
    * given to a RefPtr.
@@ -242,7 +411,7 @@ public:
    * examined by stroke(), stroke_extents(), and stroke_to_path(), but does not
    * have any effect during path construction.
    * 
-   * The default line cap style is Cairo::LINE_CAP_BUTT.
+   * The default line cap style is Cairo::LineCap::BUTT.
    *
    * @param line_cap	a line cap style, as a LineCap
    */
@@ -255,42 +424,11 @@ public:
    * examined by stroke(), stroke_extents(), and stroke_to_path(), but does not
    * have any effect during path construction.
    *
-   * The default line join style is Cairo::LINE_JOIN_MITER.
+   * The default line join style is Cairo::LineJoin::MITER.
    *
    * @param line_join	a line joint style, as a LineJoin
    */
   void set_line_join(LineJoin line_join);
-
-#ifndef CAIROMM_DISABLE_DEPRECATED
-  /**
-   * Alternate version of set_dash().  You'll probably want to use the one that
-   * takes a std::vector argument instead.
-   *
-   * @deprecated Instead use the version that takes a const dashes parameter.
-   */
-  void set_dash(std::valarray<double>& dashes, double offset);
-
-  /** Sets the dash pattern to be used by stroke(). A dash pattern is specified
-   * by dashes, an array of positive values. Each value provides the user-space
-   * length of altenate "on" and "off" portions of the stroke. The offset
-   * specifies an offset into the pattern at which the stroke begins.
-   *
-   * If dashes is empty dashing is disabled.  If the size of dashes is 1, a
-   * symmetric pattern is assumed with alternating on and off portions of the
-   * size specified by the single value in dashes.
-   *
-   * It is invalid for any value in dashes to be negative, or for all values to
-   * be 0.  If this is the case, an exception will be thrown
-   *
-   * @param dashes	an array specifying alternate lengths of on and off portions
-   * @param offset	an offset into the dash pattern at which the stroke should start
-   *
-   * @exception
-   *
-   * @deprecated Instead use the version that takes a const dashes parameter.
-   */
-  void set_dash(std::vector<double>& dashes, double offset);
-#endif //CAIROMM_DISABLE_DEPRECATED
 
   /**
    * Alternate version of set_dash().  You'll probably want to use the one that
@@ -305,7 +443,7 @@ public:
    *
    * Each "on" segment will have caps applied as if the segment were a separate
    * sub-path. In particular, it is valid to use an "on" length of 0.0 with
-   * Cairo::LINE_CAP_ROUND or Cairo::LINE_CAP_SQUARE in order to distributed
+   * Cairo::LineCap::ROUND or Cairo::LineCap::SQUARE in order to distributed
    * dots or squares along a path.
    *
    * Note: The length values are in user-space units as evaluated at the time
@@ -333,7 +471,7 @@ public:
   /**
    * Sets the current miter limit within the cairo context.
    *
-   * If the current line join style is set to Cairo::LINE_JOIN_MITER (see
+   * If the current line join style is set to Cairo::LineJoin::MITER (see
    * set_line_join()), the miter limit is used to determine whether the lines
    * should be joined with a bevel instead of a miter. Cairo divides the length
    * of the miter by the line width. If the result is greater than the miter
@@ -401,9 +539,6 @@ public:
    */
   void transform(const Matrix& matrix);
 
-  /* To keep 1.6.x ABI  */
-  void transform(const cairo_matrix_t& matrix);
-
   /** Modifies the current transformation matrix (CTM) by setting it equal to
    * matrix.
    *
@@ -411,58 +546,11 @@ public:
    */
   void set_matrix(const Matrix& matrix);
 
-  /* To keep 1.6.x ABI  */
-  void set_matrix(const cairo_matrix_t& matrix);
-
   /** Resets the current transformation matrix (CTM) by setting it equal to the
    * identity matrix. That is, the user-space and device-space axes will be
    * aligned and one user-space unit will transform to one device-space unit.
    */
   void set_identity_matrix();
-
-#ifndef CAIROMM_DISABLE_DEPRECATED
-  /** Transform a coordinate from user space to device space by multiplying the
-   * given point by the current transformation matrix (CTM).
-   *
-   * @param x	X value of coordinate (in/out parameter)
-   * @param y	Y value of coordinate (in/out parameter)
-   *
-   * @deprecated Use the const version.
-   */
-  void user_to_device(double& x, double& y);
-
-  /** Transform a distance vector from user space to device space. This
-   * function is similar to user_to_device() except that the translation
-   * components of the CTM will be ignored when transforming (dx,dy).
-   *
-   * @param dx	X component of a distance vector (in/out parameter)
-   * @param dy	Y component of a distance vector (in/out parameter)
-   *
-   * @deprecated Use the const version.
-   */
-  void user_to_device_distance(double& dx, double& dy);
-
-  /** Transform a coordinate from device space to user space by multiplying the
-   * given point by the inverse of the current transformation matrix (CTM).
-   *
-   * @param x	X value of coordinate (in/out parameter)
-   * @param y	Y value of coordinate (in/out parameter)
-   *
-   * @deprecated Use the const version.
-   */
-  void device_to_user(double& x, double& y);
-
-  /** Transform a distance vector from device space to user space. This
-   * function is similar to device_to_user() except that the translation
-   * components of the inverse CTM will be ignored when transforming (dx,dy).
-   *
-   * @param dx	X component of a distance vector (in/out parameter)
-   * @param dy	Y component of a distance vector (in/out parameter)
-   *
-   * @deprecated Use the const version.
-   */
-  void device_to_user_distance(double& dx, double& dy);
-#endif //CAIROMM_DISABLE_DEPRECATED
 
   /** Transform a coordinate from user space to device space by multiplying the
    * given point by the current transformation matrix (CTM).
@@ -768,19 +856,19 @@ public:
    * situations:
    *
    * 1. Zero-length "on" segments set in set_dash(). If the cap style is
-   * Cairo::LINE_CAP_ROUND or Cairo::LINE_CAP_SQUARE then these segments will
+   * Cairo::LineCap::ROUND or Cairo::LineCap::SQUARE then these segments will
    * be drawn as circular dots or squares respectively. In the case of
-   * Cairo::LINE_CAP_SQUARE, the orientation of the squares is determined by
+   * Cairo::LineCap::SQUARE, the orientation of the squares is determined by
    * the direction of the underlying path.
    *
    * 2. A sub-path created by move_to() followed by either a close_path() or
    * one or more calls to line_to() to the same coordinate as the move_to(). If
-   * the cap style is Cairo::LINE_CAP_ROUND then these sub-paths will be drawn
-   * as circular dots. Note that in the case of Cairo::LINE_CAP_SQUARE a
+   * the cap style is Cairo::LineCap::ROUND then these sub-paths will be drawn
+   * as circular dots. Note that in the case of Cairo::LineCap::SQUARE a
    * degenerate sub-path will not be drawn at all, (since the correct
    * orientation is indeterminate).
    *
-   * In no case will a cap style of Cairo::LINE_CAP_BUTT cause anything to be
+   * In no case will a cap style of Cairo::LineCap::BUTT cause anything to be
    * drawn in the case of either degenerate segments or sub-paths.
    */
   void stroke();
@@ -1063,7 +1151,7 @@ public:
    * @param weight the weight for the font
    *
    **/
-  void select_font_face(const std::string& family, FontSlant slant, FontWeight weight);
+  void select_font_face(const std::string& family, ToyFontFace::Slant slant, ToyFontFace::Weight weight);
 
   /**
    * Sets the current font matrix to a scale by a factor of @a size, replacing
@@ -1108,11 +1196,6 @@ public:
    * @param options font options to use
    */
   void set_font_options(const FontOptions& options);
-
-  /* To keep 1.6.x ABI  */
-  void set_font_matrix(const cairo_matrix_t& matrix);
-  void get_font_matrix(cairo_matrix_t& matrix) const;
-
 
   /**
    * Retrieves font rendering options set via set_font_options(). Note that the
@@ -1390,9 +1473,6 @@ public:
    */
   void get_matrix(Matrix& matrix);
 
-  /* To keep 1.6.x ABI  */
-  void get_matrix(cairo_matrix_t& matrix);
-
   /**
    * Returns the current transformation matrix (CTM)
    * @since 1.8
@@ -1430,7 +1510,7 @@ public:
    * operations.
    *
    * The result of path_extents() is defined as equivalent to the limit of
-   * stroke_extents() with LINE_CAP_ROUND as the line width approaches 0.0, (but
+   * stroke_extents() with LineCap::ROUND as the line width approaches 0.0, (but
    * never reaching the empty-rectangle returned by stroke_extents() for a line
    * width of 0.0).
    *

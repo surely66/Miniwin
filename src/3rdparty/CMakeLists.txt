@@ -16,6 +16,8 @@ add_subdirectory(expat)
 add_subdirectory(jsoncpp)
 add_subdirectory(id3)
 add_subdirectory(breakpad)
+add_subdirectory(lua)
+#add_subdirectory(mupdf)//compiled  failed
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
 	# add_subdirectory(directfb)

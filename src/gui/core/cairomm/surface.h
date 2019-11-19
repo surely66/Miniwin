@@ -78,6 +78,199 @@ namespace Cairo
 class Surface
 {
 public:
+  /**
+   * Type is used to describe the type of a given surface. The
+   * surface types are also known as "backends" or "surface backends" within
+   * cairo.
+   *
+   * The surface type can be queried with Surface::get_type()
+   *
+   * The various Cairo::Surface functions can be used with surfaces of
+   * any type, but some backends also provide type-specific functions
+   * that must only be called with a surface of the appropriate
+   * type.
+   *
+   * New entries may be added in future versions.
+   *
+   * @since 1.2
+   **/
+  enum class Type
+  {
+      /**
+       * The surface is of type image
+       */
+      IMAGE = CAIRO_SURFACE_TYPE_IMAGE,
+
+      /**
+       * The surface is of type pdf
+       */
+      PDF = CAIRO_SURFACE_TYPE_PDF,
+
+      /**
+       * The surface is of type ps
+       */
+      PS = CAIRO_SURFACE_TYPE_PS,
+
+      /**
+       * The surface is of type xlim
+       */
+      XLIB = CAIRO_SURFACE_TYPE_XLIB,
+
+      /**
+       * The surface is of type xcb
+       */
+      XCB = CAIRO_SURFACE_TYPE_XCB,
+
+      /**
+       * The surface is of type glitz
+       */
+      GLITZ = CAIRO_SURFACE_TYPE_GLITZ,
+
+      /**
+       * The surface is of type quartz
+       */
+      QUARTZ = CAIRO_SURFACE_TYPE_QUARTZ,
+
+      /**
+       * The surface is of type win32
+       */
+      WIN32 = CAIRO_SURFACE_TYPE_WIN32,
+
+      /**
+       * The surface is of type beos
+       */
+      BEOS = CAIRO_SURFACE_TYPE_BEOS,
+
+      /**
+       * The surface is of type directfb
+       */
+      DIRECTFB = CAIRO_SURFACE_TYPE_DIRECTFB,
+
+      /**
+       * The surface is of type svg
+       */
+      SVG = CAIRO_SURFACE_TYPE_SVG,
+
+      /**
+       * The surface is of type os2
+       */
+      OS2 = CAIRO_SURFACE_TYPE_OS2,
+
+      /**
+       * The surface is a win32 printing surface
+       */
+      WIN32_PRINTING = CAIRO_SURFACE_TYPE_WIN32_PRINTING,
+
+      /**
+       * The surface is of type quartz_image
+       */
+      QUARTZ_IMAGE = CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
+
+      /**
+       * The surface is of type script
+       * @since 1.10
+       */
+      SCRIPT = CAIRO_SURFACE_TYPE_SCRIPT,
+
+      /**
+       * The surface is of type Qt
+       * @since 1.10
+       */
+      QT = CAIRO_SURFACE_TYPE_QT,
+
+      /**
+       * The surface is of type recording
+       * @since 1.10
+       */
+      RECORDING = CAIRO_SURFACE_TYPE_RECORDING,
+
+      /**
+       * The surface is a OpenVg surface
+       * @since 1.10
+       */
+      VG = CAIRO_SURFACE_TYPE_VG,
+
+      /**
+       * The surface is of type OpenGl
+       * @since 1.10
+       */
+      GL = CAIRO_SURFACE_TYPE_GL,
+
+      /**
+       * The surface is of type Direct Render Manager
+       * @since 1.10
+       */
+      DRM = CAIRO_SURFACE_TYPE_DRM,
+
+      /**
+       * The surface is of type script 'tee' (a multiplexing surface)
+       * @since 1.10
+       */
+      TEE = CAIRO_SURFACE_TYPE_TEE,
+
+      /**
+       * The surface is of type XML (for debugging)
+       * @since 1.10
+       */
+      XML = CAIRO_SURFACE_TYPE_XML,
+
+      /**
+       * The surface is of type Skia
+       * @since 1.10
+       */
+      SKIA = CAIRO_SURFACE_TYPE_SKIA,
+
+      /**
+       * The surface is of type The surface is a subsurface created with
+       * Surface::create()
+       * @since 1.10
+       */
+      SUBSURFACE = CAIRO_SURFACE_TYPE_SUBSURFACE
+
+  };
+
+  /**
+   * Format is used to identify the memory format of
+   * image data.
+   *
+   * New entries may be added in future versions.
+   **/
+  enum class Format
+  {
+      /**
+       * Each pixel is a 32-bit quantity, with alpha in the upper 8 bits, then
+       * red, then green, then blue. The 32-bit quantities are stored
+       * native-endian. Pre-multiplied alpha is used. (That is, 50% transparent
+       * red is 0x80800000,
+       */
+      ARGB32 = CAIRO_FORMAT_ARGB32,
+
+      /**
+       * Each pixel is a 32-bit quantity, with the upper 8 bits unused. Red,
+       * Green, and Blue are stored in the remaining 24 bits in that order.
+       */
+      RGB24 = CAIRO_FORMAT_RGB24,
+
+      /**
+       * Each pixel is a 8-bit quantity holding an alpha value
+       */
+      A8 = CAIRO_FORMAT_A8,
+
+      /**
+       * Each pikel is a 1-bit quentity holding an alpha value. Pixels are packed
+       * together into 32-bit quantities. The ordering of the bits matches the
+       * endianess of the platform. On a big-endian machine, the first pixel is in
+       * the uppermost bit, on a little endian machine the first pixel is in the
+       * least-significant bit.
+       */
+      A1 = CAIRO_FORMAT_A1,
+
+      /**
+       * Each fixel is a 16-bit quantity with red in the upper 5 bits, then green
+       * in the middle 6 bits, and blue in the lower 5 bits
+       */
+      RGB16_565 = CAIRO_FORMAT_RGB16_565
+  };
   /** For example:
    * <code>
    * ErrorStatus my_write_func(unsigned char* data, unsigned int length);
@@ -161,7 +354,8 @@ public:
    *   when new image data is attached using the same MIME tpe.
    * @since 1.10
    */
-  void set_mime_data(const std::string& mime_type, unsigned char* data,unsigned long length, const SlotDestroy& slot_destroy);
+  void set_mime_data(const std::string& mime_type, unsigned char* data,
+                     unsigned long length, const SlotDestroy& slot_destroy);
 
   /** Remove the data from a surface. See set_mime_data().
    */
@@ -238,8 +432,10 @@ public:
   /** Returns a previous device offset set by set_device_offset().
    */
   void get_device_offset(double& x_offset, double& y_offset) const;
+
   void set_device_scale(double x_scale,double y_scale);
-  void get_device_scale(double& x_scale,double& y_scale)const;
+
+  void get_device_scale(double&x_scale,double&y_scale)const;
   /**
    * Set the horizontal and vertical resolution for image fallbacks.
    *
@@ -281,7 +477,7 @@ public:
    */
   void get_fallback_resolution(double& x_pixels_per_inch, double& y_pixels_per_inch) const;
 
-  SurfaceType get_type() const;
+  Type get_type() const;
 
   /**
    * This function returns the content type of surface which indicates whether
@@ -333,6 +529,7 @@ public:
    * @param filename	the name of a file to write to
    */
   void write_to_png(const std::string& filename);
+
   /** Writes the Surface to the write function.
    *
    * @note For this function to be available, cairo must have been compiled
@@ -344,13 +541,12 @@ public:
    * @since 1.8
    */
   void write_to_png_stream(const SlotWriteFunc& write_func);
-  /** @deprecated Use write_to_png_stream instead */
   void write_to_png(cairo_write_func_t write_func, void *closure);
-
 #endif // CAIRO_HAS_PNG_FUNCTIONS
 
   void write_to_jpg(const std::string& filename);
   void write_to_jpg_stream(const SlotWriteFunc& write_func);
+  void write_to_jpgg(cairo_write_func_t write_func, void *closure);
   /** This function returns the device for a surface
    * @return The device for this surface, or an empty RefPtr if the surface has
    * no associated device */
@@ -422,7 +618,7 @@ protected:
 
 /** Image surfaces provide the ability to render to memory buffers either
  * allocated by cairo or by the calling code. The supported image formats are
- * those defined in Cairo::Format
+ * those defined in Format
  *
  * An ImageSurface is the most generic type of Surface and the only one that is
  * available by default.  You can either create an ImageSurface whose data is
@@ -505,14 +701,14 @@ public:
    * surface = Cairo::ImageSurface::create (data, format, width, height);
    * @endcode
    *
-   * @param format A Cairo::Format value
+   * @param format A Format value
    * @param width The desired width of an image surface to be created.
    * @return the appropriate stride to use given the desired format and width, or
    * -1 if either the format is invalid or the width too large.
    *
    * @since 1.6
    **/
-  static int format_stride_for_width(Cairo::Format format, int width);
+  static int format_stride_for_width(Format format, int width);
 
   /**
    * Creates an image surface of the specified format and dimensions. Initially
@@ -564,6 +760,7 @@ public:
    * contents of the PNG image file.
    */
   static RefPtr<ImageSurface> create_from_png(std::string filename);
+
   /** Creates a new image surface from PNG data read incrementally via the
    * read_func function.
    *
@@ -575,13 +772,111 @@ public:
    * contents of the PNG image file.
    */
   static RefPtr<ImageSurface> create_from_png_stream(const SlotReadFunc& read_func);
-  /** @deprecated Use create_from_png_stream instead */
   static RefPtr<ImageSurface> create_from_png(cairo_read_func_t read_func, void *closure);
-
 #endif // CAIRO_HAS_PNG_FUNCTIONS
   static RefPtr<ImageSurface> create_from_jpg(std::string filename);
   static RefPtr<ImageSurface> create_from_jpg_stream(const SlotReadFunc& read_func);
   static RefPtr<ImageSurface> create_from_jpg(cairo_read_func_t read_func, void *closure);
+};
+
+
+/**
+ * A recording surface is a surface that records all drawing operations at the
+ * highest level of the surface backend interface, (that is, the level of paint,
+ * mask, stroke, fill, and show_text_glyphs). The recording surface can then be
+ * "replayed" against any target surface by using it as a source surface.
+ *
+ * If you want to replay a surface so that the results in `target` will be
+ * identical to the results that would have been obtained if the original
+ * operations applied to the recording surface had instead been applied to the
+ * target surface, you can use code like this:
+ *
+ *     Cairo::RefPtr<Cairo::Context> context = Cairo::Context::create(target);
+ *     context->set_source(recording_surface, 0.0, 0.0);
+ *     context->paint();
+ *
+ * A recording surface is logically unbounded, i.e. it has no implicit
+ * constraint on the size of the drawing surface. However, in practice this is
+ * rarely useful as you wish to replay against a particular target surface with
+ * known bounds. For this case, it is more efficient to specify the target
+ * extents to the recording surface upon creation.
+ *
+ * The recording phase of the recording surface is careful to snapshot all
+ * necessary objects (paths, patterns, etc.), in order to achieve accurate
+ * replay.
+ *
+ * Note that like all surfaces, a RecordingSurface is a reference-counted object
+ * that should be used via Cairo::RefPtr.
+ */
+class RecordingSurface : public Surface
+{
+public:
+
+  /**
+   * Create a C++ wrapper for the C instance. This C++ instance should then be
+   * given to a RefPtr.
+   * @param cobject The C instance.
+   * @param has_reference Whether we already have a reference. Otherwise, the
+   * constructor will take an extra reference.
+   */
+  explicit RecordingSurface(cairo_surface_t* cobject, bool has_reference = false);
+
+  virtual ~RecordingSurface();
+
+  /**
+   * Measures the extents of the operations stored within the recording
+   * surface.  This is useful to compute the required size of an image surface
+   * (or equivalent) into which to replay the full sequence of drawing
+   * operations.
+   * @return a Rectangle with `x` and `y` set to the coordinates of the top-left
+   * of the ink bounding box, and `width` and `height` set to the width and
+   * height of the ink bounding box.
+   */
+  Rectangle ink_extents() const;
+
+  /**
+   * Get the extents of the recording surface, if the surface is bounded.
+   * @param extents the Rectangle in which to store the extents if the recording
+   * surface is bounded
+   * @return true if the recording surface is bounded, false if the recording
+   * surface is unbounded (in which case `extents` will not be set).
+   */
+  bool get_extents(Rectangle& extents) const;
+
+  /**
+   * Creates a recording surface which can be used to record all drawing
+   * operations at the highest level (that is, the level of paint, mask, stroke,
+   * fill and show_text_glyphs). The recording surface can then be "replayed"
+   * against any target surface by using it as a source to drawing operations.
+   * The recording surface will be unbounded.
+   *
+   * The recording phase of the recording surface is careful to snapshot all
+   * necessary objects (paths, patterns, etc.), in order to achieve accurate
+   * replay.
+   *
+   * @param content the content of the recording surface; defaults to
+   * Cairo::Content::CONTENT_COLOR_ALPHA.
+   * @return a RefPtr to the newly created recording surface.
+   */
+  static RefPtr<RecordingSurface> create(Content content = Content::CONTENT_COLOR_ALPHA);
+
+  /**
+   * Creates a recording surface which can be used to record all drawing
+   * operations at the highest level (that is, the level of paint, mask, stroke,
+   * fill and show_text_glyphs). The recording surface can then be "replayed"
+   * against any target surface by using it as a source to drawing operations.
+   * The recording surface will be bounded by the given rectangle.
+   *
+   * The recording phase of the recording surface is careful to snapshot all
+   * necessary objects (paths, patterns, etc.), in order to achieve accurate
+   * replay.
+   *
+   * @param	extents the extents to record
+   * @param	content the content of the recording surface; defaults to
+   * Cairo::Content::CONTENT_COLOR_ALPHA.
+   * @return	a RefPtr to the newly created recording surface.
+   */
+  static RefPtr<RecordingSurface> create(const Rectangle& extents, Content content = Content::CONTENT_COLOR_ALPHA);
 
 };
 
@@ -639,8 +934,6 @@ public:
    * @since 1.8
    */
   static RefPtr<PdfSurface> create_for_stream(const SlotWriteFunc& write_func, double width_in_points, double height_in_points);
-  /** @deprecated use PdfSurface::create_for_stream() instead */
-  static RefPtr<PdfSurface> create(cairo_write_func_t write_func, void *closure, double width_in_points, double height_in_points);
 
 /**
  * Changes the size of a PDF surface for the current (and subsequent) pages.
@@ -742,8 +1035,6 @@ public:
    * @since 1.8
    */
   static RefPtr<PsSurface> create_for_stream(const SlotWriteFunc& write_func, double width_in_points, double height_in_points);
-  /** @deprecated use PsSurface::create_for_stream() instead */
-  static RefPtr<PsSurface> create(cairo_write_func_t write_func, void *closure, double width_in_points, double height_in_points);
 
   /**
    * Changes the size of a PostScript surface for the current (and
@@ -898,9 +1189,6 @@ public:
    * @since 1.8
    */
   static RefPtr<SvgSurface> create_for_stream(const SlotWriteFunc& write_func, double width_in_points, double height_in_points);
-
-  /** @deprecated Use SvgSurface::create_for_stream() instead */
-  static RefPtr<SvgSurface> create(cairo_write_func_t write_func, void *closure, double width_in_points, double height_in_points);
 
   /**
    * Restricts the generated SVG file to the given version. See get_versions()

@@ -110,7 +110,7 @@ int LoadSatelliteFromDB(const char*fname){
              tp.u.s.tpid=getValue(jtp,"id");
              tp.u.s.symbol_rate=getValue(jtp,"symbolrate");
              tp.u.s.polar=(NGLNimPolar)getValue(jtp,"polarity");//polarity
-             NGLOG_DEBUG("\tfreq:%d symb:%d tpid:%d polar:%d",tp.u.s.frequency,tp.u.s.symbol_rate,tp.u.s.tpid,tp.u.s.polar);
+             NGLOG_DEBUG("\tfreq:%d symb:%d tpid:%d polar:%s",tp.u.s.frequency,tp.u.s.symbol_rate,tp.u.s.tpid,Value2Name("polarity",tp.u.s.polar));
              if(jtp.isMember("frequency"))
                   AddTp2Satellite(i,&tp);
         }
@@ -252,8 +252,8 @@ int ConfigureTransponder(const TRANSPONDER*tp){
         diseqc_set_diseqc10(0,(TUNER_DISEQC10_ENUM)sat.diseqc,
             (TUNER_TP_POLARIZATION_ENUM)tp->u.s.polar,//TUNER_POL_HORIZONTAL,
             (sat.k22?TUNER_TONE_22K_ON:TUNER_TONE_22K_OFF)); 
-        NGLOG_DEBUG("tp:%d freq:%d symb:%d lnb=%d 22k=%d diseqc=%d polar=%d",tp->u.s.tpid,
-            tp->u.s.frequency,tp->u.s.symbol_rate,sat.lnb,sat.k22,sat.diseqc,tp->u.s.polar);
+        NGLOG_DEBUG("TP:%d freq:%d symb:%d lnb:%s 22k:%s diseqc:%s polar:%s",tp->u.s.tpid,tp->u.s.frequency,tp->u.s.symbol_rate,
+            Value2Name("lnb",sat.lnb),Value2Name("22k",sat.k22),Value2Name("diseqc",sat.diseqc),Value2Name("polarity",tp->u.s.polar));
         return 0;
     }
     return -1;
@@ -269,7 +269,8 @@ int ConfigureTransponderById(int tpid){
         diseqc_set_diseqc10(0,(TUNER_DISEQC10_ENUM)sat.diseqc,
             (TUNER_TP_POLARIZATION_ENUM)tp.u.s.polar,//TUNER_POL_HORIZONTAL,
             (sat.k22?TUNER_TONE_22K_ON:TUNER_TONE_22K_OFF)); 
-        NGLOG_DEBUG("tp:%d lnb=%d 22k=%d diseqc=%d polar=%d",tpid,sat.lnb,sat.k22,sat.diseqc,tp.u.s.polar);
+        NGLOG_DEBUG("TP:%d lnb:%s freq:%d symb:%d 22k:%s diseqc:%s polar:%s",tpid,tp.u.s.frequency,tp.u.s.symbol_rate,
+            Value2Name("lnb",sat.lnb),Value2Name("22k",sat.k22),Value2Name("diseqc",sat.diseqc),Value2Name("polarity",tp.u.s.polar));
     }
     return -1;
 }

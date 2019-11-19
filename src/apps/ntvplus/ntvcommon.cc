@@ -18,7 +18,7 @@ void NTVEditBox::onDraw(GraphContext&canvas){
 }
 
 NTVTitleBar::NTVTitleBar(int w,int h):View(w,h){
-   setBgColor(0xFF222222);
+   setBgColor(0xFF1F1F1F);
    setFgColor(0xFFFFFFFF);
    logo=App::getInstance().loadImage("mainmenu_small_logo.png");
 }
@@ -34,11 +34,11 @@ void NTVTitleBar::setTitle(const std::string&txt){
 }
 
 void NTVTitleBar::onDraw(GraphContext&canvas){
+    int xx=50;
     char buf[32];
     const char*weekday[]={"sunday","monday","tuesday","wednesday","thursday","friday","saturday"};
     RECT rect=getClientRect();
     View::onDraw(canvas);
-    int xx=50;
     if(logo){
         RECT rcimg=rect;
         rcimg.x=50;
@@ -58,7 +58,6 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     canvas.stroke();
     rect.x=xx+8;
     canvas.draw_text(rect,title,DT_LEFT|DT_VCENTER); 
-
     time_t tnow=time(NULL); 
     struct tm tmnow;
     gmtime_r(&tnow,&tmnow);
@@ -74,7 +73,7 @@ void NTVTitleBar::onDraw(GraphContext&canvas){
     std::string sweek=weekday[tmnow.tm_wday];
 
     canvas.get_text_extents(stime,te2);
-    rect.x=getWidth()-te2.width-50;
+    rect.x=getWidth()-220;
     rect.width=te2.width;
     canvas.draw_text(rect,stime);
     
@@ -135,7 +134,7 @@ void SettingPainter(AbsListView&lv,const ListView::ListItem&itm,int state,GraphC
     if(state){
         canvas.set_color(lv.hasFlag(View::Attr::ATTR_FOCUSED)?0xFF008000:0xFF004000);
     }else
-        canvas.set_color(lv.getBgColor());
+        canvas.set_source(lv.getBgPattern());//Color());
     RECT rect=itm.rect;
     rect.height-=1;
     canvas.draw_rect(rect);
@@ -160,9 +159,7 @@ static void ChannelPainterInner(AbsListView&lv,const ListView::ListItem&itm,int 
     if(state)
          canvas.set_color(0xFF008000);
     else{
-         if(lv.getBgPattern())
-            canvas.set_source(lv.getBgPattern());
-         else canvas.set_color(lv.getBgColor());
+        canvas.set_source(lv.getBgPattern());
     }
     canvas.draw_rect(r);
     canvas.set_color(lv.getFgColor());
@@ -170,7 +167,7 @@ static void ChannelPainterInner(AbsListView&lv,const ListView::ListItem&itm,int 
     r.width=hasid?80:20;
     r.x=20;
     if(hasid){
-        canvas.draw_text(r,std::to_string(itm.getValue()),DT_RIGHT|DT_VCENTER);
+        canvas.draw_text(r,std::to_string(itm.getId()),DT_RIGHT|DT_VCENTER);
         r.x=r.x+r.width+20;
     }
     r.width=itm.rect.width-r.x;

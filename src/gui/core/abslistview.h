@@ -8,7 +8,7 @@ public:
    class ListItem{
    private:
      std::string text_;
-     int value_;
+     int id_;
    public:
      RECT rect;//used to store item's rectangle(last draw rect)
    public:
@@ -17,8 +17,9 @@ public:
      virtual const std::string& getText()const;
      virtual void setText(const std::string&);
      virtual void onGetSize(AbsListView&lv,int* w,int* h);
-     virtual void setValue(int v){value_=v;}
-     virtual int getValue()const{return value_;}
+     virtual void setId(int v){id_=v;}
+     virtual int getId()const{return id_;}
+     virtual bool operator==(const ListItem & b)const{return id_==b.id_;}
    };
    typedef std::function<void(AbsListView&,int)>ItemSelectListener;
    typedef std::function<void(AbsListView&,const ListItem&,int state,GraphContext&)>ItemPainter;
@@ -34,6 +35,7 @@ public:
    AbsListView(int w,int h);
    AbsListView(const std::string&txt,int w,int h);
    virtual void sort(ItemCompare ,bool reverse=false);
+   virtual int find(const ListItem&a);
    virtual int getIndex();
    virtual int getTop();
    virtual void setIndex(int idx);

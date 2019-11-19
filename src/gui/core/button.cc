@@ -48,7 +48,7 @@ void Button::onDraw(GraphContext& canvas) {
     canvas.rectangle(x+1,y,w,h);
     canvas.stroke();
     // Draw the button
-    if (state_ == Button::STATE_PRESSED) {
+    if (state_ == Button::STATE_PRESSED||isFocused()) {
         // Pressed
         canvas.set_color(0xFF909090);
     } else {
@@ -64,7 +64,7 @@ void Button::onDraw(GraphContext& canvas) {
         canvas.set_color(0xFFF0F0F0);
     } else {
         // Normal
-        canvas.set_color(0xFF909090);
+        canvas.set_color(0xFFFFFFFF);
     }
     canvas.set_font_size(getFontSize());
     canvas.save();

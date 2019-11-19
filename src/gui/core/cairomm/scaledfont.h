@@ -85,9 +85,6 @@ public:
    */
   static RefPtr<ScaledFont> create(const RefPtr<FontFace>& font_face, const Matrix& font_matrix,
       const Matrix& ctm, const FontOptions& options = FontOptions());
-  /* To keep 1.6.x ABI  */
-  static RefPtr<ScaledFont> create(const RefPtr<FontFace>& font_face, const cairo_matrix_t& font_matrix,
-      const cairo_matrix_t& ctm, const FontOptions& options = FontOptions());
   // NOTE: the constructor doesn't take a RefPtr<const FontFace> because the
   // FontFace object can be changed in this constructor (in the case of user
   // fonts, the FontFace becomes immutable, i.e. you can't call any set_*_func()
@@ -102,11 +99,6 @@ public:
    * @since 1.8
    * */
   void get_extents(FontExtents& extents) const;
-
-  /** @deprecated Use get_extents() instead
-   * @since 1.2
-   * */
-  void extents(FontExtents& extents) const;
 
   /** Gets the extents for a string of text. The extents describe a user-space
    * rectangle that encloses the "inked" portion of the text drawn at the origin
@@ -129,10 +121,6 @@ public:
    * @since 1.8
    */
   void get_text_extents(const std::string& utf8, TextExtents& extents) const;
-  /** @deprecated Use get_text_extents() instead
-   * @since 1.2
-   * */
-  void text_extents(const std::string& utf8, TextExtents& extents) const;
 
   /** Gets the extents for an array of glyphs. The extents describe a user-space
    * rectangle that encloses the "inked" portion of the glyphs, (as they would
@@ -151,11 +139,6 @@ public:
    **/
   void get_glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents);
 
-  /** @deprecated Use get_glyph_extents() instead
-   * @since 1.2
-   * */
-  void glyph_extents(const std::vector<Glyph>& glyphs, TextExtents& extents);
-
   /** The FontFace with which this ScaledFont was created.
    * @since 1.2
    */
@@ -170,15 +153,11 @@ public:
    * @since 1.2
    */
   void get_font_matrix(Matrix& font_matrix) const;
-  /* To keep 1.6.x ABI  */
-  void get_font_matrix(cairo_matrix_t& font_matrix) const;
 
   /** Gets the CTM with which the ScaledFont was created.
    * @since 1.2
    */
   void get_ctm(Matrix& ctm) const;
-  /* To keep 1.6.x ABI  */
-  void get_ctm(cairo_matrix_t& ctm) const;
 
   /** Gets the type of scaled Font
    * @since 1.2
@@ -226,8 +205,8 @@ public:
 
 protected:
   /* Cairo::Matrix parameters changed to cairo_matrix_t */
-  ScaledFont(const RefPtr<FontFace>& font_face, const cairo_matrix_t& font_matrix,
-             const cairo_matrix_t& ctm, const FontOptions& options = FontOptions());
+  ScaledFont(const RefPtr<FontFace>& font_face, const Matrix& font_matrix,
+             const Matrix& ctm, const FontOptions& options = FontOptions());
   /** The underlying C cairo object that is wrapped by this ScaledFont */
   cobject* m_cobject;
 };

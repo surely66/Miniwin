@@ -201,17 +201,8 @@ bool EditBox::onKeyRelease(KeyEvent&evt){
 }
 
 void EditBox::onDraw(GraphContext&canvas){
+    Widget::onDraw(canvas);
     RECT r=getClientRect();
-    // Background
-    canvas.set_color(bg_color_);
-    canvas.draw_rect(r);
-    // Border
-    if(hasFlag(Attr::ATTR_BORDER)){
-        canvas.set_color(fg_color_);
-        canvas.set_line_width(1);
-        canvas.rectangle(r);
-        canvas.stroke();
-    }
     
     canvas.set_color(fg_color_);
     canvas.set_font_size(getFontSize());

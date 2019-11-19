@@ -68,19 +68,20 @@ void ChannelBar::getEvents(){
 
 ChannelBar::ChannelBar(int x,int y,int w,int h):NTVWindow(x,y,w,h){
    initContent(NWS_SIGNAL);
-   chlst=new NTVSelector(std::string(),500,46);
+   chlst=new Selector(std::string(),495,46);
    chlst->showArrows(Selector::SHOW_NEVER);
    chlst->setFontSize(40);
    chlst->clearFlag(Attr::ATTR_FOCUSABLE);
+   chlst->setBgColor(0xFF000000).setFgColor(0xFFFFFFFF);
    addChildView(chlst);
    chlst->setItemSelectListener([](AbsListView&lv,int index){
         ChannelItem*itm=(ChannelItem*)lv.getItem(index);
         if(itm)DtvPlay(&itm->svc,nullptr);
     });
 
-   event_name=new TextField(std::string(),500,46);
+   event_name=new TextField(std::string(),495,46);
    event_name->setFontSize(28);
-   event_name->setPos(601,0);
+   event_name->setPos(500,0);
    addChildView(event_name)->setBgColor(0xFF000000).setFgColor(0xFFFFFFFF);
 
    event_des=new TextField(std::string(),880,180);
@@ -88,7 +89,7 @@ ChannelBar::ChannelBar(int x,int y,int w,int h):NTVWindow(x,y,w,h){
    addChildView(event_des)->setBgColor(0xFF222222).setFgColor(0xFFFFFFFF);
 
    datetime=new TextField(std::string(),280,46);
-   datetime->setFontSize(30);
+   datetime->setFontSize(28);
    datetime->setPos(1000,0);
    addChildView(datetime)->setBgColor(0xFF000000).setFgColor(0xFFFFFFFF);
 
@@ -97,7 +98,7 @@ ChannelBar::ChannelBar(int x,int y,int w,int h):NTVWindow(x,y,w,h){
    sig_quality->setSize(400,10);
    sig_quality->setPos(20,66);
    
-   media_progress=new NTVProgressBar(1000,3);
+   media_progress=new NTVProgressBar(w,3);
    media_progress->setPos(0,46);
    media_progress->setProgress(37);
    addChildView(media_progress);

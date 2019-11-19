@@ -9,17 +9,17 @@ namespace nglui{
 View::View(int w,int h)
   : id_(0),  parent_(nullptr),
     fg_color_(DefaultFgColor),
-    bg_color_(DefaultBgColor),
     attr_(Attr::ATTR_VISIBLE),
     font_size_(DefaultFontSize){
-   layout_.reset(nullptr);
-   bound_.set(0,0,w,h);
-   prefer_size_.set(w,h);
-   invalid_region_=cairo_region_create();
-   invalidate(nullptr);
-   onclick_=nullptr;
-   onmessage_=nullptr;
-   memset(&scrollinfos,0,sizeof(SCROLLINFO)*2);
+    layout_.reset(nullptr);
+    bound_.set(0,0,w,h);
+    prefer_size_.set(w,h);
+    invalid_region_=cairo_region_create();
+    invalidate(nullptr);
+    onclick_=nullptr;
+    onmessage_=nullptr;
+    memset(&scrollinfos,0,sizeof(SCROLLINFO)*2);
+    setBgColor(DefaultBgColor);
 }
 
 View::~View(){
@@ -112,10 +112,7 @@ void View::resetClip(){
 }
 
 void View::onDraw(GraphContext&canvas){
-    if(bg_pattern_)
-       canvas.set_source(bg_pattern_);
-    else
-       canvas.set_color(getBgColor());
+    canvas.set_source(bg_pattern_);
     RECT r=getClientRect();
     canvas.draw_rect(r);
     if(hasFlag(Attr::ATTR_BORDER)){
@@ -201,6 +198,7 @@ const RECT View::getClientRect(){
 
 View& View::setBgPattern(const RefPtr<const Pattern>& source){
     bg_pattern_=source; 
+    return *this;
 }
 RefPtr<const Pattern>View::getBgPattern(){
     return bg_pattern_;
@@ -215,12 +213,19 @@ UINT View::getFgColor() const{
 }
 
 View& View::setBgColor(UINT color){
-    bg_color_=color;
+    //bg_color_=color;
+    bg_pattern_=SolidPattern::create_rgba(((color>>16)&0xFF)/255.,((color>>8)&0xFF)/255.,(color&0xFF)/255.,(color>>24)/255.);
     return *this;
 }
 
 UINT View::getBgColor() const{
-    return bg_color_;
+#define F2D(f) ((BYTE)(255*(f)))
+    if(bg_pattern_->get_type()==Pattern::Type::SOLID){
+        double r,g,b,a;
+        cairo_pattern_get_rgba((cairo_pattern_t*)bg_pattern_->cobj(),&r,&g,&b,&a);
+        return F2D(a)<<24|F2D(r)<<16|F2D(g)<<8|F2D(b);
+    }
+    return 0;
 }
 
 const SIZE&View::getPreferSize(){

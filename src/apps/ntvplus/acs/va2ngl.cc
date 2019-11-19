@@ -15,6 +15,7 @@ extern "C"{
 #include <va_sc.h>
 #include <va_dmx.h>
 #include <va_xnvm.h>
+#include <va_ui.h>
 DWORD VA_DSCR_Init();
 }
 #include <ngl_video.h>
@@ -23,6 +24,7 @@ DWORD VA_DSCR_Init();
 #include <ngl_pvr.h>
 #include <ngl_dmx.h>
 #include <dvbepg.h>
+#include <windows.h>
 NGL_MODULE(VA2NGL)
 
 static SERVICELOCATOR lastplayed;
@@ -32,6 +34,7 @@ static BYTE CATSection[1024];
 static BYTE PMTSection[1024];
 static UINT num_elements=0;
 static ELEMENTSTREAM elements[16];
+static  void VA_UIEvent(tVA_UI_Event *evt);
 
 static void*ACSProc(void*p){
     int i,ret;
@@ -48,6 +51,7 @@ static void*ACSProc(void*p){
     ret = VA_CTRL_Init(&param);
     NGLOG_DEBUG("VA_CTRL_Init=%d",ret);
     NGLOG_DEBUG("VA_CTRL_Start...");
+    VA_UI_AddEventListener(VA_UIEvent,NULL);
     for(i=0;i<3;i++)
         VA_CTRL_OpenAcsInstance(i,(tVA_CTRL_AcsMode)i);
 
@@ -217,4 +221,223 @@ extern "C" INT GetCurrentServiceEcmPids(USHORT*espids){
             *ppid++=es[i].pid; 
     }
     return ppid-espids;
-}  
+}
+
+void VA_ShowMessage(const std::string&txt){
+    ToastWindow::makeWindow(680,120,0,[&](Window&w,int timeout){
+           w.setLayout(new LinearLayout())->setPaddings(2);
+           w.setFlag(View::Attr::ATTR_FOCUSABLE);
+           TextField*t=new TextField(txt,670,68);
+           t->setMultiLine(true);
+           w.addChildView(t);
+           Button*btn=new Button("OK",100,32);
+           w.addChildView(btn);
+           w.addChildView(new Button("Cancel",100,32));
+           w.setPos(300,100);
+       },-1);
+}
+
+#define CASE(x) case x :{NGLOG_DEBUG("%s 0x%x",#x,x);
+#define ENDCASE break;}
+
+static void VA_UI_RequestCBK(struct _stVA_UI_Request *req){
+    switch(req->stRequestHeader.eType){
+    CASE(eVA_UI_GET_VERSION_NAME_REQUEST);
+         NGLOG_DEBUG("VersionName:[%s]",req->uRequest.stGetVersionNameRequest.pVersionName);
+         ENDCASE;
+    CASE(eVA_UI_GET_SMARTCARD_INFO_REQUEST);
+         NGLOG_DEBUG("SmartcardInfo:todo");//,req->uRequest.stGetSmartcardInfoRequest.);
+         ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_OK_EVENT);ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_EVENT);ENDCASE;
+    CASE(eVA_UI_SET_TERMINAL_ACTIVATION_CODE_REQUEST);
+         
+         ENDCASE;//for SC1901
+    default:NGLOG_DEBUG("todo:");break;
+    }
+}
+static  void VA_UIEvent(tVA_UI_Event *evt){
+    switch(evt->eEventType){//XXX_KO_EVENT will close XXX_OK_EVENT's message
+    CASE(eVA_UI_DESCRAMBLING_OK_EVENT);         
+        Toast::makeText("Stream descrambled");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_OK_RIGHT_OK_EVENT);
+        Toast::makeText("Stream descrambled");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_OK_PREVIEW_EVENT); 
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_OK_PREVIEW_AND_IPPV_OFFER_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_EVENT); 
+        VA_ShowMessage("program is scrambled");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_NO_RIGHT_EVENT);
+        VA_ShowMessage("You do not have the rights to access the <program>");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_MATURITY_RATING_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_GEOGRAPHICAL_BLACKOUT_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_MISSING_KEY_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_IPPV_OFFER_EVENT); 
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_IPPV_OFFER_EXPIRED_EVENT);
+        Toast::makeText("Purchase is not possible for the <Program>");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_MATURITY_RATING_AND_IPPV_OFFER_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_FORBIDDEN_MODE_EVENT);
+        Toast::makeText("Access to this <Program> has been forbidden by the operator.");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_INSUFFICIENT_CREDIT_EVENT);
+        Toast::makeText("You do not have sufficient credit to purchase this <Program>");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_RIGHT_EXPIRED_EVENT);
+        Toast::makeText("You cannot view this <Program> because the viewing date has expired.");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_RIGHT_CONSUMED_EVENT);
+        Toast::makeText("You cannot view this <specific text> because the maximum number of playbacks has been reached.");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_CW_PROTECTION_MISMATCH_EVENT);
+        Toast::makeText("Terminal configuration is not accurate.\nPlease contact your operator.");
+        ENDCASE;
+    CASE(eVA_UI_DESCRAMBLING_KO_APPLET_MISSING_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_FREE_TO_AIR_EVENT);
+        Toast::makeText("this event cancels messages about the smartcard status, until the next rightrestricting message");
+        ENDCASE;
+    CASE(eVA_UI_VIACCESS_NOT_APPLICABLE_EVENT);
+        Toast::makeText("Not a VO scrambled program.");
+        ENDCASE;
+    CASE(eVA_UI_VIACCESS_SMARTCARD_NOT_FOUND_EVENT);
+        Toast::makeText("Please insert the smartcard to access the program.");
+        ENDCASE;
+    CASE(eVA_UI_VIACCESS_TERMINAL_NOT_ACTIVATED_EVENT);
+        VA_ShowMessage("The terminal is not activated.\nPlease contact your operator.");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_INSERTED_EVENT);
+        Toast::makeText("Smart card inserted");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_EXTRACTED_EVENT);
+        Toast::makeText("Smart card extracted");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_READY_EVENT);
+        Toast::makeText("Smart card ready");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_NEEDED_EVENT);
+        Toast::makeText("Insert smart card please.");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_FAILED_EVENT);
+        Toast::makeText("Smart card error"); 
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_NOT_ACCEPTED_EVENT);
+        Toast::makeText("invalid smart card");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_INSUFFICIENT_MEMORY_EVENT);
+        Toast::makeText("Smartcard memory is full.");
+        ENDCASE;
+    CASE(eVA_UI_SMARTCARD_INVALIDATED_EVENT);
+        Toast::makeText("The smartcard has been invalidated by the operator.\nPlease contact your operator.");
+        ENDCASE;
+    CASE(eVA_UI_NEW_OPERATOR_MESSAGE_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_NEW_OPERATOR_DATA_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_CAMLOCK_ACTIVATED_OK_EVENT);
+        Toast::makeText("");//close eVA_UI_CAMLOCK_ACTIVATED_KO_EVENT's dialog
+        ENDCASE;//UC04
+    CASE(eVA_UI_CAMLOCK_ACTIVATED_KO_EVENT);
+        Toast::makeText("The inserted smartcard is not compliant with this STB!\nplease contact your operator.");
+        ENDCASE;
+    CASE(eVA_UI_CAMLOCK_ACTIVATED_NO_CARD_EVENT);
+        Toast::makeText("Please insert your smartcard.");
+        ENDCASE;
+    CASE(eVA_UI_CAMLOCK_NOT_ACTIVATED_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_CAMLOCK_DISABLED_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_START_SECURITY_RESTRICTION_EVENT);
+        Toast::makeText("A security restriction has been activate on this STB!\nPlease contact your operator");
+        ENDCASE;
+    CASE(eVA_UI_STOP_SECURITY_RESTRICTION_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_PAIRING_MISMATCH_EVENT);
+        Toast::makeText("Wrong Card inserted. Please contact your operator.");
+        ENDCASE;
+    CASE(eVA_UI_OVERDRAFT_REACHED_EVENT);
+        Toast::makeText("You have exceeded your credit overdraft.");
+        ENDCASE;
+    CASE(eVA_UI_THRESHOLD_REACHED_EVENT);
+        Toast::makeText("You have reached your credit threshold.");
+        ENDCASE;
+    CASE(eVA_UI_RECORD_RIGHT_OK_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_TIMESHIFT_RIGHT_OK_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_RECORD_RIGHT_KO_EVENT);
+        Toast::makeText("You do not have the rights to record this <Program>.");
+        ENDCASE;
+    CASE(eVA_UI_TIMESHIFT_RIGHT_KO_EVENT);
+        Toast::makeText("You do not have timeshift rights.");
+        ENDCASE;
+    CASE(eVA_UI_RECORD_INFO_CHANGE_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_ORM_CONNECTION_OK_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_ORM_CONNECTION_KO_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_CW_SERVER_CONNECTION_OK_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_CW_SERVER_CONNECTION_KO_EVENT);
+        Toast::makeText("");
+		ENDCASE;
+    CASE(eVA_UI_TERMINAL_NOT_ACTIVATED_EVENT);
+        Toast::makeText("The terminal is not activated.Please contact your operator."); 
+        ENDCASE;
+    CASE(eVA_UI_TERMINAL_READY_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_TERMINAL_INSUFFICIENT_MEMORY_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_TERMINAL_CONFIGURATION_ERROR_EVENT);
+        Toast::makeText("");
+        ENDCASE;
+    CASE(eVA_UI_TERMINAL_INVALIDATED_EVENT);
+        Toast::makeText("The terminal has been invalidated by the operator.Please contact your operator.");
+        ENDCASE;
+    default:NGLOG_DEBUG("unknown event 0x%x",evt->eEventType);break;
+    }
+    NGLOG_DEBUG(" acs:%d scslot:%d streamhandle:%x IsScrambledByProgram:%d uiStreamsNumber:%d",evt->dwAcsId,evt->dwScSlot,
+         evt->dwStbStreamHandle,evt->bIsScrambledByProgram,evt->uiStreamsNumber);
+}
+
+int SendUIRequest(int request_type,void*ret,void*userdata){
+    tVA_UI_Request req;
+    memset(&req,0,sizeof(req));
+    req.stRequestHeader.eType=(tVA_UI_RequestType)request_type;
+    req.stRequestHeader.pCallback=VA_UI_RequestCBK;
+    req.stRequestHeader.pUserArg=userdata;
+    return VA_UI_Request(&req);
+}
+  

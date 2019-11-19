@@ -109,4 +109,8 @@ void Window::sendMessage(std::shared_ptr<View>w,DWORD msgid,DWORD wParam,ULONG l
     WindowManager::getInstance()->sendMessage(w,msgid,wParam,lParam,delayedtime);
 }
 
+void  closeWindow(Window*w){
+    w->sendMessage(View::WM_DESTROY,0,0);
+}
+
 }  // namespace ui

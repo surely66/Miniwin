@@ -25,10 +25,10 @@ void ChannelBar::clearEvents(){
 
 void ChannelEpgView::DefaultPainter(AbsListView&lv,const AbsListView::ListItem&itm,int state,GraphContext&canvas){
      int idx=0;
-     ULONG starttime=((ChannelEpgView&)lv).getStartTime();
      float pixelmin =((ChannelEpgView&)lv).getPixelPerMinute();
      int nameWidth=((ChannelEpgView&)lv).getChannelNameWidth();
      ChannelBar&bar=(ChannelBar&)itm;
+     ULONG starttime=((ChannelEpgView&)lv).getStartTime();
      ChannelEpgView&chv=(ChannelEpgView&)lv;
      canvas.set_font_size(16);
      time_t now=time(NULL);
@@ -47,20 +47,27 @@ void ChannelEpgView::DefaultPainter(AbsListView&lv,const AbsListView::ListItem&i
              color=chv.getColor(lastisnow?EVENT_NEXT:EVENT_FEATURE);
              lastisnow=0;
          }
+         if(r.x+r.width<bar.rect.x)continue;
+         if(r.x>bar.rect.x+bar.rect.width)break;
          canvas.set_color(color);
          r.height-=1;
          r.width-=1;
          canvas.draw_rect(r);
+         canvas.set_color(chv.getColor(BORDER));
+         canvas.rectangle(r);
+         canvas.stroke();
          canvas.set_color(lv.getFgColor());
          canvas.draw_text(r,e.name);
      }
-     RECT r=bar.rect;
-     canvas.set_color(chv.getColor(state?CHANNEL_FOCUSED:CHANNEL_BG ));
-     r.width=nameWidth-1;
-     r.height-=1;
-     canvas.draw_rect(r);
+     RECT rb=bar.rect;
+     if(state)
+        canvas.set_color(chv.getColor(CHANNEL_FOCUSED));
+     else canvas.set_color(chv.getBgColor());
+     rb.width=nameWidth-1;
+     rb.height-=1;
+     canvas.draw_rect(rb);
      canvas.set_color(chv.getColor(CHANNEL_FG)); 
-     canvas.draw_text(r,bar.getText());
+     canvas.draw_text(rb,bar.getText());
 }
 
 void ChannelBar::onGetSize(AbsListView&lv,int*w,int*h){
@@ -84,17 +91,15 @@ ChannelEpgView::ChannelEpgView(int w,int h):ListView(w,h){
      Time2Hour(&starttime);
      nameWidth=120;
      timeRuleHeight=12;
+     setBgColor(0xFF101010);
      item_painter_=ChannelEpgView::DefaultPainter;
-   
-     colors[ RULER_BG ] =0xFFFFFFFF;
-     colors[ RULER_FG ] =0xFF000000;
-     colors[CHANNEL_BG] =0xFF000000;
+     colors[ RULER_FG ] =0xFFFFFFFF;
      colors[CHANNEL_FG] =0xFFFFFFFF;
-     colors[CHANNEL_BAR]=0xFF000000;
      colors[CHANNEL_FOCUSED]=0xFF00FF00;
-     colors[EVENT_POST] =0xFF222222;
-     colors[ EVENT_NOW ]=0xFF444444;
-     colors[ EVENT_NEXT]=0xFF666666;
+     colors[BORDER]=0xFF222222;
+     colors[EVENT_POST] =0xFF333333;
+     colors[EVENT_NOW ] =0xFF444444;
+     colors[EVENT_NEXT] =0xFF666666;
      colors[EVENT_FEATURE]=0xFF888888;
 }
 
