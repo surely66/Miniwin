@@ -110,7 +110,12 @@ size_t App::loadFile(const std::string&fname,unsigned char**buffer)const{
     if(resmgr)return resmgr->loadFile(fname,buffer);
     return 0;
 }
-
+int App::addEventSource(EventSource *source, EventHandler handler){
+    return looper.add_event_source(source,handler);
+}
+int App::removeEventSource(EventSource*source){
+    return looper.remove_event_source(source);
+}
 
 int App::exec(){
     WindowManager::getInstance()->run();

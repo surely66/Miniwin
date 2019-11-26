@@ -6,9 +6,9 @@ add_subdirectory(tools)
 option( LUA_BINDINGS "UI Lua script bindings" OFF)
 
 aux_source_directory(core SRCS_GUICORE)
-aux_source_directory(core/svg SRCS_SVG)
+#aux_source_directory(core/svg SRCS_SVG)
 aux_source_directory(core/cairomm   SRCS_CAIROMM)
-
+aux_source_directory(looper SRCS_LOOP)
 message("UI Lua script bindings is ${LUA_BINDINGS}")
 message("=======CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
 if ( LUA_BINDINGS )
@@ -16,10 +16,10 @@ aux_source_directory(luabinding SRCS_LUABIND)
 list(APPEND EXT_LIBS lua)
 endif ()
 
-add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND}) #${SRCS_SVG})
+add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LOOP} ${SRCS_SVG})
 
 include_directories(
-    ./core ./core/svg ./luabinding 
+    ./ ./core ./core/svg ./luabinding 
     ${CMAKE_BINARY_DIR}/include/
     ${CMAKE_BINARY_DIR}/include/cairo
     ${CMAKE_BINARY_DIR}/include/porting
@@ -37,6 +37,8 @@ include_directories(
 
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
+file(GLOB LOOPERHEADERS  ${PROJECT_SOURCE_DIR}/looper/*.h)
+message("LOOPERHEADERS=${LOOPERHEADERS}")
 link_directories(
     ${CMAKE_BINARY_DIR}/src/3rdparty/libpng/
     ${CMAKE_BINARY_DIR}/src/3rdparty/lua 
@@ -60,8 +62,10 @@ target_link_libraries(respackt z)
  
 add_custom_command(TARGET gui POST_BUILD 
     COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/gui/cairomm
+    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/looper
     COMMAND cp -u *.h  ${CMAKE_SOURCE_DIR}/include/gui/   
     COMMAND cp -u cairomm/*.h  ${CMAKE_SOURCE_DIR}/include/gui/cairomm   
+    COMMAND cp -u ../looper/*.h  ${CMAKE_SOURCE_DIR}/include/looper   
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/core
     COMMENT "Copy GUI Header Files")
 
@@ -69,4 +73,5 @@ install (TARGETS gui  DESTINATION lib)
 install (TARGETS respackt  DESTINATION bin)
 install (FILES ${MMHEADERS} DESTINATION include/gui/cairomm/)
 install (FILES ${GUIHEADERS} DESTINATION include/gui/)
+install (FILES ${LOOPERHEADERS} DESTINATION include/looper)
 

@@ -3,7 +3,9 @@
 #include<string>
 #include<map>
 #include<cairomm/surface.h>
+#include<looper/looper.h>
 using namespace Cairo;
+using namespace looper;
 namespace nglui{
 
 class App{
@@ -11,6 +13,7 @@ private:
     class ResourceManager*resmgr;
     ResourceManager*getResourceManager();
     std::map<std::string,std::string>args;
+    looper::EventLoop looper;
 protected:
     static App*mInst;
     std::string name;
@@ -31,7 +34,8 @@ public:
      const std::string&getArg(const std::string&key,const std::string&def="");
 
      int getArgAsInt(const std::string&key,int def);
-
+     int addEventSource(EventSource *source, EventHandler handler);
+     int removeEventSource(EventSource*source);
      int exec();
 };
 

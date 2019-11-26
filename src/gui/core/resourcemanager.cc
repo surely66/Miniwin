@@ -74,17 +74,19 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      }else if(ext=="jpg"||ext=="jpeg"){
          img=ImageSurface::create_from_jpg(pak_read,&closure);
      }else if(ext=="bmp"){
-         /*RefPtr<BasicBitmap>bmp=make_refptr_for_instance<BasicBitmap>(BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL));//
+         BasicBitmap*bmp=BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL);//
          NGLOG_VERBOSE("bmp size=%dx%d fmt=%d pitch=%d",bmp->Width(),bmp->Height(),bmp->Format(),bmp->Pitch());
          if(bmp->Format()!=BasicBitmap::A8R8G8B8){
-            RefPtr<BasicBitmap>cvt(new BasicBitmap(bmp->Width(), bmp->Height(),BasicBitmap::A8R8G8B8));
+            BasicBitmap*cvt=new BasicBitmap(bmp->Width(), bmp->Height(),BasicBitmap::A8R8G8B8);
             if (cvt)
                 cvt->Convert(0, 0, (const BasicBitmap*)bmp, 0, 0, bmp->Width(), bmp->Height());
-            bmp=cvt;
+            img=ImageSurface::create(cvt->Bits(),Surface::Format::ARGB32,cvt->Width(),cvt->Height(),cvt->Pitch());
+            delete cvt;
+         }else{
+             NGLOG_DUMP("BMP",bmp->Bits(),8);
+             img=ImageSurface::create(bmp->Bits(),Surface::Format::ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());
+             delete bmp;
          }
-
-         NGLOG_DUMP("BMP",bmp->Bits(),8);
-         img=ImageSurface::create(bmp->Bits(),Surface::Format::ARGB32,bmp->Width(),bmp->Height(),bmp->Pitch());*/
      }
      if(cache)
          images.insert(std::map<const std::string,RefPtr<ImageSurface> >::value_type(resname,img));
