@@ -35,6 +35,6 @@ void nglLogParseModules(int argc,const char*argv[]);
 #define NGLOG_WARN_IF(x,...) do{if(x)nglLogPrintf(__ngl_module__,NGL_LOG_WARN,__FUNCTION__,__LINE__,__VA_ARGS__);}while(0)
 #define NGLOG_ERROR_IF(x,...) do{if(x)nglLogPrintf(__ngl_module__,NGL_LOG_ERROR,__FUNCTION__,__LINE__,__VA_ARGS__);}while(0)
 #define NGLOG_ALERT_IF(x,...) do{if(x)nglLogPrintf(__ngl_module__,NGL_LOG_ALERT,__FUNCTION__,__LINE__,__VA_ARGS__);}while(0)
-
+#define NGASSERT(x) do{if(!x)nglLogPrintf("ASSERT",NGL_LOG_ERROR,__FUNCTION__,__LINE__,"Failed %s",#x);}while(0)
 NGL_END_DECLS
 #endif

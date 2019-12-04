@@ -219,7 +219,7 @@ DWORD   VA_XNVM_Open(DWORD dwVaXnvmHandle, tVA_XNVM_Segment eSegment)
         for (i = 0; i < eSEGMENT_LAST; i ++){
             m_nvm_segment[i].dwVaXnvmHandle = kVA_ILLEGAL_HANDLE;
             m_nvm_segment[i].segment_size = m_segmnet_size[i];
-            m_nvm_segment[i].segment_offset = offset;
+            m_nvm_segment[i].segment_offset = (eSegment-1)*m_segmnet_size[i];//offset;
             m_nvm_segment[i].status = XNVM_STATUS_IDEL;
             offset += m_segmnet_size[i];
         }

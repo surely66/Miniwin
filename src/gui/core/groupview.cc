@@ -200,12 +200,15 @@ bool GroupView::onKeyPress(KeyEvent& evt) {
 }
 
 View*GroupView::getFocused(){
+    View*first=nullptr;//first focusable view
     for(auto it=children_.begin();it!=children_.end();it++){
+       if(nullptr==first&&(*it)->hasFlag(Attr::ATTR_FOCUSABLE))
+           first=it->get();
        if((*it)->hasFlag(Attr::ATTR_FOCUSED)){
            return it->get();
        }
     }
-    return nullptr;
+    return first;
 }
 
 View* GroupView::getNextFocus(View*cv,int key){

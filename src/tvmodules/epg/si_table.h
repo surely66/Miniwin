@@ -17,7 +17,8 @@ enum{
    PID_EIT=0x12,
    PID_RST=0x13,
    PID_TDT=0x14,
-   PID_TOT=0x14
+   PID_TOT=0x14,
+   PID_INVALID=0x1FFF
 };
 
 enum{

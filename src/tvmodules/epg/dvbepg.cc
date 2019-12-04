@@ -293,22 +293,21 @@ static void  SearchProc(void*p)
              }
              break;
         case MSG_PMT_RECEIVED:
-             {//todo no pmt ,will caused filter leak.
+             {
                 NGLOG_VERBOSE("RECV MSG_PMT_RECEIVED filter=%p pmt.size=%d/%d/%d state=%d",msg.param2,ts.pmt.size(),pmtfilters.size(),program_count,state);
                 for(size_t i=0;i<pmtfilters.size();i++){
-                    NGLOG_VERBOSE("\tpmtfilter[%d]=%p param2=%p",i,pmtfilters[i],msg.param2);
                     if(pmtfilters[i]==msg.param2){
                         nglStopSectionFilter(msg.param2);
                         nglFreeSectionFilter(msg.param2);
                         pmtfilters.erase(pmtfilters.begin()+i);
-                        NGLOG_VERBOSE("remove[%d] filt=%p pmtfilters.size=%d",i,msg.param2,pmtfilters.size());
+                        NGLOG_VERBOSE("Stop[%d] filt=%p pmtfilters.size=%d",i,msg.param2,pmtfilters.size());
                         break;
                     } 
                 }
                 if( ts.pmt.size()==program_count){NGLOG_VERBOSE("PMT ok free remained %d/%d filters",pmtfilters.size(),program_count);
                     for(auto f:pmtfilters){
                         nglStopSectionFilter(f);
-                        nglStopSectionFilter(f);
+                        nglFreeSectionFilter(f);
                     }
                     pmtfilters.clear();
                     if(ts.sdt.size()){

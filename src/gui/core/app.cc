@@ -11,7 +11,7 @@
 #include <cairomm/surface.h>
 #include <usbmanager.h>
 #include <getopt.h>
-
+#include <fcntl.h>
 NGL_MODULE(APP)
 
 void spt_init(int argc, char *argv[]);
@@ -110,24 +110,35 @@ size_t App::loadFile(const std::string&fname,unsigned char**buffer)const{
     if(resmgr)return resmgr->loadFile(fname,buffer);
     return 0;
 }
+
 int App::addEventSource(EventSource *source, EventHandler handler){
     return looper.add_event_source(source,handler);
 }
+
 int App::removeEventSource(EventSource*source){
     return looper.remove_event_source(source);
 }
 
 int App::exec(){
-    WindowManager::getInstance()->run();
-    /*while(1){
-       nglSleep(1000);
-    }*/
+    int fd=open("/dev/input/event0",O_RDWR|O_NONBLOCK);
+    looper.add_idle([](EventSource&){
+        WindowManager::getInstance()->runOnce();
+        return true;
+    });
+    looper.add_event_source(new InputEventSource(fd),[](EventSource&e){
+        InputEventSource& fe=(InputEventSource&)e;
+        NGLOG_DEBUG("fd:%d event:%d",fe.fd,fe.events);
+        return true;
+    });
+    looper.run();
 }
+
 void App::setName(const std::string&appname){
     setproctitle(appname.c_str());
     name=appname;
     getResourceManager();
 }
+
 const std::string& App::getName(){
     return name;
 }

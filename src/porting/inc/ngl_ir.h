@@ -94,8 +94,11 @@ typedef struct{
     DWORD event_time; 
 }NGLKEYINFO;
 
+typedef void(*NGLKEY_CALLBACK)(NGLKEYINFO*key,void*userdata);
+
 DWORD nglIrInit();
 DWORD nglIrOpen(int deviceid,const char*keymap);
+DWORD nglIrRegisterCallback(DWORD handle,NGLKEY_CALLBACK cbk,void*data);
 DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout);
 DWORD nglIrClose(DWORD handle);
 

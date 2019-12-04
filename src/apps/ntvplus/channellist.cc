@@ -124,6 +124,7 @@ bool ChannelsWindow::onKeyRelease(KeyEvent&k){
         {
             int idx=chlst->getIndex();
             ChannelItem*itm=(ChannelItem*)chlst->getItem(idx);
+            NGLOG_VERBOSE("itm=%p",itm);
             if(itm)DtvPlay(&itm->svc,nullptr); 
         }break;
    case KEY_YELLOW:CreateChannelEditWindow();return true;

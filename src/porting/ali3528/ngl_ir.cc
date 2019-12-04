@@ -14,6 +14,8 @@ static aui_hdl hdl_key=NULL;
 typedef struct{
    aui_hdl hdl;
    std::map<int,int>keymap;
+   NGLKEY_CALLBACK cbk;
+   void*userdata;
 }IRDEV;
 
 #define NB_DEV 8
@@ -74,8 +76,18 @@ DWORD nglIrInit(){
 
 }
 
-static void key_callback(aui_key_info*key,void*d){
-    int rc=nglMsgQSend(msgQ,key,sizeof(aui_key_info),100);
+static void key_callback(aui_key_info*ki,void*d){
+    int rc=nglMsgQSend(msgQ,ki,sizeof(aui_key_info),100);
+    NGLKEYINFO ko;
+    IRDEV*ir=&irdevices[0];
+    auto fnd=ir->keymap.find(ki->n_key_code);
+    ko.key_code=(fnd!=ir->keymap.end())?fnd->second:ki->n_key_code;
+    ko.repeat=ki->n_count;
+    ko.state=ki->e_status==1?NGL_KEY_PRESSED:NGL_KEY_RELEASE;
+    NGL_RunTime rt;
+    nglGetRunTime(&rt);
+    ko.event_time=rt.uiMilliSec;
+    if(ir->cbk)ir->cbk(&ko,ir->userdata); 
 }
 
 DWORD nglIrOpen(int id,const char*keymap){
@@ -109,12 +121,19 @@ DWORD nglIrOpen(int id,const char*keymap){
     return 0;
 }
 
+DWORD nglIrRegisterCallback(DWORD handle,NGLKEY_CALLBACK cbk,void*data){
+    IRDEV*ir=(IRDEV*)handle;
+    ir->cbk=cbk;
+    ir->userdata=data;
+    return 0;
+}
+
 DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
     IRDEV*ir=(IRDEV*)handle;
     aui_key_info info;
 
     if(ir<irdevices||ir>=&irdevices[NB_DEV]){
-        NGLOG_DEBUG("invalid para");
+        NGLOG_DEBUG("invalid para %p [%p,%p]",ir,&irdevices[0],&irdevices[NB_DEV]);
         return NGL_INVALID_PARA;
     }
     memset(key,0,sizeof(NGLKEYINFO));

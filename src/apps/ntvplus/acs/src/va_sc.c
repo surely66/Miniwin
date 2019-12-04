@@ -41,6 +41,8 @@ NGL_MODULE(VASC)
 #define CARD_STATUS_ACTIVED         (1<<7)
 #define CARD_STATUS_DEACTIVING      (1<<8)
 #define CARD_STATUS_DEACTIVED       (1<<9)
+#undef NGLOG_DUMP
+#define NGLOG_DUMP(a,b,c)
 
 typedef struct va_sc_slot_data{
     aui_hdl handle;
@@ -89,7 +91,7 @@ static AUI_RTN_CODE *smc_init_cb(void *para)
 {
 
     aui_smc_device_cfg_t *pconfig = (aui_smc_device_cfg_t*)para;
-    NGLOG_DEBUG("M3527 viaccess. running smc_init_cb\n");
+    NGLOG_VERBOSE("M3527 viaccess. running smc_init_cb\n");
     //pconfig++; // 3733 use slot 1
     pconfig->init_clk_trigger = 1;
     pconfig->init_clk_number = 1;
@@ -107,7 +109,7 @@ static AUI_RTN_CODE *smc_init_cb(void *para)
 
     pconfig->disable_pps = 1;
 
-    NGLOG_DEBUG("disable_pps: %d\n", pconfig->disable_pps);
+    NGLOG_VERBOSE("disable_pps: %d\n", pconfig->disable_pps);
     return AUI_RTN_SUCCESS;
 }
 
@@ -119,7 +121,7 @@ static void va_sc_status_fun_cb(const unsigned int slot_num, unsigned int status
     unsigned char atr[MAX_ATR_LN];
     unsigned short atr_len = 0;
     
-    NGLOG_DEBUG("smart card %d %s (status = %u)\n",slot_num, status ? "detected" : "missing",  status);
+    NGLOG_VERBOSE("smart card %d %s (status = %u)\n",slot_num, status ? "detected" : "missing",  status);
 
     if (status){
         ret = VA_SC_CardInserted(slot_num);
@@ -282,7 +284,7 @@ static void *va_sc_reset_thread(void *arg)
     //pps1_value = 0x18;    
 
     ret = aui_smc_reset(m_va_sc_slot[slot_num].handle, atr, &atr_len, TRUE);
-    NGLOG_DEBUG("aui_smc_reset(slot:%d)=%d pps1_value=%X" ,slot_num,ret, pps1_value);
+    NGLOG_VERBOSE("aui_smc_reset(slot:%d)=%d pps1_value=%X" ,slot_num,ret, pps1_value);
     if (AUI_RTN_SUCCESS != ret){
         ret_val = kVA_ERROR;
         goto reset_thread_exit;
@@ -293,7 +295,7 @@ static void *va_sc_reset_thread(void *arg)
     DR = pps1_value & 0x0F;
     Fr = m_conversion_factor[FR];
     Dr = m_adjustment_factor[DR];
-    NGLOG_DEBUG("FR:%d, DR:%d, Fr:%d, Dr:%d, Fd: 372, Dd: 1",   (int)FR, (int)DR, (int)Fr, (int)Dr);
+    NGLOG_VERBOSE("FR:%d, DR:%d, Fr:%d, Dr:%d, Fd: 372, Dd: 1",   (int)FR, (int)DR, (int)Fr, (int)Dr);
 
     if (pps1_value){
 	 if ((atr[1] & 0x10) && (atr_len >= 2)){
@@ -319,7 +321,7 @@ static void *va_sc_reset_thread(void *arg)
 		set_pps = 0; 
 		pps1_value = 0x11;
 	}
-	NGLOG_DEBUG("pps1_value = 0x%x", pps1_value);
+	NGLOG_VERBOSE("pps1_value = 0x%x", pps1_value);
 		
 	//So far, according to 7816-3 SPEC, user can not modify the F/D
 	// arbitrarily, and PPS is set(AT1) in smart card driver when reset,
@@ -334,26 +336,26 @@ static void *va_sc_reset_thread(void *arg)
 	if (TS0 & 0x40) index++;
 	if (TS0 & 0x80) { // if T0 bit8=1, TD1 exist.
 		TD1 = atr[index];
-		NGLOG_DEBUG("TD1=0x%02X", TD1);
+		NGLOG_VERBOSE("TD1=0x%02X", TD1);
 		if(!(TD1 & 0x10)) { 
 			// if TD1 bit5=0, TA2 is not exist, card in negotiable mode, can set PPS
 			T = TD1 & 0x0F;
-			NGLOG_DEBUG("Smart card is negotiable mode");
+			NGLOG_VERBOSE("Smart card is negotiable mode");
 		} else {
 			// if TD1 bit5=1, TA2 exist, card in specific mode. can not set PPS
-			NGLOG_DEBUG("Smart card is specific mode");
+			NGLOG_VERBOSE("Smart card is specific mode");
 			set_pps = 0;
 		}
 	} else {
 		TD1 = 0;
 		T = 0;
 	}
-	NGLOG_DEBUG("set_pps=%d, TS0=0x%x", set_pps, (unsigned int)TS0);
+	NGLOG_VERBOSE("set_pps=%d, TS0=0x%x", set_pps, (unsigned int)TS0);
     }else{
 	//do not set pps if pps1_value = 0;
 	set_pps = 0; 
     }	
-    NGLOG_DEBUG("final pps1_value = 0x%x", pps1_value);
+    NGLOG_VERBOSE("final pps1_value = 0x%x", pps1_value);
 
 retry_pps:
     if (set_pps){
@@ -378,7 +380,7 @@ retry_pps:
     	Fi = m_conversion_factor[FI];
     	Di = m_adjustment_factor[DI];
 
-        NGLOG_DEBUG("F:%d, D:%d, Fi:%d, Di:%d, Fd: 372, Dd: 1", (int)FI, (int)DI, (int)Fi, (int)Di);
+        NGLOG_VERBOSE("F:%d, D:%d, Fi:%d, Di:%d, Fd: 372, Dd: 1", (int)FI, (int)DI, (int)Fi, (int)Di);
 
         //send PPS command to smart card
         ret = aui_smc_setpps(m_va_sc_slot[slot_num].handle, tx_buffer, write_len, rx_buffer, &read_len);
@@ -388,7 +390,7 @@ retry_pps:
             goto reset_thread_exit;
         }
         NGLOG_DUMP("Get from PPS: ", rx_buffer, 4);
-        NGLOG_DEBUG("Fn:%d, Dn:%d",(int)((rx_buffer[2] >> 4) & 0x0F), (int)(rx_buffer[2] & 0x0F));
+        NGLOG_VERBOSE("Fn:%d, Dn:%d",(int)((rx_buffer[2] >> 4) & 0x0F), (int)(rx_buffer[2] & 0x0F));
 
         if (memcmp(tx_buffer, rx_buffer, 4) == 0){
 
@@ -413,12 +415,12 @@ retry_pps:
             if (1 == DR){
                 //DR = 1, can not set pps with the smallest value, do not need to try again
                 pps1_value = m_va_sc_slot[slot_num].pps1_value;
-                NGLOG_DEBUG("can not set pps with the smallest value, do not need to try");
+                NGLOG_VERBOSE("can not set pps with the smallest value, do not need to try");
                 
             }else{
                 DN = va_sc_get_smaller_DN(DR);
                 pps1_value =  (FN << 4)| (DN & 0x0f);
-                NGLOG_DEBUG("retry pps1_value=0x%x", (unsigned int)pps1_value);
+                NGLOG_VERBOSE("retry pps1_value=0x%x", (unsigned int)pps1_value);
                 goto retry_pps;
             }
         }
@@ -429,7 +431,7 @@ retry_pps:
 reset_thread_exit:
     m_va_sc_slot[slot_num].card_status = CARD_STATUS_RESET;
     if (kVA_OK == ret_val){
-        NGLOG_DEBUG("pps1_value=0x%x", (unsigned int)pps1_value);
+        NGLOG_VERBOSE("pps1_value=0x%x", (unsigned int)pps1_value);
         va_ret = VA_SC_ResetDone(slot_num, atr_len, atr, pps1_value);
         if (va_ret){
             NGLOG_ERROR("VA_SC_ResetDone error, ret = %d", va_ret);
@@ -441,7 +443,7 @@ reset_thread_exit:
         }
     }
     
-    NGLOG_DEBUG("Reset Done!");
+    NGLOG_VERBOSE("Reset Done!");
 
 #if 0
     memset(atr, 0, sizeof(atr));
@@ -483,7 +485,7 @@ static void *va_sc_send_cmd_thread(void *arg)
 
     pthread_detach(pthread_self());
     
-    NGLOG_DEBUG("slot num: %d, cmd_size=%d", (unsigned int)slot_num, (int)m_va_sc_slot[slot_num].cmd_size);
+    NGLOG_VERBOSE("slot num: %d, cmd_size=%d", (unsigned int)slot_num, (int)m_va_sc_slot[slot_num].cmd_size);
     
     cmd_head_size = 5;
 
@@ -613,7 +615,7 @@ static void *va_sc_send_cmd_thread(void *arg)
     }else{// read data
         //step3: read data
         short read_length = m_va_sc_slot[slot_num].cmd_buf[4];
-        NGLOG_DEBUG("smart card read length=%d", (int)read_length);
+        NGLOG_VERBOSE("smart card read length=%d", (int)read_length);
         if (0 == read_length)
             read_length = 256;
         
@@ -670,7 +672,7 @@ send_thread_exit:
     if (ret)
         VA_SC_CommandFailed(slot_num);
     
-    NGLOG_DEBUG("send command Done!");
+    NGLOG_VERBOSE("send command Done!");
     pthread_exit(NULL);
 }
 
@@ -749,7 +751,7 @@ INT VA_SC_SendCommand(DWORD dwScSlot, UINT32 uiCommandSize, BYTE *pCommand)
     aui_hdl hdl = NULL;
     int ret;
 
-    NGLOG_DEBUG("parameter: dwScSlot=%d, uiCommandSize=%d!",(int)dwScSlot, (int)uiCommandSize);
+    NGLOG_VERBOSE("parameter: dwScSlot=%d, uiCommandSize=%d!",(int)dwScSlot, (int)uiCommandSize);
 
     if (dwScSlot > kVA_SETUP_NBMAX_SC){
         NGLOG_ERROR("dwScSlot is error: %d", (int)dwScSlot);

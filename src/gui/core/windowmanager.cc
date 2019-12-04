@@ -24,30 +24,24 @@
 NGL_MODULE(WINDOWMANAGER)
 
 namespace nglui {
-static bool run_in_looper=false;
 // Initialize the instance of the singleton to nullptr
 WindowManager* WindowManager::instance_ = nullptr;
 
 WindowManager::WindowManager()
 {
      GraphDevice::getInstance();
-     ir_handle_=nglIrOpen(0,nullptr);
 }
 
 WindowManager*WindowManager::getInstance(){
     if(nullptr==instance_){
         DWORD threadid;
-        nglIrInit();
         instance_=new WindowManager();
-        nglCreateThread(&threadid,0,0,LooperProc,instance_); 
     }
     return instance_;
 };
 
 WindowManager::~WindowManager() {
     windows_.erase(windows_.begin(),windows_.end());
-    nglIrClose(ir_handle_);
-    ir_handle_=0;
 }
 
 void WindowManager::sendMessage(Window*w,DWORD msgid,DWORD wp,ULONG lp,DWORD delayedtime){
@@ -64,7 +58,6 @@ void WindowManager::sendMessage(std::shared_ptr<View>v,DWORD msgid,DWORD wp,ULON
     msg.view=v;
     msg.msgid=msgid;
     msg.wParam=wp;    msg.lParam=lp;
-    std::lock_guard<std::mutex>lock(msgq_mutex_);
     if(delayedtime!=0){
        NGL_RunTime tnow;
        nglGetRunTime(&tnow);
@@ -79,7 +72,6 @@ void WindowManager::popMessage(){
     UIMSG msg;
     std::shared_ptr<View>sp;
     {
-       std::lock_guard<std::mutex>lock(msgq_mutex_);
        if(msg_queue_.size()){
           msg=msg_queue_.front();
           std::weak_ptr<View>wp=msg.view;
@@ -107,7 +99,6 @@ void WindowManager::popMessage(){
 }
 
 void WindowManager::addWindow(Window*w){
-    std::lock_guard<std::mutex>lock(msgq_mutex_);
     std::shared_ptr<Window>wp(w);
     windows_.push_back(wp);
     SIZE sz;
@@ -204,7 +195,6 @@ void WindowManager::onKeyChar(uint32_t key) {
 
 void WindowManager::drawWindows() {
   // Notify the focused child to draw on this canvas
-  std::lock_guard<std::mutex>lock(msgq_mutex_);
   for (auto wind : windows_) {
        if(wind->isDirty())
        wind->draw(false);
@@ -212,32 +202,15 @@ void WindowManager::drawWindows() {
   GraphDevice::getInstance()->flip(nullptr);
 }
 
-void WindowManager::processKey(){
-    NGLKEYINFO key;
-    if(nglIrGetKey(ir_handle_,&key,50)!=NGL_OK)
-         return;
-    if(key.state==NGL_KEY_PRESSED)
-         onKeyPress(key.key_code);
-    else
-         onKeyRelease(key.key_code);
-    //if(key.state==NGL_KEY_POWER);
+void WindowManager::runOnce(){
+    drawWindows();
+    popMessage();
 }
+
 void WindowManager::run(){
-    run_in_looper=true;
     while(true){
-        processKey();
-        drawWindows();
-        popMessage();
+        runOnce();
     }
-}
-void WindowManager::LooperProc(void*p){
-    WindowManager*wm=(WindowManager*)p;
-    while(!run_in_looper){
-         wm->processKey();
-         wm->drawWindows();
-         wm->popMessage();
-    }
-    NGLOG_VERBOSE("WindowManager::LooperProc End"); 
 }
 
 }  // namespace ui

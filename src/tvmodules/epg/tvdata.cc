@@ -261,7 +261,7 @@ INT DtvRemoveStreamByTP(int tpid){
 
 INT DtvEnumTSService(const STREAMDB&ts,DTV_SERVICE_CBK cbk,void*userdata){
     int rc=0;
-    NGLOG_DEBUG("gStreams.size=%d ts.sdt=%d ts.pmt=%d",gStreams.size(),ts.sdt.size(),ts.pmt.size());
+    NGLOG_DEBUG("Streams %d.%d pat=%d sdt=%d pmt=%d",ts.netid,ts.tsid,ts.pat.size(),ts.sdt.size(),ts.pmt.size());
     SERVICELOCATOR loc;
     if(ts.sdt.size()){
         char sname[128]={0};
@@ -326,9 +326,11 @@ static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
 }
 
 INT DtvGetServerPmtPid(const SERVICELOCATOR*sloc){
-    USHORT pmtpid=0;
+    USHORT pmtpid=PID_INVALID;
     std::unique_lock<std::mutex> lck(mtx_seclist); 
+    NGASSERT(sloc);
     for(auto itr_ts:gStreams ){
+        NGLOG_ERROR_IF(itr_ts.pat.size()==0,"TS %d.%d pat.size=%d",itr_ts.netid,itr_ts.tsid,itr_ts.pat.size());
         if(itr_ts.netid==sloc->netid&&itr_ts.tsid==sloc->tsid){
              PAT pat(itr_ts.pat.front());
              pmtpid=pat.getPMTPID(sloc->sid);
@@ -512,6 +514,7 @@ public:
 static std::unordered_map<SERVICELOCATOR,ServiceData*>service_lcn;
 static USHORT lcnmask=0xFFFF;
 INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
+    NGASSERT(svc);
     std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator got=service_lcn.find(*svc);
     if(got==service_lcn.end()||(value==NULL))
         return NGL_ERROR;

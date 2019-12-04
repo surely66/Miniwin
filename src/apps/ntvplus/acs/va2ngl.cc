@@ -38,8 +38,12 @@ static  void VA_UIEvent(tVA_UI_Event *evt);
 
 static void*ACSProc(void*p){
     int i,ret;
+    const static BYTE serial[kVA_SERIAL_NUMBER_SIZE]={0x00,0x00,0x00,0x07,0x10,0x00,0x90,0x61,0x92,0x40,0x00,0x02};
     tVA_CTRL_ConfigurationParameters param;
     memset(&param,0,sizeof(tVA_CTRL_ConfigurationParameters));
+    memcpy(param.stStbInformation.stBoxIdentity,(void*)serial,kVA_SERIAL_NUMBER_SIZE);
+    param.stStbInformation.wConstructorIdentifier=0x13C;//0x11B;
+    param.stStbInformation.wModelIdentifier=0x01;
     param.uiNbAcs = kVA_SETUP_NBMAX_ACS ;//1
     param.uiNbSmartCard = kVA_SETUP_NBMAX_SC ;//1
     param.aAcs->stDemux.uiMaxNumberOfFilters = 16;

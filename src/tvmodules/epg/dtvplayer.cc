@@ -40,7 +40,6 @@ static INT PlayService(BYTE*pmtbuff,const char*lan){
     ELEMENTSTREAM es[32];
     INT cnt=pmt.getElements(es);
     pcr=pmt.pcrPid();
-    NGLOG_INFO("%d elements lan=%c%c%c",cnt,lan[0],lan[1],lan[2]);
     for(int i=0;i<cnt;i++){
        char*pc=es[i].iso639lan;
        NGLOG_DEBUG("\t pid=%d type=%d lan=%c%c%c",es[i].pid,es[i].getType(),pc[0],pc[1],pc[2]);
@@ -80,7 +79,7 @@ static void PlayProc(void*param){
     DWORD flt_cat=0;
     BYTE PMT[1024];
     BYTE CAT[1024];
-    USHORT pmtpid;
+    int pmtpid;
     char lan[4];
     flt_cat=CreateFilter(PID_CAT,SectionMonitor,CAT,true,1,0xFF01);
     while(1){
@@ -92,12 +91,12 @@ static void PlayProc(void*param){
                 memcpy(lan,msg.lan,3);
                 DtvTuneByService(&msg.loc);
                 DtvGetServicePmt(&msg.loc,PMT);
-                pmtpid=(USHORT)msg.lParam;
+                pmtpid=msg.lParam;
                 nglStopSectionFilter(flt_pmt);
                 nglFreeSectionFilter(flt_pmt);
                 cur_svc=msg.loc; 
+                NGLOG_INFO("PLAY %d.%d.%d %s%c%c%c",cur_svc.netid,cur_svc.tsid,cur_svc.sid,(lan[0]?"lan=":""),lan[0],lan[1],lan[2]);
                 flt_pmt=CreateFilter((USHORT)pmtpid,SectionMonitor,PMT,true,3,0xFF02,(0xFF00|(cur_svc.sid>>8)),(0xFF00|(cur_svc.sid&0xFF)));
-                NGLOG_INFO("PLAY %d.%d.%d lan=%c%c%c",cur_svc.netid,cur_svc.tsid,cur_svc.sid,lan[0],lan[1],lan[2]);
                 PlayService(PMT,msg.lan);
                 DtvNotify(MSG_SERVICE_CHANGE,&cur_svc,0,0);
             }break;
@@ -128,7 +127,9 @@ void DtvGetCurrentService(SERVICELOCATOR*sloc){
 
 INT DtvPlay(SERVICELOCATOR*loc,const char*lan){
     MSGPLAY msg;
-    INT pmtpid;
+    INT pmtpid=PID_INVALID;
+    NGASSERT(loc);
+    NGLOG_VERBOSE("PLAY %d.%d.%d",loc->netid,loc->tsid,loc->sid);
     DtvGetServiceItem(loc,SKI_PMTPID,&pmtpid);
     msg.msgid=MSG_PLAY;
     msg.lParam=pmtpid;

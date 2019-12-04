@@ -23,7 +23,6 @@
 #include <stdint.h>
 #include <ngl_ir.h>
 #include <queue>
-#include <mutex>
 
 namespace nglui {
 
@@ -58,20 +57,16 @@ class WindowManager {
   void addWindow(Window*w);
   void sendMessage(Window*,DWORD msgid,DWORD wp,ULONG lp,DWORD delayedtime=0);
   void sendMessage(std::shared_ptr<View>,DWORD msgid,DWORD wp,ULONG lp,DWORD delayedtime=0);
+  void runOnce();
   void run();
  private:
   WindowManager();
   void removeWindow(std::shared_ptr<Window>w);
-  void processKey();
-  DWORD ir_handle_;
   std::vector< std::shared_ptr<Window> > windows_;
-  std::vector<NGLKEYINFO>ir_events_;
   std::queue<UIMSG>msg_queue_;
   std::priority_queue<UIMSG,std::vector<UIMSG>,std::greater<UIMSG> >delayed_msgq_;
-  std::mutex msgq_mutex_;
   void popMessage();
   static WindowManager* instance_;
-  static void LooperProc(void*);
   DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };
 

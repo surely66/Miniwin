@@ -10,6 +10,8 @@
 
 #include <looper/EventSource.h>
 #include <looper/FileEvents.h>
+#include <linux/input.h> 
+#include <string>
 
 namespace looper 
 {
@@ -43,6 +45,13 @@ public:
 	bool is_file_source() const override final { return true; }
 };
 
+class InputEventSource:public FileSource{
+public:
+      InputEventSource(int fd):FileSource(fd,events=FileEvents::NONE){}
+      int getType(std::string&type);
+      void dumpEvent(struct input_event&event);
+      int getEvent(struct input_event&evt);
+};
 } // namespace looper
 
 #endif // LOOPER_FILESOURCE_H

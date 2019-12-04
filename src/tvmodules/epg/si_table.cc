@@ -88,7 +88,7 @@ int PAT::getPrograms(PROGRAMMAP*maps,bool nit){
 }
 
 int PAT::getPMTPID(USHORT program_number){
-    PROGRAMMAP prgs[32];
+    PROGRAMMAP prgs[128];
     int cc=getPrograms(prgs,false);
     for(int i=0;i<cc;i++){
        if(prgs[i].program_number==program_number)
