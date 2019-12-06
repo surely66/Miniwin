@@ -49,36 +49,27 @@ EventLoop::EventLoop()
 
 void EventLoop::iteration()
 {
-	int max_timeout = -1;
+	int max_timeout =10;//-1;
 	int n_ready = 0;
-
 	// prepare and check for already ready event sources
-	for (auto source : impl->sources)
-	{
+	for (auto source : impl->sources){
 		if (source->is_idle_source())
 			continue;
 
 		int source_timeout = -1;
 
-		if (source->prepare(source_timeout))
-		{
+		if (source->prepare(source_timeout)){
 			source->loop_data.ready = true;
 			n_ready++;
-		}
-		else if (source_timeout > 0 &&
-					(max_timeout == -1 || source_timeout < max_timeout))
-		{
+		}else if (source_timeout > 0 &&	(max_timeout == -1 || source_timeout < max_timeout)){
 			max_timeout = source_timeout;
 		}
 	}
 
 	// poll all of the pollable event sources
 	impl->poll_fds.resize(impl->pollable_sources.size());
-	for (size_t i = 0; i < impl->pollable_sources.size(); i++)
-	{
-		if (! impl->pollable_sources[i]->loop_data.ready &&
-				impl->pollable_sources[i]->fd >= 0)
-		{
+	for (size_t i = 0; i < impl->pollable_sources.size(); i++){
+		if (! impl->pollable_sources[i]->loop_data.ready && impl->pollable_sources[i]->fd >= 0){
 			impl->poll_fds[i].fd = impl->pollable_sources[i]->fd;
 			impl->poll_fds[i].events = static_cast<int>(impl->pollable_sources[i]->events);
 			impl->poll_fds[i].revents = impl->pollable_sources[i]->revents = 0;
@@ -97,15 +88,11 @@ void EventLoop::iteration()
 	}
 
 	// now check if any more sources are ready after polling
-	for (auto source : impl->sources)
-	{
+	for (auto source : impl->sources){
 		if (source->is_idle_source())
 			continue;
-
-		if (! source->loop_data.ready)
-		{
-			if (source->check())
-			{
+		if (! source->loop_data.ready){
+			if (source->check()){
 				source->loop_data.ready = true;
 				n_ready++;
 			}
@@ -113,26 +100,20 @@ void EventLoop::iteration()
 	}
 
 	impl->remove_sources.clear();
-	if (n_ready > 0)
-	{
+	if (n_ready > 0){
 		// dispatch all ready event sources
-		for (auto source : impl->sources)
-		{
+		for (auto source : impl->sources){
 			if (! source->is_idle_source() &&
 					source->loop_data.ready &&
-					source->loop_data.handler)
-			{
+					source->loop_data.handler){
 				if (! source->dispatch(source->loop_data.handler))
 					impl->remove_sources.emplace_back(source);
 				source->loop_data.ready = false;
 			}
 		}
-	}
-	else
-	{
+	}else{
 		// nothing else ready, dispatch idle event sources
-		for (auto source : impl->idle_sources)
-		{
+		for (auto source : impl->idle_sources){
 			if (source->loop_data.handler &&
 					! source->dispatch(source->loop_data.handler))
 			{

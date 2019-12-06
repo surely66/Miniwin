@@ -25,7 +25,6 @@ GraphDevice*GraphDevice::GraphDevice::getInstance(){
         DWORD tid;
         nglGraphInit();
         mInst=new GraphDevice();
-        nglCreateThread(&tid,0,0,GraphDevice::ComposeProc,mInst);
     }
     return mInst;
 }
@@ -35,9 +34,8 @@ GraphDevice::GraphDevice(int format){
     nglGetScreenSize((UINT*)&width,(UINT*)&height);
     FT_Init_FreeType(&ft_library);
     
-    graphEvent=nglCreateEvent(0,0);
     nglCreateSurface(&primarySurface,width,height,0,1);
-    NGLOG_DEBUG("primarySurface=%p size=%dx%d graphEvent=%x ",primarySurface,width,height,graphEvent);
+    NGLOG_DEBUG("primarySurface=%p size=%dx%d ",primarySurface,width,height);
 
     cairo_surface_t*surface=cairo_ngl_surface_create(primarySurface);
     primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
@@ -73,7 +71,7 @@ int GraphDevice::getScreenHeight(){
 
 void GraphDevice::flip(GraphContext*ctx){
     if(ctx)ctx->get_target()->flush();//cairo_surface_flush(ctx->surface);
-    nglSetEvent(graphEvent);
+    compose_event++;
 }
 
 GraphContext*GraphDevice::getPrimaryContext(){
@@ -137,24 +135,19 @@ bool GraphDevice::CheckOverlapped(GraphContext*c,int idx){
     return false;
 }
 
-void GraphDevice::ComposeProc(void*param){
-    GraphDevice*dev=(GraphDevice*)param;
+void GraphDevice::ComposeSurfaces(){
     int writed=0;
-    NGLOG_DEBUG("Compose Thread started primarySurface=%p graphEvent=%p....",dev->primarySurface,dev->graphEvent);
-    while(true){
-        if(nglWaitEvent(dev->graphEvent,100)==NGL_OK) {
-            int i=0;
-            NGLRect rr={40,70,320,240}; 
-            nglFillRect(dev->primarySurface,nullptr,0);
-            for(auto s:gSurfaces){
-                POINT pt=s->screenPos;
-                NGLRect srec={pt.x,pt.y,0,0};
-                DWORD nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
-                if(GraphDevice::CheckOverlapped(s,i++))continue;
-                nglBlit(dev->primarySurface,nglsurface,nullptr,&srec);
-            }
-            nglFlip(dev->primarySurface);
-        }
+    int i=0;
+    NGLRect rr={40,70,320,240}; 
+    nglFillRect(primarySurface,nullptr,0);
+    for(auto s:gSurfaces){
+        POINT pt=s->screenPos;
+        NGLRect srec={pt.x,pt.y,0,0};
+        DWORD nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
+        if(GraphDevice::CheckOverlapped(s,i++))continue;
+        nglBlit(primarySurface,nglsurface,nullptr,&srec);
     }
+    nglFlip(primarySurface);
+    compose_event=0;
 }
 

@@ -59,6 +59,7 @@ class WindowManager {
   void sendMessage(std::shared_ptr<View>,DWORD msgid,DWORD wp,ULONG lp,DWORD delayedtime=0);
   void runOnce();
   void run();
+  int hasEvents();
  private:
   WindowManager();
   void removeWindow(std::shared_ptr<Window>w);
@@ -66,6 +67,8 @@ class WindowManager {
   std::queue<UIMSG>msg_queue_;
   std::priority_queue<UIMSG,std::vector<UIMSG>,std::greater<UIMSG> >delayed_msgq_;
   void popMessage();
+  bool hasDirtyWindows();
+  bool hasDelayedMessage();
   static WindowManager* instance_;
   DISALLOW_COPY_AND_ASSIGN(WindowManager);
 };

@@ -68,6 +68,15 @@ void WindowManager::sendMessage(std::shared_ptr<View>v,DWORD msgid,DWORD wp,ULON
     msg_queue_.push(msg);
 }
 
+bool WindowManager::hasDelayedMessage(){
+    NGL_RunTime tnow;
+    UIMSG msg;
+    if(delayed_msgq_.empty())return false;
+    nglGetRunTime(&tnow);
+    DWORD nowms=tnow.uiMilliSec+tnow.uiMicroSec/1000;
+    msg=delayed_msgq_.top();
+    return msg.time<nowms;
+}
 void WindowManager::popMessage(){
     UIMSG msg;
     std::shared_ptr<View>sp;
@@ -82,12 +91,8 @@ void WindowManager::popMessage(){
              }
           }
           msg_queue_.pop();
-      }else if(!delayed_msgq_.empty()){
-          NGL_RunTime tnow;
-          nglGetRunTime(&tnow);
-          DWORD nowms=tnow.uiMilliSec+tnow.uiMicroSec/1000;
+      }else if(hasDelayedMessage()){
           msg=delayed_msgq_.top();
-          if(msg.time>nowms)return;
           delayed_msgq_.pop();
           std::weak_ptr<View>wp=msg.view;
           if(wp.use_count()){
@@ -184,27 +189,44 @@ void WindowManager::onKeyRelease(uint32_t key) {
 }
 
 void WindowManager::onKeyChar(uint32_t key) {
-  KeyEvent evt(key,0,0);// = Event::Make(Event::Type::K_CHAR, key);
-  // Notify the focused child
-  for (auto wind=windows_.rbegin() ;wind!=windows_.rend();wind++) {
-    if ((*wind)->isFocused() == true) {
-       (*wind)->onKeyChar(evt);
+    KeyEvent evt(key,0,0);// = Event::Make(Event::Type::K_CHAR, key);
+    // Notify the focused child
+    for (auto wind=windows_.rbegin() ;wind!=windows_.rend();wind++) {
+        if ((*wind)->isFocused() == true) {
+            (*wind)->onKeyChar(evt);
+        }
     }
-  }
+}
+
+bool WindowManager::hasDirtyWindows(){
+    for (auto wind : windows_)
+        if(wind->isDirty())return true;
+    return false;
 }
 
 void WindowManager::drawWindows() {
-  // Notify the focused child to draw on this canvas
-  for (auto wind : windows_) {
-       if(wind->isDirty())
-       wind->draw(false);
-  }
-  GraphDevice::getInstance()->flip(nullptr);
+    // Notify the focused child to draw on this canvas
+    for (auto wind : windows_) {
+        if(wind->isDirty())
+        wind->draw(false);
+    }
+    GraphDevice::getInstance()->flip(nullptr);
+}
+
+int WindowManager::hasEvents(){
+    int rc=0;
+    if(msg_queue_.size())rc|=1;
+    if(hasDelayedMessage())rc|=2;
+    if(hasDirtyWindows())rc|=4;
+    if(GraphDevice::getInstance()->needCompose())rc|=8;
+    return rc; 
 }
 
 void WindowManager::runOnce(){
-    drawWindows();
-    popMessage();
+    if (hasDirtyWindows())drawWindows();
+    if(GraphDevice::getInstance()->needCompose())
+       GraphDevice::getInstance()->ComposeSurfaces();
+    if(msg_queue_.size()||hasDelayedMessage())popMessage();
 }
 
 void WindowManager::run(){

@@ -41,7 +41,7 @@ public:
         ir_handle_=nglIrOpen(0,nullptr);
         nglIrRegisterCallback(ir_handle_,KEYCBK,this);
     }
-    bool prepare(int&) override { return false; }
+    bool prepare(int&) override { return keys.size()>0; }
     bool check(){
         return keys.size()>0;
     }

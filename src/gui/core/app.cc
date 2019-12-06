@@ -12,6 +12,7 @@
 #include <usbmanager.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <thread>
 NGL_MODULE(APP)
 
 void spt_init(int argc, char *argv[]);
@@ -26,7 +27,17 @@ static struct option app_options[]={
    {"language",required_argument,0,0},
    {0,0,0,0}
 };
+class UIEventSource:public looper::EventSource{
+public:
+    UIEventSource(){};
+    int getEvents(){return WindowManager::getInstance()->hasEvents();}
+    bool prepare(int&) override { return getEvents();}
+    bool check(){
+        return  getEvents();
+    }
+    bool dispatch(EventHandler &func) { return func(*this); }
 
+};
 App::App(int argc,const char*argv[]){
     struct stat pakstat;
     int option_index,c;
@@ -121,7 +132,7 @@ int App::removeEventSource(EventSource*source){
 
 int App::exec(){
     int fd=open("/dev/input/event0",O_RDWR|O_NONBLOCK);
-    looper.add_idle([](EventSource&){
+    looper.add_event_source(new UIEventSource(),[](EventSource&e){
         WindowManager::getInstance()->runOnce();
         return true;
     });
@@ -131,6 +142,8 @@ int App::exec(){
         return true;
     });
     looper.run();
+    //std::thread thread_loop(std::bind(&looper::EventLoop::run,&looper));
+    //thread_loop.join();
 }
 
 void App::setName(const std::string&appname){
