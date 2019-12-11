@@ -71,6 +71,7 @@ DVBApp::DVBApp(int argc,const char**argv)
     DtvLoadProgramsData("dvb_programs.dat");
     FavInit(getArg("favorite","favorites.json").c_str());
     DtvInitLCN((LCNMODE)(LCN_FROM_BAT|LCN_FROM_USER),1000);
+    LoadServiceAdditionals("additionals.json");
     pref.load("settings.pref");
     int res=pref.getInt("pciture","resolution",DISP_RES_720P);
     NGLOG_DEBUG("DVBApp::DVBApp resolution=%d",res);

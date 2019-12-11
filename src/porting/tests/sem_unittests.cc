@@ -47,6 +47,20 @@ TEST_F(OSSem,SEM_Acquire_2){
    ASSERT_TRUE(0==nglDeleteSemaphore(sem));
 }
 
+static void SemPostProc(void*p){
+   printf("SemPostProc sem=%p",p);
+   sleep(5);
+   nglReleaseSemaphore((DWORD)p);
+   printf("nglReleaseSemaphore %p",p);
+}
+TEST_F(OSSem,SEM_Acquire_FOREVER){
+   NGLSemaphore sem; 
+   DWORD tid;
+   ASSERT_TRUE(0==nglCreateSemaphore(&sem,0));
+   nglCreateThread(&tid,0,0,SemPostProc,(void*)sem);
+   ASSERT_TRUE(0==nglAcquireSemaphore(sem,-1));
+}
+
 TEST_F(OSSem,SEM_Acquire_Timeout_1){
    NGLSemaphore sem;
    struct timeval tv1,tv2;
@@ -63,7 +77,7 @@ TEST_F(OSSem,SEM_Acquire_Timeout_2){
    struct timeval tv1,tv2;
    ASSERT_TRUE(0==nglCreateSemaphore(&sem,0));
    gettimeofday(&tv1,NULL);
-   ASSERT_TRUE(0==nglAcquireSemaphore(sem,1000));
+   ASSERT_FALSE(0==nglAcquireSemaphore(sem,1000));
    gettimeofday(&tv2,NULL);
    unsigned long long dur=tv2.tv_sec*1000l+tv2.tv_usec/1000-tv1.tv_sec*1000l-tv1.tv_usec/1000;
    ASSERT_TRUE(dur<1010&&dur>990);

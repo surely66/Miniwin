@@ -20,7 +20,7 @@ add_library(acs SHARED ${SRCS_ACS})
 
 add_definitions(-DVAOPT_ENABLE_SCHIP=1)
 include_directories(
-     include
+     ./ include
      ../../include/
      ../porting/inc/
      ${CMAKE_BINARY_DIR}/include

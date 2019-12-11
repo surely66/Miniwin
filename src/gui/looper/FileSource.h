@@ -47,7 +47,7 @@ public:
 
 class InputEventSource:public FileSource{
 public:
-      InputEventSource(int fd):FileSource(fd,events=FileEvents::NONE){}
+      InputEventSource(int fd):FileSource(fd,events=FileEvents::INPUT){}
       int getType(std::string&type);
       void dumpEvent(struct input_event&event);
       int getEvent(struct input_event&evt);

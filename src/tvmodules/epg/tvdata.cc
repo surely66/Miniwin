@@ -7,6 +7,9 @@
 #include <ngl_log.h>
 #include <ngl_dmx.h>
 #include <favorite.h>
+#include <json/json.h>
+#include <iostream>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <thread>
@@ -526,6 +529,47 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
     default:return NGL_ERROR;
     }
     return NGL_OK;
+}
+
+INT LoadServiceAdditionals(const char*fname){
+    Json::CharReaderBuilder builder;
+    Json::Value root;
+    Json::String errs;
+    std::ifstream fin(fname);
+    builder["collectComments"] = false;
+    bool rc=Json::parseFromStream(builder,fin, &root, &errs);
+    NGLOG_DEBUG_IF(!rc,"json.parse=%d %s",rc,errs.c_str());
+    Json::Value jssvcs=root["services"];
+    for(int i=0;i<jssvcs.size();i++){
+        Json::Value jssvc=jssvcs[i];
+        SERVICELOCATOR svc;
+        svc.netid=jssvc["netid"].asInt();
+        svc.tsid =jssvc["tsid"].asInt();
+        svc.sid  =jssvc["sid"].asInt();
+        service_lcn[svc]->deleted=jssvc["deleted"].asInt();//additinal data
+    }
+    return jssvcs.size();
+}
+
+INT SaveServiceAdditionals(const char*fname){
+    INT rc=0;
+    Json::Value root;
+    std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator itr;
+    for(itr=service_lcn.begin();itr!=service_lcn.end();itr++,rc++){
+        SERVICELOCATOR svc=itr->first;
+        Json::Value jssvc;
+        jssvc["netid"]=svc.netid;
+        jssvc["tsid"]=svc.tsid;
+        jssvc["sid"]=svc.sid;
+        jssvc["deleted"]=itr->second->deleted;//addtional data
+        root["services"].append(jssvc);
+    }
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ofstream fout(fname);
+    writer->write(root,&fout);
+    return rc;
 }
 
 const DVBService*DtvGetServiceInfo(const SERVICELOCATOR*svc){

@@ -223,10 +223,11 @@ int WindowManager::hasEvents(){
 }
 
 void WindowManager::runOnce(){
-    if (hasDirtyWindows())drawWindows();
-    if(GraphDevice::getInstance()->needCompose())
+    int evts=hasEvents();
+    if (evts&4)drawWindows();
+    if(evts&8)
        GraphDevice::getInstance()->ComposeSurfaces();
-    if(msg_queue_.size()||hasDelayedMessage())popMessage();
+    if(evts&3)popMessage();
 }
 
 void WindowManager::run(){

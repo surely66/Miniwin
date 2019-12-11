@@ -25,6 +25,7 @@ DWORD VA_DSCR_Init();
 #include <ngl_dmx.h>
 #include <dvbepg.h>
 #include <windows.h>
+#include <CAEventSource.h>
 NGL_MODULE(VA2NGL)
 
 static SERVICELOCATOR lastplayed;
@@ -40,6 +41,7 @@ static void*ACSProc(void*p){
     int i,ret;
     const static BYTE serial[kVA_SERIAL_NUMBER_SIZE]={0x00,0x00,0x00,0x07,0x10,0x00,0x90,0x61,0x92,0x40,0x00,0x02};
     tVA_CTRL_ConfigurationParameters param;
+    ViaccessEventSource via_events;
     memset(&param,0,sizeof(tVA_CTRL_ConfigurationParameters));
     memcpy(param.stStbInformation.stBoxIdentity,(void*)serial,kVA_SERIAL_NUMBER_SIZE);
     param.stStbInformation.wConstructorIdentifier=0x13C;//0x11B;
@@ -49,13 +51,21 @@ static void*ACSProc(void*p){
     param.aAcs->stDemux.uiMaxNumberOfFilters = 16;
     param.aAcs->stDemux.uiMaxSizeOfFilter = 4096;
     param.aAcs->stDescrambler.uiMaxNumberOfChannels =4;
-    //param.stStbInformation.
     NGLOG_DEBUG("VA_CTRL_Init calling...");
     VA_DSCR_Init();
     ret = VA_CTRL_Init(&param);
     NGLOG_DEBUG("VA_CTRL_Init=%d",ret);
     NGLOG_DEBUG("VA_CTRL_Start...");
-    VA_UI_AddEventListener(VA_UIEvent,NULL);
+    App::getInstance().addEventSource(&via_events,[](EventSource&e)->bool{
+            tVA_UI_Event cae; 
+            if(((ViaccessEventSource&)e).getEvent(cae)){
+                VA_UIEvent(&cae);
+            }
+            return true;
+        });
+    VA_UI_AddEventListener([](tVA_UI_Event*e){
+             ((ViaccessEventSource*)e->pUserArg)->addEvent(*e);
+        },&via_events);
     for(i=0;i<3;i++)
         VA_CTRL_OpenAcsInstance(i,(tVA_CTRL_AcsMode)i);
 
@@ -120,14 +130,14 @@ static void SectionCBK(DWORD dwVaFilterHandle,const BYTE *Buffer, unsigned int u
     case 1:/*CAT*/
          if(cat.version()!=si.version()){
             NGLOG_DUMP("CAT",Buffer,32);
-            VA_CTRL_CatUpdated(0,uiBufferLength,(BYTE*)Buffer);
+            VA_CTRL_CatUpdated(0,uiBufferLength+3,(BYTE*)Buffer);
             memcpy(CATSection,Buffer,uiBufferLength);
          }
          break;
     case 2:/*PMT*/
          if(pmt.version()!=si.version()){
              NGLOG_DUMP("PMT",Buffer,32);
-             SwitchProgram((BYTE*)Buffer,uiBufferLength);
+             SwitchProgram((BYTE*)Buffer,uiBufferLength+3);
              memcpy(PMTSection,Buffer,uiBufferLength);
          }
          break;
@@ -261,6 +271,7 @@ static void VA_UI_RequestCBK(struct _stVA_UI_Request *req){
     }
 }
 static  void VA_UIEvent(tVA_UI_Event *evt){
+    ViaccessEventSource*cas=(ViaccessEventSource*)evt->pUserArg;
     switch(evt->eEventType){//XXX_KO_EVENT will close XXX_OK_EVENT's message
     CASE(eVA_UI_DESCRAMBLING_OK_EVENT);         
         Toast::makeText("Stream descrambled");
@@ -275,7 +286,10 @@ static  void VA_UIEvent(tVA_UI_Event *evt){
         Toast::makeText("");
         ENDCASE;
     CASE(eVA_UI_DESCRAMBLING_KO_EVENT); 
-        VA_ShowMessage("program is scrambled");
+        if(cas->svcstate==CASVC_INIT){
+            cas->svcstate=CASVC_SCRAMBLED;
+            VA_ShowMessage("program is scrambled");
+        }
         ENDCASE;
     CASE(eVA_UI_DESCRAMBLING_KO_NO_RIGHT_EVENT);
         VA_ShowMessage("You do not have the rights to access the <program>");
@@ -299,7 +313,7 @@ static  void VA_UIEvent(tVA_UI_Event *evt){
         Toast::makeText("");
         ENDCASE;
     CASE(eVA_UI_DESCRAMBLING_KO_FORBIDDEN_MODE_EVENT);
-        Toast::makeText("Access to this <Program> has been forbidden by the operator.");
+        cas->svcstate=CASVC_INIT;//Toast::makeText("Access to this <Program> has been forbidden by the operator.");
         ENDCASE;
     CASE(eVA_UI_DESCRAMBLING_KO_INSUFFICIENT_CREDIT_EVENT);
         Toast::makeText("You do not have sufficient credit to purchase this <Program>");

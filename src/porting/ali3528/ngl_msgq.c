@@ -69,7 +69,7 @@ DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
      return rc!=AUI_RTN_SUCCESS;
 #else
     MSGQUEUE*q=(MSGQUEUE*)msgid;
-    struct timespec ts,*pts=NULL;
+    struct timespec ts;
     int rc=0;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     ts.tv_sec += timeout/1000;
@@ -78,14 +78,13 @@ DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
          ts.tv_sec+=ts.tv_nsec/1000000000l;
          ts.tv_nsec%=1000000000l;
     }
-    if(0xFFFFFFFF!=timeout)pts=&ts;
     if(0==timeout){ts.tv_sec=ts.tv_nsec=0;}
     pthread_mutex_lock(&q->mutex);
     NGLOG_VERBOSE("rdidx=%d wridx=%d msgsize=%d/%d/%d",q->rdidx,q->wridx,q->msgCount,
         (q->wridx+q->queSize-q->rdidx)%q->queSize,q->queSize);
     if((q->wridx==q->rdidx)&&(q->queSize==q->msgCount)){
         NGLOG_VERBOSE("queue is full");
-        rc=pthread_cond_timedwait(&q->cput,&q->mutex,pts);
+        rc=pthread_cond_timedwait(&q->cput,&q->mutex,&ts);
     }
     if(0==rc){
         memcpy(q->msgs+q->wridx*q->msgSize,pvmsg,((msgsize<=0)?q->msgSize:msgsize));
@@ -107,7 +106,7 @@ DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeou
     return 0;
 #else
     MSGQUEUE*q=(MSGQUEUE*)msgid;
-    struct timespec ts,*pts=NULL;
+    struct timespec ts;
     int rc=0;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     ts.tv_sec += timeout/1000;
@@ -116,14 +115,13 @@ DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeou
          ts.tv_sec+=ts.tv_nsec/1000000000l;
          ts.tv_nsec%=1000000000l;
     }
-    if(0xFFFFFFFF!=timeout)pts=&ts;
     if(0==timeout){ts.tv_sec=ts.tv_nsec=0;}
     pthread_mutex_lock(&q->mutex);
     NGLOG_VERBOSE("rdidx=%d wridx=%d msgsize=%d/%d/%d",q->rdidx,q->wridx,q->msgCount,
         (q->wridx+q->queSize-q->rdidx)%q->queSize,   q->queSize);
     if((q->wridx==q->rdidx)&&(q->msgCount==0)){
         NGLOG_VERBOSE("queue is empty waiting...");
-        rc=pthread_cond_timedwait(&q->cget,&q->mutex,pts);
+        rc=pthread_cond_timedwait(&q->cget,&q->mutex,&ts);
     }
     if(0==rc){
         memcpy(pvmsg,q->msgs+q->rdidx*q->msgSize,((msgsize<=0)?q->msgSize:msgsize));

@@ -72,7 +72,7 @@ INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration )
 {
 #ifdef LINUX
   int rc=NGL_OK;
-  struct timespec ts,*pts=NULL;
+  struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC,&ts);
   ts.tv_sec+=uiDuration/1000;
   ts.tv_nsec+=(uiDuration%1000)*1000000l;
@@ -85,11 +85,10 @@ INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration )
   SEM*s=(SEM*)pSemaphore;
   if(NULL==s)
       return NGL_ERROR;
-  if(uiDuration!=0xFFFFFFFF)pts=&ts;
   if(0==uiDuration){ts.tv_sec=ts.tv_nsec=0;}
   pthread_mutex_lock(&s->mtx);
   if(s->nsem==0)
-     rc=pthread_cond_timedwait(&s->cond,&s->mtx,pts);
+     rc=pthread_cond_timedwait(&s->cond,&s->mtx,&ts);
   s->nsem--;
   pthread_mutex_unlock(&s->mtx);
   return rc;
@@ -245,7 +244,7 @@ DWORD nglWaitEvent(DWORD eventid, DWORD timeout)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
-    struct timespec ts,*pts;
+    struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     
     ts.tv_sec+=timeout/1000;
@@ -255,13 +254,11 @@ DWORD nglWaitEvent(DWORD eventid, DWORD timeout)
          ts.tv_sec+=ts.tv_nsec/1000000000l;
          ts.tv_nsec%=1000000000l;
     }
-    pts=&ts;
-    if(timeout==0xFFFFFFFF)pts=NULL;
     else if(timeout==0)ts.tv_sec=ts.tv_nsec=0;
     
     pthread_mutex_lock(&e->mtx); 
     while(!e->triggered){
-         if(pthread_cond_timedwait(&e->cond,&e->mtx,pts)){
+         if(pthread_cond_timedwait(&e->cond,&e->mtx,&ts)){
                pthread_mutex_unlock(&e->mtx);
                return NGL_ERROR;
          }

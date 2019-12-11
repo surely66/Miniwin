@@ -131,16 +131,22 @@ int App::removeEventSource(EventSource*source){
 }
 
 int App::exec(){
-    int fd=open("/dev/input/event0",O_RDWR|O_NONBLOCK);
-    looper.add_event_source(new UIEventSource(),[](EventSource&e){
+    looper.add_event_source(new UIEventSource(),[](EventSource&e)->bool{
         WindowManager::getInstance()->runOnce();
         return true;
     });
-    looper.add_event_source(new InputEventSource(fd),[](EventSource&e){
-        InputEventSource& fe=(InputEventSource&)e;
-        NGLOG_DEBUG("fd:%d event:%d",fe.fd,fe.events);
-        return true;
-    });
+    for(int i=0;i<2;i++){
+       char fname[32];
+       sprintf(fname,"/dev/input/event%d",i);
+       int fd=open(fname,O_RDWR|O_NONBLOCK);
+       looper.add_event_source(new InputEventSource(fd),[](EventSource&s){
+           InputEventSource& fe=(InputEventSource&)s;
+           struct input_event e;
+           fe.getEvent(e);
+           fe.dumpEvent(e);
+           return true;
+       });
+    }
     looper.run();
     //std::thread thread_loop(std::bind(&looper::EventLoop::run,&looper));
     //thread_loop.join();

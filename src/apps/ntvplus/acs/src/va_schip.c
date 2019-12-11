@@ -15,7 +15,6 @@ NGL_MODULE(SCHIP)
 
 //pls refto aui_test_stream_nim_dsc_kl.c
 
-static tVA_SCHIP_CipheringMode s_CipherMode;
 static const char*ModeName(tVA_SCHIP_CipheringMode md){
   switch(md){
      case eINACTIVE:return "eINACTIVE";
@@ -26,7 +25,6 @@ static const char*ModeName(tVA_SCHIP_CipheringMode md){
 }
 INT   VA_SCHIP_SetChipsetMode ( tVA_SCHIP_CipheringMode eChipsetMode )
 {
-     NGLOG_DEBUG("eChipsetMode=%s",ModeName(eChipsetMode));
      switch(eChipsetMode){
      case eINACTIVE:
      case eSESSION: 
@@ -34,22 +32,24 @@ INT   VA_SCHIP_SetChipsetMode ( tVA_SCHIP_CipheringMode eChipsetMode )
      default:return kVA_INVALID_PARAMETER;
      }
      int rc=nglSetCipherMode((NGLCipherMode)eChipsetMode);
+     NGLOG_DEBUG("rc=%d eChipsetMode=%s",rc,ModeName(eChipsetMode));
      return rc==NGL_OK?kVA_OK:kVA_ERROR;
 }
 
 INT VA_SCHIP_GetChipsetMode ( tVA_SCHIP_CipheringMode* eChipsetMode )
 {
-     NGLOG_DEBUG("ChipsetMode=%s",ModeName(s_CipherMode));
      if(NULL==eChipsetMode)
          return kVA_INVALID_PARAMETER;
      int rc=nglGetCipherMode((NGLCipherMode*)eChipsetMode);
+     NGLOG_DEBUG("rc=%d ChipsetMode=%s",rc,ModeName(*eChipsetMode));
      return rc==NGL_OK?kVA_OK:kVA_ERROR;
 }
 
 
 INT   VA_SCHIP_SetSessionKey ( UINT32 uiSessionKeyLength, const BYTE *pSessionKey )
 {
-    NGLOG_DEBUG("uiSessionKeyLength=%d",uiSessionKeyLength);//kVA_SETUP_CHIPSET_KEY_MAX_SIZE);
+    NGLOG_DEBUG("pSessionKey=%p,len=%d",pSessionKey,uiSessionKeyLength);
+    NGLOG_DUMP("uiSessionKey",pSessionKey,uiSessionKeyLength);
     if(NULL==pSessionKey||(0==uiSessionKeyLength)||(uiSessionKeyLength%8))
         return kVA_INVALID_PARAMETER; 
     int rc=nglSetCipherSessionKey(pSessionKey,uiSessionKeyLength);
@@ -59,6 +59,7 @@ INT   VA_SCHIP_SetSessionKey ( UINT32 uiSessionKeyLength, const BYTE *pSessionKe
 DWORD VA_SCHIP_GetChipsetId ( void )
 {
      DWORD id=nglGetChipID();
+     NGLOG_DEBUG("chipid=%x",id);
      return id;
 }
 

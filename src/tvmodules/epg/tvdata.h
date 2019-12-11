@@ -33,7 +33,8 @@ typedef enum{
 }LCNMODE;
 
 INT DtvInitLCN(LCNMODE mode,USHORT lcnstart);
-
+INT LoadServiceAdditionals(const char*fname);
+INT SaveServiceAdditionals(const char*fname);
 INT DtvCreateGroupByBAT();
 void DtvCreateSystemGroups();
 

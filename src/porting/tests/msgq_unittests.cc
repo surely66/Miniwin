@@ -36,14 +36,24 @@ TEST_F(OSMsgQ,Create_Error_2){
    ASSERT_TRUE(0==q);
 }
 
+static void MsgQProc(void*p){
+   int msg=3201;
+   sleep(5);
+   nglMsgQSend((DWORD)p,&msg,sizeof(int),-1);
+}
+
 TEST_F(OSMsgQ,Recv_1){
    int msg=1023;
+   DWORD tid;
    DWORD q=nglMsgQCreate(10,sizeof(int));
    ASSERT_FALSE(0==q);
    ASSERT_TRUE(0==nglMsgQSend(q,&msg,sizeof(int),-1));
    msg=0;
    ASSERT_TRUE(0==nglMsgQReceive(q,&msg,sizeof(int),-1)); 
    ASSERT_TRUE(1023==msg);
+   nglCreateThread(&tid,0,0,MsgQProc,(void*)q);
+   ASSERT_TRUE(0==nglMsgQReceive(q,&msg,sizeof(int),-1));
+   ASSERT_TRUE(3201==msg);
    ASSERT_TRUE(0==nglMsgQDestroy(q));
 }
 
