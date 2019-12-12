@@ -147,40 +147,36 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
      double total_width=0, total_height=0;
      get_font_extents(ftext);
      NGLOG_VERBOSE("ascent=%.3f descent=%.3f height=%.3f xy_advance=%.3f/%.3f",ftext.ascent,ftext.descent,ftext.height,ftext.max_x_advance,ftext.max_x_advance);
-     if( text_alignment&DT_MULTILINE){
-         for(int i=0; i<text.length();i++){
-             switch(brks[i]){
-             case WORDBREAK_BREAK:{
-               std::string word(pword,ptxt+i-pword+1);
-               get_text_extents(word,extents);
+     for(int i=0; i<text.length();i++){
+         switch(brks[i]){
+         case WORDBREAK_BREAK:{
+                 std::string word(pword,ptxt+i-pword+1);
+                 get_text_extents(word,extents);
 
-               if( (total_width+extents.width >= rect.width) || (text[i]=='\n') ){
-                   lines.push_back(line);
-                   total_height+=extents.height;
-                   line="";total_width=0;
-                   size_t ps=word.find('\n');
-                   if(ps!=std::string::npos)word.erase(ps,1);
-               }
-               total_width+=extents.width;
-               line.append(word);
-               pword=ptxt+i+1;
+                 if( ((total_width+extents.width >= rect.width) || (text[i]=='\n')) && (text_alignment&DT_MULTILINE) ){
+                     lines.push_back(line);
+                     total_height+=extents.height;
+                     line="";total_width=0;
+                     size_t ps=word.find('\n');
+                     if(ps!=std::string::npos)word.erase(ps,1);
+                 }
+                 total_width+=extents.width;
+                 line.append(word);
+                 pword=ptxt+i+1;
              }
              break;
-            case WORDBREAK_NOBREAK:    break;
-            case WORDBREAK_INSIDEACHAR:break;
-            default:break;
-            }
+        case WORDBREAK_NOBREAK:    break;
+        case WORDBREAK_INSIDEACHAR:break;
+        default:break;
         }
-        free(brks);
-        total_height+=extents.height;
-        lines.push_back(line);
-        //NGLOG_DEBUG("multilines lines=%d height=%.3f/%.3f totalhight=%.3f",lines.size(),ftext.height,extents.height,total_height);
-        total_height=lines.size()*ftext.height;
     }
-    //rectangle(rect.x,rect.y,rect.width,rect.height);
-    //clip(); 
+    free(brks);
+    total_height+=extents.height;
+    lines.push_back(line);
+    total_height=lines.size()*ftext.height;
+    
     if((text_alignment&DT_MULTILINE)==0){
-        get_text_extents(text,te);
+        get_text_extents(lines[0],te);
         y=rect.y;
         switch(text_alignment&0xF0){
         case DT_TOP:y=rect.y-te.y_bearing+ftext.descent;break;
@@ -215,7 +211,6 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
             show_text(line);
         }
     }
-    //reset_clip();
 }
 
 void GraphContext::draw_text(int x,int y,const std::string& text){

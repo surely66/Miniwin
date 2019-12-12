@@ -297,7 +297,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
       CHECKDMX(aui_dmx_filter_close(&(flt->hfilter)));
       if(flt->ch->num_filt==0){
            int rc=aui_dmx_channel_close(&flt->ch->channel);
-           NGLOG_DEBUG("aui_dmx_channel_close=%d pid=%d",rc,flt->ch->pid);
+           NGLOG_VERBOSE("aui_dmx_channel_close=%d pid=%d",rc,flt->ch->pid);
       }
       flt->ch=NULL;
   }else{
@@ -341,7 +341,7 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
-  NGLOG_DEBUG("flt=%p/%p/%p  started=%d/%d",flt,flt->ch,flt->hfilter,flt->started,flt->ch->num_started);
+  NGLOG_VERBOSE("flt=%p/%p/%p  started=%d/%d",flt,flt->ch,flt->hfilter,flt->started,flt->ch->num_started);
   nglLockMutex(mtx_dmx);
   if(flt->started==0){
      if(flt->ch->num_started==0){
