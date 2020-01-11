@@ -15,7 +15,7 @@ set(PIXMAN_VERSION "${PIXMAN_VERSION_MAJOR}.${PIXMAN_VERSION_MINOR}.${PIXMAN_VER
 if(NOT MSVC)
     option(BUILD_SHARED "build shared library" ON)
 endif()
-option(BUILD_STATIC "build static library" ON)
+option(BUILD_STATIC "build static library" OFF)
 if(BUILD_STATIC)
     option(BUILD_TESTS "build tests" OFF)
 endif()

@@ -53,8 +53,8 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 33)
-m4_define([pixman_micro], 3)
+m4_define([pixman_minor], 38)
+m4_define([pixman_micro], 4)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -347,14 +347,33 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
 #include <mmintrin.h>
-#include <xmmintrin.h>
+#include <stdint.h>
+
+/* Check support for block expressions */
+#define _mm_shuffle_pi16(A, N)						\
+    ({									\
+	__m64 ret;							\
+									\
+	/* Some versions of clang will choke on K */ 			\
+	asm ("pshufw %2, %1, %0\n\t"					\
+	     : "=y" (ret)						\
+	     : "y" (A), "K" ((const int8_t)N)				\
+	);								\
+									\
+	ret;								\
+    })
+
 int main () {
     __m64 v = _mm_cvtsi32_si64 (1);
     __m64 w;
 
-    /* Test some intrinsics from xmmintrin.h */
     w = _mm_shuffle_pi16(v, 5);
-    w = _mm_mulhi_pu16(w, w);
+
+    /* Some versions of clang will choke on this */
+    asm ("pmulhuw %1, %0\n\t"
+	: "+y" (w)
+	: "y" (v)
+    );
 
     return _mm_cvtsi64_si32 (v);
 }]])], have_mmx_intrinsics=yes)
@@ -410,10 +429,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <mmintrin.h>
 #include <xmmintrin.h>
 #include <emmintrin.h>
+int param;
 int main () {
-    __m128i a = _mm_set1_epi32 (0), b = _mm_set1_epi32 (0), c;
+    __m128i a = _mm_set1_epi32 (param), b = _mm_set1_epi32 (param + 1), c;
 	c = _mm_xor_si128 (a, b);
-    return 0;
+    return _mm_cvtsi128_si32(c);
 }]])], have_sse2_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
@@ -454,10 +474,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <tmmintrin.h>
+int param;
 int main () {
-    __m128i a = _mm_set1_epi32 (0), b = _mm_set1_epi32 (0), c;
+    __m128i a = _mm_set1_epi32 (param), b = _mm_set1_epi32 (param + 1), c;
     c = _mm_maddubs_epi16 (a, b);
-    return 0;
+    return _mm_cvtsi128_si32(c);
 }]])], have_ssse3_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
@@ -811,6 +832,19 @@ if test $enable_timers = yes ; then
    AC_DEFINE(PIXMAN_TIMERS, 1, [enable TIMER_BEGIN/TIMER_END macros])
 fi
 AC_SUBST(PIXMAN_TIMERS)
+
+dnl ===================================
+dnl gnuplot
+
+AC_ARG_ENABLE(gnuplot,
+   [AC_HELP_STRING([--enable-gnuplot],
+                   [enable output of filters that can be piped to gnuplot [default=no]])],
+   [enable_gnuplot=$enableval], [enable_gnuplot=no])
+
+if test $enable_gnuplot = yes ; then
+   AC_DEFINE(PIXMAN_GNUPLOT, 1, [enable output that can be piped to gnuplot])
+fi
+AC_SUBST(PIXMAN_GNUPLOT)
 
 dnl ===================================
 dnl GTK+
