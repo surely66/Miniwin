@@ -178,13 +178,27 @@ static void GetExtESInfo(ELEMENTSTREAM*es){
 }
 int PMT::getElements(ELEMENTSTREAM*es,bool own){
     INT i,len1,len2;
+    USHORT svc_caid=0,svc_ecmpid=0;
+    USHORT es_caid=0,es_emcpid=0;
     BYTE*des=getProgramDescriptors(len1);
+    if(des){
+       CADescriptor cad(des,des[1]+2);
+       svc_caid=cad.getCAID();
+       svc_ecmpid=cad.getEcmPID();
+    }
     des+=len1;
     for(i=0;des<data+sectionLength()-1;i++){
-        char*l=es->iso639lan;
+        BYTE*pca;
+        USHORT dlen=(des[3]&0x0F)<<8|des[4];
         es->stream_type=des[0];
         es->pid=(des[1]&0x1F)<<8|des[2];
-        es->setDescriptor(des+5,(des[3]&0x0F)<<8|des[4],own);//es->length=(des[3]&0x0F)<<8|des[4];
+        es->setDescriptor(des+5,dlen,own);//es->length=(des[3]&0x0F)<<8|des[4];
+        pca=es->findDescriptor(TAG_CA);
+        if(pca){
+            CADescriptor cad(pca,pca[1]+2);
+            es_caid=cad.getCAID();
+            svc_ecmpid=cad.getEcmPID();
+        }
         des+=es->getLength()+5;
         GetExtESInfo(es);
         es++;
@@ -247,12 +261,44 @@ DVBEvent::DVBEvent(const DVBEvent&o):Descriptors(o){
     start_time=o.start_time;
     duration=o.duration; 
 }
-
+int DVBEvent::getNibble(BYTE*nb1,BYTE*nb2){
+    BYTE*p=findDescriptor(TAG_CONTENT);
+    if(p){
+        ContentDescriptor cd(p,p[1]+2);
+        cd.getNibble(nb1,nb2);
+    }
+}
 int DVBEvent::getShortName(char*name,char*des){
     BYTE*p=findDescriptor(TAG_SHORT_EVENT);
     if(p){
          ShortEventNameDescriptor sd(p,p[1],false);
          return sd.getName(name,des);
+    }
+    return 0;
+}
+
+int DVBEvent::getExtend(char*text,const char*lan){
+    int len=length;
+    char*ptxt=text;
+    BYTE*des=Descriptors::findDescriptor(descriptors,length,TAG_EXTEND_EVENT);
+    if(des)len-=(des-descriptors);
+    if(lan){
+        BYTE*p=des;
+        char dlan[8];
+        ExtendEventDescriptor ed(p,p[1]+2);
+        ed.getLanguage(dlan);
+        while( (memcmp(dlan,lan,3)!=0) && (len>0) && (p[0]==TAG_EXTEND_EVENT) ){
+             len-=p[1]+2;
+             p+=p[1]+2;
+        }
+        if(len>0)des=p;
+    } 
+    for( ;des && (des[0]==TAG_EXTEND_EVENT) && (len>0) ; ){
+        ExtendEventDescriptor ed(des,len);
+        ptxt+=ed.getText(ptxt);
+        len-=des[1]+2;        des+=des[1]+2;
+        if(ed.getDescriptorNumber()==ed.getLastDescriptorNumber())
+            break;
     }
     return 0;
 }

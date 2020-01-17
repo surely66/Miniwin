@@ -49,6 +49,14 @@ void Descriptors::setDescriptor(const BYTE*des,INT len,bool deepcopy){
     ownedbuff=deepcopy;
 }
 
+BYTE*Descriptors::findDescriptor(BYTE*des,int len,int tag){
+    for(int pos=0;pos<len;){
+        if(des[pos]==tag)return des+pos;
+        pos+=2+des[pos+1];
+    }
+    return NULL;
+}
+
 BYTE*Descriptors::findDescriptor(INT tag)const{
     for(int pos=0;pos<length;){
         if(descriptors[pos]==tag)return descriptors+pos;

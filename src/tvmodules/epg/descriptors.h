@@ -18,7 +18,7 @@ class Descriptors{
 private:
    int ownedbuff;
 protected:
-   INT length;
+   INT length;//length include tag and data...
    BYTE*descriptors;
 public:
    Descriptors();
@@ -29,6 +29,7 @@ public:
    void cloneData();
    BYTE*findDescriptor(INT tag)const;
    INT findDescriptors(INT,...)const;
+   static BYTE*findDescriptor(BYTE*des,int len,int tag);
    int getLength()const{return length;}
    operator const BYTE*(){return descriptors;}
 };
@@ -74,6 +75,14 @@ public:
     int getName(char*name,char*desc);
 };
 
+class ContentDescriptor:Descriptors{
+public:
+    ContentDescriptor(const BYTE*pd,int len,bool deep=false):Descriptors(pd,len,deep){}
+    void getNibble(BYTE*nibble1,BYTE*nibble2=nullptr,BYTE*ub=nullptr){//only get 1st nibble 
+        if(nibble1)*nibble1=descriptors[2]>>4;
+        if(nibble2)*nibble2=descriptors[2]&0x0F;
+    }
+};
 
 class ExtendEventDescriptor:public Descriptors{
 public:

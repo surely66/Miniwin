@@ -156,6 +156,8 @@ public:
     BYTE stream_type; 
     char iso639lan[4];
     USHORT pid;
+    USHORT caid;
+    USHORT ecmpid;
     INT getCategory();
     INT getType();//convert to porting video/audio type
     BOOL getCAECM(USHORT*caid,USHORT*ecmpid);
@@ -219,6 +221,8 @@ public:
    DVBEvent();
    DVBEvent(const DVBEvent&);
    int getShortName(char*name,char*des);
+   int getNibble(BYTE*nb1,BYTE*nb2);
+   int getExtend(char*text,const char*lan=nullptr);
 }EVENT;
 
 class EIT:public PSITable{
