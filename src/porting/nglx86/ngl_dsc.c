@@ -16,7 +16,7 @@ DWORD nglDscInit(){
    bzero(nglDSCS,sizeof(nglDSCS));
 }
 
-DWORD nglDscOpen(UINT16 pid)
+DWORD nglDscOpen(USHORT *pids ,UINT cnt)
 {
     int i;
     return (DWORD)0;

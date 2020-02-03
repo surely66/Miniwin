@@ -84,7 +84,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
   return NGL_OK;
 }
 
-INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle,UINT uiLength, BYTE *pValue, BYTE *pMask)
+INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle, BYTE *pMask, BYTE *pValue,UINT uiLength)
 {
   BYTE reverse[16];
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;

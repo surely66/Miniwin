@@ -25,7 +25,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <net/if_arp.h>
-#include <linux/if.h>
+//#include <linux/if.h>
 #include <linux/if_addr.h>
 #include <linux/if_link.h>
 #include <linux/netfilter/nfnetlink.h>
