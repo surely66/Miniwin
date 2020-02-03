@@ -58,6 +58,10 @@ void WindowManager::sendMessage(std::shared_ptr<View>v,DWORD msgid,DWORD wp,ULON
     msg.view=v;
     msg.msgid=msgid;
     msg.wParam=wp;    msg.lParam=lp;
+    if(msgid==View::WM_INVALIDATE){
+       invalidate_views.emplace(v);
+       return ;
+    }
     if(delayedtime!=0){
        NGL_RunTime tnow;
        nglGetRunTime(&tnow);
@@ -201,7 +205,7 @@ void WindowManager::onKeyChar(uint32_t key) {
 bool WindowManager::hasDirtyWindows(){
     for (auto wind : windows_)
         if(wind->isDirty())return true;
-    return false;
+    return false;//invalidate_views.size()>0;
 }
 
 void WindowManager::drawWindows() {
@@ -210,6 +214,16 @@ void WindowManager::drawWindows() {
         if(wind->isDirty())
         wind->draw(false);
     }
+    /*for(auto v:invalidate_views){
+        GraphContext*c=v->getCanvas();
+        NGLOG_DEBUG_IF(c==nullptr,"canvas=NULL"); 
+        if(c==nullptr)continue;
+        RefPtr<GraphContext>canvas(c);
+        //v->clip(*canvas);
+        v->onDraw(*canvas);
+    }*/
+    NGLOG_DEBUG_IF(invalidate_views.size()>1,"invalidate_views.size=%d",invalidate_views.size());
+    invalidate_views.clear();
     GraphDevice::getInstance()->flip(nullptr);
 }
 

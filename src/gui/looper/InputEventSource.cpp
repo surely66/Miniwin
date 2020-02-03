@@ -38,7 +38,23 @@ int InputEventSource::getType(std::string&type){
    }
    return 0;  
 }
-
+void getEvent(){
+    int slot,touch_fd=1;
+    struct input_event touch;
+    int bytes=read(touch_fd,&touch, sizeof(struct input_event));
+    while (bytes > 0 && touch.type != EV_SYN) {
+        if (touch.type == EV_ABS && touch.code == ABS_MT_SLOT) {
+           slot = touch.value;
+        } else if (touch.type == EV_ABS && touch.code == ABS_MT_TRACKING_ID) {
+            //touch_st->id[slot] = touch.value;
+        } else if (touch.type == EV_ABS && touch.code == ABS_MT_POSITION_X) {
+            //touch_st->x[slot] = touch.value;               
+        } else if (touch.type == EV_ABS && touch.code == ABS_MT_POSITION_Y) {
+            //touch_st->y[slot] = touch.value;
+        }            
+        bytes = read(touch_fd,&touch, sizeof(struct input_event));
+    }
+}
 int InputEventSource::getEvent(struct input_event&event){
     return read(fd,&event,sizeof(struct input_event));
 }

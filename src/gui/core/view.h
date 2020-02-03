@@ -5,7 +5,7 @@
 #include <layout.h>
 #include <memory>
 #include <vector>
-
+struct pixman_region32;
 namespace nglui{
 #define SIF_ALL             0xFF//:整个结构都有效
 #define SIF_DISABLENOSCROLL 0x01//:该值仅在设定参数时使用，视控件参数设定的需要来对本结构的成员进行取舍。
@@ -83,7 +83,7 @@ protected:
     RECT bound_;
     SIZE prefer_size_;
     SCROLLINFO scrollinfos[2];
-    cairo_region_t *invalid_region_;
+    struct pixman_region32 *invalid_region_;
     std::vector< std::shared_ptr<View> > children_;
     std::unique_ptr<class Layout> layout_;
     ClickListener onclick_;
@@ -92,6 +92,7 @@ protected:
 public:
     View(int w,int h);
     virtual ~View();
+    virtual GraphContext*getCanvas();
     virtual void onDraw(GraphContext&ctx);
     virtual void invalidate(const RECT*);
     const RECT&getBound();

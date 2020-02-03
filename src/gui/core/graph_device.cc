@@ -140,6 +140,7 @@ void GraphDevice::ComposeSurfaces(){
     int i=0;
     NGLRect rr={40,70,320,240}; 
     nglFillRect(primarySurface,nullptr,0);
+    NGLOG_VERBOSE("compose_event=%d",compose_event);
     for(auto s:gSurfaces){
         POINT pt=s->screenPos;
         NGLRect srec={pt.x,pt.y,0,0};

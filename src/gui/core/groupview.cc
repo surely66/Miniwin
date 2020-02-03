@@ -18,6 +18,7 @@
 #include <ngl_log.h>
 #include <ngl_ir.h>
 #include <uievents.h>
+#include <pixman.h>
 
 NGL_MODULE(GroupView)
 
@@ -43,7 +44,8 @@ const SIZE& GroupView::getPreferSize(){
 }
 
 bool GroupView::isDirty(){
-    return hasFlag(Attr::ATTR_VISIBLE)&&!cairo_region_is_empty(invalid_region_);
+    NGLOG_VERBOSE("GroupView %x region_empty=%d",this,pixman_region32_not_empty(invalid_region_));
+    return hasFlag(Attr::ATTR_VISIBLE);//&&pixman_region32_not_empty(invalid_region_);
 }
 
 void GroupView::onDraw(GraphContext& canvas) {
@@ -51,10 +53,10 @@ void GroupView::onDraw(GraphContext& canvas) {
     canvas.reset_clip();
     clip(canvas);
     INHERITED::onDraw(canvas);
+    //pixman_region32_print(invalid_region_);
     for(auto child : children_){
         RECT rect=child->getBound();
-        cairo_rectangle_int_t r={rect.x,rect.y,rect.width,rect.height};
-        RefPtr<GraphContext>subcanvas(new GraphContext(canvas,child->getX(),child->getY(),child->getWidth(),child->getHeight()));
+        RefPtr<GraphContext>subcanvas(child->getCanvas());//(new GraphContext(canvas,child->getX(),child->getY(),child->getWidth(),child->getHeight()));
         subcanvas->set_font_face(GraphDevice::getInstance()->getFont());
         subcanvas->set_antialias(ANTIALIAS_GRAY);
         NGLOG_VERBOSE("%p draw view %p   %d,%d-%d,%d",this,child.get(),rect.x,rect.y,rect.width,rect.height);

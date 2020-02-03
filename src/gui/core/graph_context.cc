@@ -16,20 +16,17 @@ NGL_MODULE(GraphContext)
 GraphContext::GraphContext(GraphDevice*_dev,const RefPtr<Surface>& target)
    :Context(target){
     dev=_dev;
-   isSubCanvas=FALSE;
 }
 
 GraphContext::GraphContext(GraphDevice*_dev,cairo_t* cobject, bool has_reference)
    :Context(cobject,has_reference){
    dev=_dev;
-   isSubCanvas=FALSE;
 };
 
 GraphContext::GraphContext(GraphContext&ctx,int x,int y,int w,int h)
    :Context(Surface::create(ctx.get_target(),x,y,w,h)){
     dev=ctx.dev;
     screenPos.set(0,0);
-    isSubCanvas=TRUE;
 }
 
 GraphContext::~GraphContext(){
@@ -309,7 +306,7 @@ void GraphContext::draw_image(const RefPtr<ImageSurface>&img,const RECT*dst,cons
 }
 
 void GraphContext::flip(){
-    if(!isSubCanvas)dev->flip(this);
+    if(get_target()->get_type()!=Surface::Type::SUBSURFACE)dev->flip(this);
 }
 
 void GraphContext::dump2png(const char*fname){

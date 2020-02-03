@@ -1,6 +1,7 @@
 #include <view.h>
 #include <ngl_log.h>
 #include <ngl_ir.h>
+#include <pixman.h>
 
 NGL_MODULE(VIEW)
 
@@ -14,7 +15,8 @@ View::View(int w,int h)
     layout_.reset(nullptr);
     bound_.set(0,0,w,h);
     prefer_size_.set(w,h);
-    invalid_region_=cairo_region_create();
+    invalid_region_=(pixman_region32_t*)malloc(sizeof(pixman_region32_t));
+    pixman_region32_init(invalid_region_);//=cairo_region_create();
     invalidate(nullptr);
     onclick_=nullptr;
     onmessage_=nullptr;
@@ -24,7 +26,9 @@ View::View(int w,int h)
 
 View::~View(){
     children_.clear();
-    cairo_region_destroy(invalid_region_);
+    //cairo_region_destroy(invalid_region_);
+    pixman_region32_fini(invalid_region_);
+    free(invalid_region_);
 }
 
 View*View::findViewById(int id){
@@ -90,25 +94,40 @@ void View::setMessageListener(MessageListener ls){
     onmessage_=ls;
 }
 void View::clip(GraphContext&canvas){
+    pixman_region32_t rgn;
     canvas.reset_clip();
     for(auto c:children_){
         RECT rc=c->getBound();
-        cairo_rectangle_int_t r={rc.x,rc.y,rc.width,rc.height};
+        pixman_region32_init_rect(&rgn,rc.x,rc.y,rc.width,rc.height);
         if((c->isVisible()==false)||(c->hasFlag(Attr::ATTR_TRANSPARENT)&&c->getChildrenCount()==0))continue;
-        cairo_region_subtract_rectangle(invalid_region_,&r);
+        pixman_region32_subtract(invalid_region_,invalid_region_,&rgn);
+        pixman_region32_fini(&rgn);
     }
-    int num=cairo_region_num_rectangles(invalid_region_);
+    int num=pixman_region32_n_rects(invalid_region_);//cairo_region_num_rectangles(invalid_region_);
     for(int i=0;i<num;i++){
-        cairo_rectangle_int_t r;
-        cairo_region_get_rectangle(invalid_region_,i,&r);
-        canvas.rectangle(r.x,r.y,r.width,r.height);
+        pixman_box32_t *r=pixman_region32_rectangles(invalid_region_,NULL)+i;//cairo_region_get_rectangle(invalid_region_,i,&r);
+        canvas.rectangle(r->x1,r->y1,r->x2-r->x1,r->y2-r->y1);
     }
     canvas.clip();
 }
 
 void View::resetClip(){
-    cairo_rectangle_int_t r={0,0,0,0};
-    cairo_region_intersect_rectangle(invalid_region_,&r);
+    pixman_region32_intersect_rect(invalid_region_,invalid_region_,0,0,0,0);
+}
+
+GraphContext*View::getCanvas(){
+    View*p=this;
+    POINT pt={0,0};
+    while(p->parent_){
+        pt.x+=p->getX();
+        pt.y+=p->getY();
+        p=p->parent_;
+    }
+    NGLOG_VERBOSE("this=%p p=%p p->canvas=%p",this,p,(p?p->getCanvas():nullptr));
+    if(p->getCanvas()==nullptr)return nullptr;
+    GraphContext*c=(new GraphContext(*p->getCanvas(),pt.x,pt.y,getWidth(),getHeight()));
+    c->set_font_face(p->getCanvas()->get_font_face());
+    return c;
 }
 
 void View::onDraw(GraphContext&canvas){
@@ -288,44 +307,20 @@ View& View::setFontSize(int sz){
 }
 
 void View::invalidate(const RECT*rect){
-#if 1
-    cairo_rectangle_int_t r;
     RECT rc=getClientRect();
     if(rect && rect->empty()==false)
          rc=*rect;
-    r.x=rc.x;    r.y=rc.y;
-    r.width= rc.width;
-    r.height=rc.height;
      
-    cairo_region_union_rectangle(invalid_region_,&r);
-    if(parent_){
-       rc.offset(getX(),getY());
-       parent_->invalidate(&rc);
-    }
-#else
-    DWORD wp=0,lp=0;
-    if(rect){
-         wp=rect->x<<16|rect->y;
-         lp=rect->width<<16|rect->height;
-    }
-    sendMessage(WM_INVALIDATE,wp,lp);
-#endif
+    pixman_region32_union_rect(invalid_region_,invalid_region_,rc.x,rc.y,rc.width,rc.height);
+    sendMessage(WM_INVALIDATE,0,0);
 }
 
 void View::invalidate_inner(const RECT*rect){
-    cairo_rectangle_int_t r;
     RECT rc=getClientRect();
     if(rect)
          rc=*rect;
-    r.x=rc.x;    r.y=rc.y;
-    r.width= rc.width;
-    r.height=rc.height;
-
-    cairo_region_union_rectangle(invalid_region_,&r);
-    if(parent_){
-       rc.offset(getX(),getY());
-       parent_->invalidate(&rc);
-    }
+    pixman_region32_union_rect(invalid_region_,invalid_region_,rc.x,rc.y,rc.width,rc.height);
+    sendMessage(WM_INVALIDATE,0,0);
 }
 // Layout
 Layout* View::setLayout(Layout* layout){
@@ -377,6 +372,7 @@ View* View::addChildView(View* view){
     std::shared_ptr<View>itm;itm.reset(view);
     children_.push_back(itm);
     onLayout();
+    view->invalidate(nullptr);
     return itm.get();
 }
 
@@ -453,11 +449,6 @@ void View::sendMessage(std::shared_ptr<View>w,DWORD msgid,DWORD wParam,ULONG lPa
 bool View::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){
     RECT r;
     switch(msgid){
-    case WM_INVALIDATE://printf("View::onMessage WM_INVALIDATE %p\r\n",this);
-         invalidate_inner(nullptr);
-         r.set(wParam>>16,wParam&0xFFFF,lParam>>16,lParam&0xFFFF);
-         invalidate( (0==wParam&&0==lParam)?nullptr:&r );
-         return true;
     default:
          if(onmessage_)onmessage_(*this,msgid,wParam,lParam);
          return false;   

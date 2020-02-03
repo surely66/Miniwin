@@ -298,6 +298,7 @@ void GameWindow::initBoard(uint16_t size) {
 bool GameWindow::onKeyRelease(KeyEvent&k){
     bool success=false;
     switch(k.getKeyCode()){
+    printf("rcv key %x\r\n",k.getKeyCode());
     case NGL_KEY_UP   : success=moveUp();break;
     case NGL_KEY_DOWN : success=moveDown();break;
     case NGL_KEY_LEFT : success=moveLeft();break;
@@ -315,6 +316,7 @@ bool GameWindow::onKeyRelease(KeyEvent&k){
 
 int main(int argc, const char *argv[]) {
         App app(argc,argv);
+        printf("====\r\n");
         GameWindow*gw=new GameWindow(200,0,1080,720);
         gw->initBoard(4);
         return app.exec();

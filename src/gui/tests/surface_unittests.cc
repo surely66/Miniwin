@@ -5,10 +5,11 @@
 #include <ngl_os.h>
 #include <ngl_timer.h>
 #include <cairomm/basicbitmap.h>
+#include <sys/time.h>
 #include <resourcemanager.h>
 class CONTEXT:public testing::Test{
 protected:
-   NGL_RunTime ts,te;
+   unsigned long long ts;
 public :
    nglui::ResourceManager *rm;
    virtual void SetUp(){
@@ -17,12 +18,17 @@ public :
    virtual void TearDown(){
    }
    void tmstart(){
-      nglGetRunTime(&ts);
+      ts=gettime();
    }
    void tmend(const char*txt){
-      nglGetRunTime(&te);
-      printf("%s:used time %dms\r\n",txt,te.uiMilliSec+te.uiMicroSec/1000-ts.uiMilliSec-ts.uiMicroSec/1000);
+      printf("%s:used time %dms\r\n",txt,gettime()-ts);
    }
+   unsigned long long gettime(){
+       struct timeval tv;
+       gettimeofday(&tv,NULL);
+       return tv.tv_sec*1000+tv.tv_usec/1000;
+   }
+
 };
 
 TEST_F(CONTEXT,SURFACE_CREATE_1){
@@ -30,7 +36,7 @@ TEST_F(CONTEXT,SURFACE_CREATE_1){
    ctx1->set_color(0,0,255);
    ctx1->rectangle(0,0,800,600);
    ctx1->fill();
-   for(int j=0;j<10;j++){
+   for(int j=0;j<1;j++){
       for(int i=0;i<10;i++){
          const char *txt[]={"Beijing","Sigapo","ShangHai","Shenzhen",
             "The quick brown fox jumps over a lazy dog",
@@ -41,19 +47,21 @@ TEST_F(CONTEXT,SURFACE_CREATE_1){
              RECT rc={400,i*40,400,40};
              ctx1->set_color(255,0,0);
              ctx1->draw_rect(0,i*40,800,40);
-             ctx1->set_color(255,255,255);
+             ctx1->set_color(255,255,255);tmstart();
              ctx1->draw_text(10,i*40,txt[i%(sizeof(txt)/sizeof(char*))]);
+             tmend(txt[i%(sizeof(txt)/sizeof(char*))]);
          }else{
              ctx1->rectangle(0,i*40,800,40);
              ctx1->fill();
-             ctx1->set_color(255,255,255);
+             ctx1->set_color(255,255,255);tmstart();
              ctx1->draw_text(10,i*40,txt[i%(sizeof(txt)/sizeof(char*))]);
+             tmend(txt[i%(sizeof(txt)/sizeof(char*))]);
          }
          ctx1->restore();
       }ctx1->flip();
    }
-   ctx1->dump2png("test3.png");
-   nglSleep(2000);
+   //ctx1->dump2png("test3.png");
+   //nglSleep(2000);
 }
 
 TEST_F(CONTEXT,TEXT_ALIGNMENT){

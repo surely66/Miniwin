@@ -95,16 +95,19 @@ void TVWindow::onEITS(const SERVICELOCATOR*svc){
 }
 
 int TVWindow::loadEvents(TVChannel*ch){
-    char sname[256],des[256];
+    char sname[256],des[256],text[512];
     ch->clearEvents();
     std::vector<DVBEvent>evts;
     DtvGetEvents(&ch->svc,evts);
     for(auto e:evts){
        e.getShortName(sname,des);
+       e.getExtend(text);
+       NGLOG_VERBOSE_IF(text[0],"eventid:%d text=%s",e.event_id,text);
        ch->addEvent(sname,e.start_time,e.duration);
     }
     return evts.size();
 }
+
 bool TVWindow::onMessage(DWORD msg,DWORD wp,ULONG lp){
     if(msg!=MSG_EPGS_UPDATE)
         return NTVWindow::onMessage(msg,wp,lp);

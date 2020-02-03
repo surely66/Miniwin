@@ -27,6 +27,7 @@ public:
   virtual ~Window();
   virtual void show();
   virtual void hide();
+  virtual GraphContext*getCanvas()override;
   virtual View& setPos(int x,int y)override;
   virtual View& setSize(int cx,int cy)override;
   virtual bool onKeyRelease(KeyEvent& evt) override;

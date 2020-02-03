@@ -75,17 +75,19 @@ View& Window::setSize(int cx,int cy){
     return *this;
 }
 
-void Window::draw(bool flip){
+GraphContext*Window::getCanvas(){
     if(nullptr==canvas){
         canvas=GraphDevice::getInstance()->createContext(bound_);
     }
-    onDraw(*canvas);
+    return canvas;
+}
+void Window::draw(bool flip){
+    onDraw(*getCanvas());
     if(flip)canvas->flip();
 }
 
 Window::~Window() {
-    if(canvas)delete canvas;
-    canvas=nullptr;
+    delete canvas;
     NGLOG_VERBOSE("%p",this);
 }
 

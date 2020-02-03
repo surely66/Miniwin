@@ -56,7 +56,7 @@ Window*CreateMainMenu(){
    w->addTipInfo("help_icon_ok.png","Select",-1,160);
    w->addTipInfo("help_icon_exit.png","Exit",-1,160);
    
-   NGLOG_DEBUG("show mainmenu");
+   NGLOG_DEBUG("show mainmenu  %p",w);
    w->show();
    return w;
 }

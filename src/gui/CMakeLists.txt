@@ -32,6 +32,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/pixman-1
 )
 
 

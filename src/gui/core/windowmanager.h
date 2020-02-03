@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <ngl_ir.h>
 #include <queue>
+#include <unordered_set>
 
 namespace nglui {
 
@@ -66,6 +67,7 @@ class WindowManager {
   std::vector< std::shared_ptr<Window> > windows_;
   std::queue<UIMSG>msg_queue_;
   std::priority_queue<UIMSG,std::vector<UIMSG>,std::greater<UIMSG> >delayed_msgq_;
+  std::unordered_set< std::shared_ptr<View> >invalidate_views;
   void popMessage();
   bool hasDirtyWindows();
   bool hasDelayedMessage();

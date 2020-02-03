@@ -80,7 +80,7 @@ DVBApp::DVBApp(int argc,const char**argv)
     addEventSource(new IREventSource(),[](looper::EventSource&s){
         return ((IREventSource&)s).processKey();
     });
-    StartACS();    
+    //StartACS();    
     //google_breakpad::MinidumpDescriptor descriptor("/tmp");
     //eh=new google_breakpad::ExceptionHandler(descriptor, NULL, DumpCallback,NULL, true, -1);
 }

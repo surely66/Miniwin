@@ -5,8 +5,8 @@ if( CMAKE_SYSTEM_NAME MATCHES "Linux" )
 add_definitions(-DLINUX=1)
 endif()
 
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O3 -fPIC")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -fPIC")
 
 message("CAPLATFORM=${CA_PLATFORM}")
 include(${NGL_CHIP_PLATFORM}/platform.cmake)
