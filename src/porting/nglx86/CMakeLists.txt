@@ -16,16 +16,30 @@ set(SRCS_X86
    ngl_disp.c
    ngl_pvr.c
    ngl_ir.cc
-   ngl_graph.c
    ngl_mediaplayer.c
 )
 
-add_library(nglx86 STATIC ${SRCS_X86})
 include(platform.cmake)
 
-find_package(GTK2  REQUIRED gtk)
+find_package(GTK3)
+find_package(X11)
+if (TRUE)
+   set(SRC_GRAPH ngl_vnc_graph.c)
+elseif ( X11_FOUND )
+   set(SRC_GRAPH ngl_x11_graph.c)
+elseif ( GTK3_FOUND )
+   set(SRC_GRAPH ngl_gtk_graph.c)
+else()
+   set(SRC_GRAPH ngl_fb_graph.c)
+endif()
 
-include_directories(${GTK2_INCLUDE_DIRS}
+add_library(nglx86 STATIC ${SRCS_X86} ${SRC_GRAPH})
+
+message("==SRC_GRAPH=${SRC_GRAPH}")
+message("NGL_PLATFORM_INCDIRS=${NGL_PLATFORM_INCDIRS}")
+message("NGL_PLATFORM_LIBS=${NGL_PLATFORM_LIBS}")
+
+include_directories(${NGL_PLATFORM_INCDIRS}
   ../inc ./)
 
 
