@@ -25,7 +25,6 @@
 
 #ifdef CAIRO_HAS_NGL_SURFACE
 #include <cairo-ngl.h>
-
 // This header is not included by cairomm.h because it requires Windows headers that 
 // tend to pollute the namespace with non-prefixed #defines and typedefs.
 // You may include it directly if you need to use this API.
@@ -59,7 +58,7 @@ public:
    *
    * @return HDC or NULL if no HDC available.
    */
-   DWORD getSurface()const;//get ngl surface
+   void* getSurface()const;//get ngl surface
   //TODO: What does owned mean here? murrayc
   //TODO: If this is just a get, shouldn't there be a const version too? murrayc
   /** Returns a ImageSurface that refers to the same bits as the DIB of the
@@ -81,7 +80,7 @@ public:
    * @param hdc the DC to create a surface for.
    * @return the newly created surface.
    */
-  static RefPtr<NGLSurface> create(DWORD nglsurface);
+  static RefPtr<NGLSurface> create(void* nglsurface);
 
   /**
    * @deprecated use create_with_dib()

@@ -129,8 +129,8 @@ of threads that access a shared resource.
 @see VA_DeleteSemaphore VA_AcquireSemaphore VA_ReleaseSemaphore
 */
 
-typedef DWORD NGLSemaphore;
-typedef DWORD NGLMutex;
+typedef HANDLE NGLSemaphore;
+typedef HANDLE NGLMutex;
 
 INT nglCreateSemaphore(NGLSemaphore * const pSemaphore, UINT uiValue);
 
@@ -242,8 +242,8 @@ INT nglUnlockMutex (NGLMutex pMutex);
 
 typedef void (*NGLThreadProc)(void*p);
 
-void nglCreateThread(DWORD *threadid,int p,int stacksize,NGLThreadProc proc,void*param);
-void nglDeleteThread(DWORD threadid);
+void nglCreateThread(HANDLE *threadid,int p,int stacksize,NGLThreadProc proc,void*param);
+void nglDeleteThread(HANDLE threadid);
 /**
 This function suspends the execution of the current thread for a specified amount 
 of time.
@@ -253,15 +253,15 @@ of time.
 */
 void nglSleep( UINT uiDuration );
 
-DWORD nglCreateEvent(BOOL state, BOOL autoreset);
+HANDLE nglCreateEvent(BOOL state, BOOL autoreset);
 
-DWORD nglDestroyEvent(DWORD evenid);
+DWORD nglDestroyEvent(HANDLE evenid);
 
-DWORD nglResetEvent(DWORD evenid);
+DWORD nglResetEvent(HANDLE evenid);
 
-DWORD nglSetEvent(DWORD evenid);
+DWORD nglSetEvent(HANDLE evenid);
 
-DWORD nglWaitEvent(DWORD evenid, DWORD timeout);
+DWORD nglWaitEvent(HANDLE evenid, DWORD timeout);
 
 NGL_END_DECLS
 

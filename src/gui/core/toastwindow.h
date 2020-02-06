@@ -9,7 +9,7 @@ enum{
     LENGTH_SHORT=2000,
     LENGTH_LONG=4000
 };
-typedef std::function<void(Window&,int)>OnCreateContentListener;
+typedef void (OnCreateContentListener)(Window&,int);
 public:
     ToastWindow(int w,int h,int timeout);
     ~ToastWindow();

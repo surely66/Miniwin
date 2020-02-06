@@ -174,7 +174,7 @@ typedef struct{
     BOOL autoreset;
 }EVENT;
 
-DWORD nglCreateEvent(BOOL state,BOOL autoreset )
+HANDLE nglCreateEvent(BOOL state,BOOL autoreset )
 {
     EVENT*e=(EVENT*)nglMalloc(sizeof(EVENT));
     pthread_mutex_init(&e->mtx,NULL);
@@ -193,12 +193,12 @@ DWORD nglCreateEvent(BOOL state,BOOL autoreset )
      attr.b_auto_reset=0;
      attr.b_initial_state=0;
      aui_os_event_create(&attr,&hdl);
-     return (DWORD)hdl;
+     return (HANDLE)hdl;
 #endif
 }
 
 
-DWORD nglDestroyEvent(DWORD eventid)
+DWORD nglDestroyEvent(HANDLE eventid)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -215,7 +215,7 @@ DWORD nglDestroyEvent(DWORD eventid)
 #endif
 }
 
-DWORD nglResetEvent(DWORD eventid)
+DWORD nglResetEvent(HANDLE eventid)
 {
 #ifdef LINUX
      EVENT*e=(EVENT*)eventid;
@@ -230,7 +230,7 @@ DWORD nglResetEvent(DWORD eventid)
 #endif
 }
 
-DWORD nglSetEvent(DWORD eventid)
+DWORD nglSetEvent(HANDLE eventid)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -244,7 +244,7 @@ DWORD nglSetEvent(DWORD eventid)
 #endif
 }
 
-DWORD nglWaitEvent(DWORD eventid, DWORD timeout)
+DWORD nglWaitEvent(HANDLE eventid, DWORD timeout)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -278,18 +278,18 @@ DWORD nglWaitEvent(DWORD eventid, DWORD timeout)
 #endif
 }
 
-void nglCreateThread(DWORD *threadid,int p,int stacksize,NGLThreadProc proc,void*param)
+void nglCreateThread(HANDLE *threadid,int p,int stacksize,NGLThreadProc proc,void*param)
 {
     pthread_t thid;
     pthread_create(&thid,NULL,(void * (*)(void *))proc,param);
     *threadid=thid;
 }
 
-void nglDeleteThread(DWORD threadid){
+void nglDeleteThread(HANDLE threadid){
     
 }
 
-void nglJoinThread(DWORD threadid){
+void nglJoinThread(HANDLE threadid){
     pthread_join((pthread_t)threadid,NULL);
 }
 

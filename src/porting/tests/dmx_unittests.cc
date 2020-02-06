@@ -7,8 +7,8 @@
 
 class DMX:public testing::Test{
    public :
-   DWORD flt;
-   DWORD eventHandle;
+   HANDLE flt;
+   HANDLE eventHandle;
    BYTE*data;
    unsigned int program_count;
    unsigned short pmtpids[MAX_PROGRAM+MAX_PROGRAM];
@@ -50,7 +50,7 @@ class DMX:public testing::Test{
   }
 };
 
-static void SectionCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData)
+static void SectionCBK(HANDLE dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData)
 {
    printf("SectionCBK flt=0x%x data=%p 0x%02x\n",dwVaFilterHandle,pBuffer,pBuffer[0]);  
 }
@@ -122,12 +122,12 @@ TEST_F(DMX,SetFilterParam_Error_2){
    nglFreeSectionFilter(flt);
 }
 
-static void FilterCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData){
+static void FilterCBK(HANDLE dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData){
    int i;
    void**params=(void**)pUserData;
    printf("FilterCBK flt=%p  params[0]=%p\r\n",dwVaFilterHandle,params[0]);
    memcpy(params[0],pBuffer,uiBufferLength);
-   nglSetEvent((DWORD)params[1]);
+   nglSetEvent((HANDLE)params[1]);
 }
 
 TEST_F(DMX,Filter_Section_1){

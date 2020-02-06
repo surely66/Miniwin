@@ -33,7 +33,7 @@ NGLSurface::~NGLSurface()
   // surface is destroyed in base class
 }
 
-DWORD NGLSurface::getSurface() const
+void* NGLSurface::getSurface() const
 {
   return cairo_ngl_surface_get_surface(m_cobject);
 }
@@ -45,7 +45,7 @@ RefPtr<ImageSurface> NGLSurface::get_image()
   return surface;
 }
 
-RefPtr<NGLSurface> NGLSurface::create(DWORD nglsurface)
+RefPtr<NGLSurface> NGLSurface::create(void* nglsurface)
 {
   auto cobject = cairo_ngl_surface_create(nglsurface);
   check_status_and_throw_exception(cairo_surface_status(cobject));
@@ -54,7 +54,7 @@ RefPtr<NGLSurface> NGLSurface::create(DWORD nglsurface)
 
 RefPtr<NGLSurface> NGLSurface::create(Format format, int width, int height)
 {
-  DWORD nglsurface;
+  void* nglsurface;
   nglCreateSurface(&nglsurface,width,height,0,0);
   auto cobject=cairo_ngl_surface_create(nglsurface);
   return RefPtr<NGLSurface> (new NGLSurface(cobject,true));//create_with_dib(format, width, height);

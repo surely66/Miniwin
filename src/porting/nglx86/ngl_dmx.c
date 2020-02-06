@@ -64,7 +64,7 @@ DWORD nglDmxInit(){
    return 0;
 }
 
-DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*userdata,NGL_DMX_TYPE dmxtype)
+HANDLE nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*userdata,NGL_DMX_TYPE dmxtype)
 {
     int rc;
     nglLockMutex(mtx_dmx);
@@ -72,11 +72,11 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
     return (DWORD)0;
 }
 
-INT nglGetFilterPid( DWORD dwStbFilterHandle){
+INT nglGetFilterPid( HANDLE dwStbFilterHandle){
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   return flt->ch?flt->ch->pid:-1;
 }
-INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
+INT nglFreeSectionFilter( HANDLE dwStbFilterHandle )
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   nglLockMutex(mtx_dmx);
@@ -84,7 +84,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
   return NGL_OK;
 }
 
-INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle, BYTE *pMask, BYTE *pValue,UINT uiLength)
+INT nglSetSectionFilterParameters( HANDLE dwStbFilterHandle, BYTE *pMask, BYTE *pValue,UINT uiLength)
 {
   BYTE reverse[16];
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
@@ -92,7 +92,7 @@ INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle, BYTE *pMask, BYTE *p
   return NGL_OK;
 }
 
-INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
+INT nglStartSectionFilter(HANDLE  dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
@@ -102,7 +102,7 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
 }
 
 /**AllocSectionFilter without FreeSectionFilter ?*/
-INT nglStopSectionFilter(DWORD  dwStbFilterHandle)
+INT nglStopSectionFilter(HANDLE dwStbFilterHandle)
 {
   NGLOG_VERBOSE("NGLStopSectionFilter filter=0x%x",dwStbFilterHandle);
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
@@ -111,7 +111,7 @@ INT nglStopSectionFilter(DWORD  dwStbFilterHandle)
   return NGL_OK;
 }
 
-INT nglUnlockSectionFilter(DWORD dwStbFilterHandle)
+INT nglUnlockSectionFilter(HANDLE dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);

@@ -1,7 +1,10 @@
 #include<windows.h>
 #include<ngl_ir.h>
+#include<ngl_log.h>
+NGL_MODULE(SIMPLEWIN)
 
 static bool onKey(int key){
+    NGLOG_DEBUG("rcvkey %d",key);
     switch(key){
     case NGL_KEY_ESCAPE:exit(0);
     default:
@@ -18,7 +21,9 @@ int main(int argc,const char*argv[]){
     Window*w=nullptr;
     desktop->setKeyListener(onKey);
     if(argc==1){//it's recomand that use C++11 lambda listener for simple listener function
+#if __cplusplus>201700
        desktop->setKeyListener([&w](int key)->bool{
+             NGLOG_DEBUG("rcvkey %d",key);
              switch(key){
              case NGL_KEY_ESCAPE:exit(0);
              default:
@@ -37,6 +42,7 @@ int main(int argc,const char*argv[]){
             w->addChildView(new TextField("HelloWorld!! "+std::to_string(count++),400,80)); 
             desktop->sendMessage(msg,wp,lp,500);
        });
+#endif
     }else{//if you dont known C++11 lambda,used like following lines
        desktop->setKeyListener(onKey);
     }

@@ -6,7 +6,7 @@ namespace nglui{
 
 class EditBox:public Widget{
 public:
-  typedef std::function<void (EditBox&)>AfterTextChanged;
+  typedef void (*AfterTextChanged)(EditBox&);
 protected:
   int edit_mode_;//0-->insert mode 1-->replace_mode
   int caretPos;

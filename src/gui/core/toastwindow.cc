@@ -62,18 +62,21 @@ ToastWindow*ToastWindow::makeWindow(int width,int height,int flags,OnCreateConte
     return w;
 }
 
+static void onCreatePopup(Window&w,int){
+     int sw,sh,tw;
+     TextField*tf=new TextField("txt",w.getWidth(),w.getHeight());
+     GraphDevice::getInstance()->getScreenSize(sw,sh);
+     tf->setMultiLine(true);
+     w.addChildView(tf);
+     w.setPos((sw-tw)/2,50);
+}
 ToastWindow*ToastWindow::makeText(const std::string&txt,UINT timeout){
     int sw,sh,tw,th;
     GraphDevice::getInstance()->getScreenSize(sw,sh);
     GraphDevice::getInstance()->getPrimaryContext()->set_font_size(20);
     GraphDevice::getInstance()->getPrimaryContext()->get_text_size(txt,&tw,&th);
     tw+=th*4;th+=th;
-    return makeWindow(tw,th,0,[&](Window&w,int){
-           TextField*tf=new TextField(txt,tw,th);
-           tf->setMultiLine(true);
-           w.addChildView(tf);
-           w.setPos((sw-tw)/2,50);
-       },timeout);
+    return makeWindow(tw,th,0,onCreatePopup,timeout);
 }
 }//namespace
 

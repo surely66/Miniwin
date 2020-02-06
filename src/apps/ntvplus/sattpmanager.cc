@@ -59,6 +59,7 @@ TPManagerWindow::TPManagerWindow(int x,int y,int w,int h)
             nglTunerLock(0,&tp);
         }
     });
+#if __cplusplus>=201700
     satlst->setItemSelectListener([&](AbsListView&lv,int index){
         TRANSPONDER tps[32];
         NGLOG_DEBUG("prepare to switch sateliite");
@@ -69,7 +70,7 @@ TPManagerWindow::TPManagerWindow(int x,int y,int w,int h)
         tplst->setIndex(0);
         NGLOG_DEBUG("");
     });
-
+#endif
 
     TextField*lb=new TextField("Signal Intensity",150,30);
     lb->setPos(80,555);

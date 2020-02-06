@@ -60,6 +60,10 @@ public:
     }
 };
 
+static void OnSelectorItemChange(AbsListView&lv,int idx){
+    lv.setIndex(idx);
+}
+
 Window*Selector::createPopupWindow(){
     Window*wpop;
     ListView*lv;
@@ -76,10 +80,10 @@ Window*Selector::createPopupWindow(){
         wpop->setBgColor(parent_->getBgColor());
         wpop->setFgColor(parent_->getFgColor());
     }
-    
-    lv->setItemSelectListener([this](AbsListView&lv,int idx){
+    lv->setItemSelectListener(OnSelectorItemChange);
+    /*lv->setItemSelectListener([this](AbsListView&lv,int idx){
         setIndex(idx);
-    });
+    });*/
     for(int i=0;i<getItemCount();i++){
         lv->addItem(list_[i]);
     }

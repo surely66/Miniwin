@@ -13,16 +13,16 @@ add_library(unibreak STATIC ${SRCS_UNIBREAK})
 #target_link_libraries(linebreak_test unibreak)
 set(CMAKE_C_FLAGS -fPIC)
 
-add_executable(graphemebreak_test tools/graphemebreak_test.c)
-target_link_libraries(graphemebreak_test unibreak)
+#add_executable(graphemebreak_test tools/graphemebreak_test.c)
+#target_link_libraries(graphemebreak_test unibreak)
 
-add_executable(wordbreak_test tools/wordbreak_test.c)
-target_link_libraries(wordbreak_test unibreak)
+#add_executable(wordbreak_test tools/wordbreak_test.c)
+#target_link_libraries(wordbreak_test unibreak)
 
 install(TARGETS unibreak DESTINATION lib)
 #install(TARGETS linebreak_test DESTINATION bin)
-install(TARGETS graphemebreak_test DESTINATION bin)
-install(TARGETS wordbreak_test DESTINATION bin)
+#install(TARGETS graphemebreak_test DESTINATION bin)
+#install(TARGETS wordbreak_test DESTINATION bin)
 
 
 

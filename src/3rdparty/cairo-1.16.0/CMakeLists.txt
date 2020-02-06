@@ -14,6 +14,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
 include(Configure_config.cmake)
 include(Configure_features.cmake)
 include_directories(${cairo_BINARY_DIR}
+   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
    ../pixman/pixman
    ../freetype-2.10.0/include
    ../zlib-1.2.11/

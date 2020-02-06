@@ -16,7 +16,7 @@ class OSEvent:public testing::Test{
 };
 
 TEST_F(OSEvent,Create_Auto_1){
-   DWORD hdl=nglCreateEvent(0,1);//init as FALSE, auto reset
+   HANDLE hdl=nglCreateEvent(0,1);//init as FALSE, auto reset
    gettimeofday(&tv1,NULL);
    ASSERT_TRUE(nglWaitEvent(hdl,1000)==NGL_ERROR);
    gettimeofday(&tv2,NULL);
@@ -25,7 +25,7 @@ TEST_F(OSEvent,Create_Auto_1){
 }
 
 TEST_F(OSEvent,Create_Auto_2){
-   DWORD hdl=nglCreateEvent(1,1);//init as TRUE, auto reset
+   HANDLE hdl=nglCreateEvent(1,1);//init as TRUE, auto reset
    gettimeofday(&tv1,NULL);
    ASSERT_TRUE(nglWaitEvent(hdl,1000)==NGL_OK);
    ASSERT_TRUE(nglWaitEvent(hdl,1000)==NGL_OK);
@@ -35,7 +35,7 @@ TEST_F(OSEvent,Create_Auto_2){
 }
 
 TEST_F(OSEvent,Create_Manual_1){
-   DWORD hdl=nglCreateEvent(1,0);
+   HANDLE hdl=nglCreateEvent(1,0);
    gettimeofday(&tv1,NULL);
    ASSERT_TRUE(nglWaitEvent(hdl,1000)==NGL_OK);
    gettimeofday(&tv2,NULL);
@@ -49,7 +49,7 @@ TEST_F(OSEvent,Create_Manual_1){
 }
 
 TEST_F(OSEvent,Create_Manual_2){
-   DWORD hdl=nglCreateEvent(0,0);
+   HANDLE hdl=nglCreateEvent(0,0);
    gettimeofday(&tv1,NULL);
    ASSERT_TRUE(nglWaitEvent(hdl,1000)==NGL_ERROR);
    gettimeofday(&tv2,NULL);

@@ -16,7 +16,7 @@ typedef struct{
    unsigned char*msgs;
 }MSGQUEUE;
 
-DWORD nglMsgQCreate(int howmany, int sizepermag)
+HANDLE nglMsgQCreate(int howmany, int sizepermag)
 {
      if(howmany*sizepermag==0)return 0;
      MSGQUEUE*q=(MSGQUEUE*)nglMalloc(sizeof(MSGQUEUE));
@@ -32,10 +32,10 @@ DWORD nglMsgQCreate(int howmany, int sizepermag)
      q->rdidx=q->wridx=q->msgCount=0;
      q->msgs=(unsigned char*)nglMalloc(sizepermag*howmany);
      NGLOG_VERBOSE("msgq=%p",q);
-     return (DWORD)q;
+     return q;
 }
 
-DWORD nglMsgQDestroy(DWORD msgid)
+DWORD nglMsgQDestroy(HANDLE msgid)
 {
      MSGQUEUE*q=(MSGQUEUE*)msgid;
      pthread_cond_destroy(&q->cput);
@@ -46,7 +46,7 @@ DWORD nglMsgQDestroy(DWORD msgid)
      return NGL_OK;
 }
 
-DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
+DWORD nglMsgQSend(HANDLE msgid, const void* pvmsg, int msgsize, DWORD timeout)
 {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     struct timespec ts,*pts=NULL;
@@ -76,7 +76,7 @@ DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
     return rc==0?NGL_OK:NGL_ERROR;
 }
 
-DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeout)
+DWORD nglMsgQReceive(HANDLE msgid, const void* pvmsg, DWORD msgsize, DWORD timeout)
 {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     struct timespec ts,*pts=NULL;
@@ -106,7 +106,7 @@ DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeou
     return rc==0?NGL_OK:NGL_ERROR;
 }
 
-DWORD nglMsgQGetCount(DWORD msgid,UINT*count){
+DWORD nglMsgQGetCount(HANDLE msgid,UINT*count){
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     pthread_mutex_lock(&q->mutex);
     *count=q->msgCount;

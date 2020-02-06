@@ -1,4 +1,5 @@
 #include<docview.h>
+#include <strings.h>
 namespace nglui{
 
 DocumentView::DocumentView(int width, int height)

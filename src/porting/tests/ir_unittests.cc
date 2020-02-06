@@ -13,12 +13,12 @@ class IRINPUT:public testing::Test{
 };
 
 TEST_F(IRINPUT,Open){
-   DWORD hdl=nglIrOpen(0,NULL);
+   HANDLE hdl=nglIrOpen(0,NULL);
    ASSERT_TRUE(hdl);
    nglIrClose(hdl);
 }
 TEST_F(IRINPUT,GetKey){
-   DWORD hdl=nglIrOpen(0,NULL);
+   HANDLE hdl=nglIrOpen(0,NULL);
    int i=0;
    while(i++<100){
       NGLKEYINFO key;

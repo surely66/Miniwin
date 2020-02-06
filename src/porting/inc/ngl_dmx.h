@@ -121,7 +121,7 @@ typedef enum{
     
     For related information refer to @ref VA_DMX_AllocateSectionFilter.
 */
-typedef void (*NGL_DMX_FilterNotify)(DWORD dwVaFilterHandle,const BYTE *pBuffer ,UINT uiBufferLength ,void *pUserData );
+typedef void (*NGL_DMX_FilterNotify)(HANDLE dwVaFilterHandle,const BYTE *pBuffer ,UINT uiBufferLength ,void *pUserData );
 
 DWORD nglDmxInit();
 /** @} */
@@ -170,7 +170,7 @@ DWORD nglDmxInit();
     
     For more information refer to @ref VA_DMX_FreeSectionFilter.
 */
-DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid, NGL_DMX_FilterNotify filterCallback,void*userdata,NGL_DMX_TYPE dmxtp);
+HANDLE nglAllocateSectionFilter(INT dmx_id,WORD  wPid, NGL_DMX_FilterNotify filterCallback,void*userdata,NGL_DMX_TYPE dmxtp);
 
 /**
     This function frees a previously allocated filter.
@@ -188,7 +188,7 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid, NGL_DMX_FilterNotify filte
     
     For related information, refer to: @ref VA_DMX_AllocateSectionFilter and @ref VA_DMX_StopSectionFilter.
 */
-INT nglFreeSectionFilter( DWORD dwStbFilterHandle );
+INT nglFreeSectionFilter( HANDLE dwStbFilterHandle );
 
 /**
     This function sets the value and the mask of a given filter.
@@ -225,7 +225,7 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle );
 
     For related information refer to: @ref VA_DMX_StartSectionFilter and @ref VA_DMX_StopSectionFilter.
 */
-INT nglSetSectionFilterParameters(DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pValue, UINT uiLength);
+INT nglSetSectionFilterParameters(HANDLE dwStbFilterHandle,BYTE *pMask, BYTE *pValue, UINT uiLength);
 
 /**
     This function starts a given filtering.
@@ -251,7 +251,7 @@ INT nglSetSectionFilterParameters(DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pVa
     For related information refer to: @ref VA_DMX_StopSectionFilter, @ref tVA_DMX_NotifyFilteredSection 
     and @ref VA_DMX_SetSectionFilterParameters.
 */
-INT nglStartSectionFilter(DWORD  dwStbFilterHandle);
+INT nglStartSectionFilter(HANDLE  dwStbFilterHandle);
 
 /**
     This function stops a given filtering.
@@ -268,9 +268,9 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle);
 
     For related information refer to @ref VA_DMX_StartSectionFilter.
 */
-INT nglStopSectionFilter(DWORD  dwStbFilterHandle);
-INT nglGetFilterPid(DWORD  dwStbFilterHandle);
-INT nglSetSectionFilterOneshot(DWORD dwStbFilterHandle,BOOL onshort);
+INT nglStopSectionFilter(HANDLE  dwStbFilterHandle);
+INT nglGetFilterPid(HANDLE  dwStbFilterHandle);
+INT nglSetSectionFilterOneshot(HANDLE dwStbFilterHandle,BOOL onshort);
 /** @} */
 /** @} */
 NGL_END_DECLS

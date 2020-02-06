@@ -1,8 +1,10 @@
 project(C CXX)
 
 aux_source_directory(src SRCS_CAIRO_SVG)
-include_directories(include src)
-
+include_directories(include src
+	${CMAKE_BINARY_DIR}/src/3rdparty/cairo-1.16.0
+	${CMAKE_SOURCE_DIR}/src/3rdparty/cairo-1.16.0
+	)
 add_library(cairosvg STATIC ${SRCS_CAIRO_SVG})
 install(TARGETS cairosvg DESTINATION lib)
 

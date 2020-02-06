@@ -15,6 +15,8 @@ NGL_MODULE(IRINPUT)
 typedef struct{
   // aui_hdl hdl;
    std::map<int,int>keymap;
+   NGLKEY_CALLBACK cbk;
+   void*userdata;
 }IRDEV;
 
 #define NB_DEV 8
@@ -22,12 +24,13 @@ typedef struct{
 static IRDEV irdevices[NB_DEV];
 static std::map<std::string,int>name2key;
 static std::map<int,std::string>key2name;
-static DWORD msgQ=0;
+static HANDLE msgQ=0;
 #define REGIST_KEY(x) {name2key[#x]=NGL_##x ;key2name[NGL_##x]=#x;}
 
 DWORD nglIrInit(){
+    NGLOG_DEBUG("cplusplus=%d",__cplusplus);
     if(msgQ)return 0;
-    msgQ=nglMsgQCreate(16,32);//sizeof(aui_key_info));
+    msgQ=nglMsgQCreate(16,sizeof(NGLKEYINFO));//sizeof(aui_key_info));
     //aui_key_init(NULL,NULL);
     //for(int i=0;i<NB_DEV;i++)irdevices[i].hdl=NULL;
     //REGIST_KEY(KEY_LEFT);it the same as keynames["KEY_LEFT"]=NGL_KEY_LEFT;
@@ -75,7 +78,7 @@ DWORD nglIrInit(){
     int rc=nglMsgQSend(msgQ,key,sizeof(aui_key_info),100);
 }*/
 
-DWORD nglIrOpen(int id,const char*keymap){
+HANDLE nglIrOpen(int id,const char*keymap){
     IRDEV*ir=&irdevices[id];
     std::ifstream fin;
     fin.open(keymap?keymap:"key.map");
@@ -102,11 +105,20 @@ DWORD nglIrOpen(int id,const char*keymap){
        NGLOG_VERBOSE("nametokey [%s]-->%x",kname.c_str(),name2key[kname]);
        ir->keymap[key]=name2key[kname];
     }
-    if(rc==0)return (DWORD)ir;
+    NGLOG_DEBUG("nglx86.IrOpen  ir=%p",ir);
+    if(rc==0)return ir;
     return 0;
 }
 
-DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
+DWORD nglIrSendKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
+    IRDEV*ir=&irdevices[0];
+    NGLOG_DEBUG("ir=%p cbk=%p key=%x",ir,(ir?ir->cbk:NULL),key->key_code);
+    if(ir&&ir->cbk)
+	ir->cbk(key,ir->userdata);
+    return nglMsgQSend(msgQ,key,sizeof(NGLKEYINFO),timeout);
+}
+
+DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
     IRDEV*ir=(IRDEV*)handle;
     //aui_key_info info;
 
@@ -119,23 +131,19 @@ DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
 #if 0
     int rc=aui_key_key_get(ir->hdl,&info);
 #else
-    int rc= 0;//nglMsgQReceive(msgQ,&info,sizeof(aui_key_info),timeout);
+    int rc= nglMsgQReceive(msgQ,key,sizeof(NGLKEYINFO),timeout);
 #endif
-    /*auto fnd=ir->keymap.find(info.n_key_code);
-    key->key_code=(fnd!=ir->keymap.end())?fnd->second:info.n_key_code;
-    key->repeat=info.n_count;
-    key->state=info.e_status==1?NGL_KEY_PRESSED:NGL_KEY_RELEASE;
-    NGL_RunTime rt;
-    nglGetRunTime(&rt);
-    key->event_time=rt.uiMilliSec;
-    NGLOG_VERBOSE_IF(rc==0,"key_code=0x%x state=%d  repeat=%d keyname=%s",key->key_code,
-         key->state,key->repeat, key2name[key->key_code].c_str());
-    key->state=(NGLKEYSTATE)info.e_status;
-    return rc==0?NGL_OK:NGL_ERROR;*/
     return NGL_OK;
 }
 
-DWORD nglIrClose(DWORD handle){
+DWORD nglIrRegisterCallback(HANDLE handle,NGLKEY_CALLBACK cbk,void*data){
+    IRDEV*ir=(IRDEV*)handle;
+    ir->cbk=cbk;
+    ir->userdata=data;
+    return 0;
+}
+
+DWORD nglIrClose(HANDLE handle){
     IRDEV*ir=(IRDEV*)handle;
     if(ir<irdevices||ir>=&irdevices[NB_DEV])
         return NGL_INVALID_PARA;

@@ -304,10 +304,10 @@ INT DtvEnumService(DTV_SERVICE_CBK cbk,void*userdata){
     return rc;
 }
 
-static void PMT_CBK(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
+static void PMT_CBK(HANDLE filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
     void**params=(void**)UserData;
     memcpy(params[1],Buffer,BufferLength);
-    nglSetEvent((DWORD)params[0]);
+    nglSetEvent((HANDLE)params[0]);
    NGLOG_DEBUG("rcv PMT");
 }
 static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
@@ -315,11 +315,11 @@ static int GetPMT(USHORT pid,USHORT sid,BYTE*buffer){
     mask[0]=0xFF;  match[0]=0x02;mask[1]=mask[2]=0;
     mask[3]=0xFF;  match[3]=sid>>8;
     mask[4]=0xFF;  match[4]=sid&0xFF;
-    DWORD hevt=nglCreateEvent(0,0);
+    HANDLE hevt=nglCreateEvent(0,0);
     void *params[2];
     params[0]=(void*)hevt;
     params[1]=buffer;
-    DWORD flt=nglAllocateSectionFilter(0,pid,PMT_CBK,params,NGL_DMX_SECTION);
+    HANDLE flt=nglAllocateSectionFilter(0,pid,PMT_CBK,params,NGL_DMX_SECTION);
     nglSetSectionFilterParameters(flt,mask,match,5);
     nglStartSectionFilter(flt);
     int rc=nglWaitEvent(hevt,5000);

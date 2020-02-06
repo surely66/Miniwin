@@ -29,20 +29,20 @@ TEST_F(GRAPH,Graph_GetScreen){
 }
 
 TEST_F(GRAPH,CreateSurface){
-   DWORD surface=0;
+   HANDLE surface=0;
    UINT width,height;
    nglGetScreenSize(&width,&height);
    nglCreateSurface(&surface,width,height,0,1);
    NGLRect r={100,100,400,400};
-   nglFillRect(surface,&r,0xFFFF0000);
+   nglFillRect(surface,&r,0xFFFF00FF);
    nglFlip(surface);
    ASSERT_TRUE(surface!=0);
-   sleep(2);
+   sleep(20);
    nglDestroySurface(surface);
 }
 
 TEST_F(GRAPH,Surface_Draw){
-   DWORD surface=0;
+   HANDLE surface=0;
    UINT width,height;
    UINT*buffer;
    UINT pitch;
@@ -55,13 +55,14 @@ TEST_F(GRAPH,Surface_Draw){
    NGLRect r={100,100,400,400};
    nglFillRect(surface,&r,0xFFFF00FF);
    nglFlip(surface);
-   sleep(3);
+   sleep(20);
    nglDestroySurface(surface);
 
 }
 
 TEST_F(GRAPH,Blit){
-   DWORD hwsurface=0,swsurface;
+   HANDLE hwsurface;
+   HANDLE swsurface;
    nglCreateSurface(&hwsurface,1280,720,0,1);
    NGLRect r1={0,0,1280,720};
    nglFillRect(hwsurface,&r1,0x00000);
@@ -81,10 +82,11 @@ TEST_F(GRAPH,Blit){
    }
    nglDestroySurface(swsurface);
    nglDestroySurface(hwsurface);
+   sleep(20);
 }
 
 TEST_F(GRAPH,Pixman){
-    DWORD surface;
+    HANDLE surface;
     UINT width,height;
     UINT*buffer;
     UINT pitch;
@@ -113,7 +115,7 @@ TEST_F(GRAPH,Pixman){
 }
 
 TEST_F(GRAPH,freetype){
-    DWORD surface;
+    HANDLE surface;
     UINT width,height;
     FT_Library	library;
     FT_Face		face;
@@ -149,7 +151,7 @@ TEST_F(GRAPH,freetype){
 }
 
 TEST_F(GRAPH,canvas){
-    DWORD surface;
+    HANDLE surface;
     UINT width,height;
     UINT*buffer;
     UINT pitch;
@@ -186,3 +188,4 @@ TEST_F(GRAPH,canvas){
 
     nglDestroySurface(surface);
 }
+

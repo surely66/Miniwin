@@ -7,11 +7,14 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include
    ${CMAKE_SOURCE_DIR}/include/porting
    ${CMAKE_BINARY_DIR}/include/
-   ${CMAKE_BINARY_DIR}/include/pixman-1
+   ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver
+   ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
+   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
+   ${CMAKE_SOURCE_DIR}/src/3rdparty/pixman/pixman
    ${CMAKE_BINARY_DIR}/include/freetype2
 )
 add_executable(hal_tests ${SRCS_HAL_TESTS}) 
 
 target_link_libraries(hal_tests  tvhal pixman-1 png freetype gtest)
 
-install (TARGETS hal_tests DESTINATION bin)
+install (TARGETS hal_tests  DESTINATION bin)

@@ -238,6 +238,7 @@ int WindowManager::hasEvents(){
 
 void WindowManager::runOnce(){
     int evts=hasEvents();
+    NGLOG_VERBOSE("events=%x",evts);
     if (evts&4)drawWindows();
     if(evts&8)
        GraphDevice::getInstance()->ComposeSurfaces();

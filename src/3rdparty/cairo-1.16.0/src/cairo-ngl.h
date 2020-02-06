@@ -55,9 +55,9 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_public cairo_surface_t *cairo_ngl_surface_create (DWORD surface);
+cairo_public cairo_surface_t *cairo_ngl_surface_create (HANDLE surface);
 /*get nglsurface handle by cairo surface*/
-cairo_public DWORD cairo_ngl_surface_get_surface (cairo_surface_t *surface);
+cairo_public HANDLE cairo_ngl_surface_get_surface (cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 

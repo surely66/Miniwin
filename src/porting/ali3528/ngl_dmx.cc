@@ -107,7 +107,7 @@ static long AuiPesCBK(void *p_user_hdl,unsigned char* pbuf,unsigned long ul_size
     NGLOG_DEBUG("p_user_hdl=%p pbuf=%p/%02x ul_size=%d ",p_user_hdl,pbuf,pbuf[0],ul_size);
     NGLDMXFILTER*flt=GetFilter(p_user_hdl);
     if(flt&&flt->CallBack)
-        flt->CallBack((DWORD)flt,pbuf,ul_size,flt->userdata); 
+        flt->CallBack(flt,pbuf,ul_size,flt->userdata); 
 }
 static void TS_CBK(void*data,int len,void*p){
     struct aui_attr_tsg attr;
@@ -228,7 +228,7 @@ EXIT_FAIL:
    return -1;
 }
 
-DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*userdata,NGL_DMX_TYPE dmxtype)
+HANDLE nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*userdata,NGL_DMX_TYPE dmxtype)
 {
     int rc;
     aui_attr_dmx dmxattr;
@@ -277,14 +277,14 @@ DWORD nglAllocateSectionFilter(INT dmx_id,WORD  wPid,NGL_DMX_FilterNotify cbk,vo
     flt->CallBack=cbk;
     flt->userdata=userdata;
     nglUnlockMutex(mtx_dmx);
-    return (DWORD)flt;
+    return (HANDLE)flt;
 }
 
-INT nglGetFilterPid( DWORD dwStbFilterHandle){
+INT nglGetFilterPid( HANDLE dwStbFilterHandle){
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   return flt->ch?flt->ch->pid:-1;
 }
-INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
+INT nglFreeSectionFilter( HANDLE dwStbFilterHandle )
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
@@ -309,13 +309,13 @@ INT nglFreeSectionFilter( DWORD dwStbFilterHandle )
   return NGL_OK;
 }
 
-INT nglSetSectionFilterOneshot(DWORD dwStbFilterHandle,BOOL onshort){
+INT nglSetSectionFilterOneshot(HANDLE dwStbFilterHandle,BOOL onshort){
     NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
     CHECKFILTER(flt);
     flt->attr.uc_continue_capture_flag=!onshort; 
     return NGL_OK;
 }
-INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pValue,UINT uiLength)
+INT nglSetSectionFilterParameters(HANDLE dwStbFilterHandle,BYTE *pMask, BYTE *pValue,UINT uiLength)
 {
   int rc;
   BYTE reverse[16];
@@ -337,7 +337,7 @@ INT nglSetSectionFilterParameters( DWORD dwStbFilterHandle,BYTE *pMask, BYTE *pV
   return NGL_OK;
 }
 
-INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
+INT nglStartSectionFilter(HANDLE  dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);
@@ -356,7 +356,7 @@ INT nglStartSectionFilter(DWORD  dwStbFilterHandle)
 }
 
 /**AllocSectionFilter without FreeSectionFilter ?*/
-INT nglStopSectionFilter(DWORD  dwStbFilterHandle)
+INT nglStopSectionFilter(HANDLE dwStbFilterHandle)
 {
   NGLOG_VERBOSE("NGLStopSectionFilter filter=0x%x",dwStbFilterHandle);
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
@@ -377,7 +377,7 @@ INT nglStopSectionFilter(DWORD  dwStbFilterHandle)
   return NGL_OK;
 }
 
-INT nglUnlockSectionFilter(DWORD dwStbFilterHandle)
+INT nglUnlockSectionFilter(HANDLE dwStbFilterHandle)
 {
   NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
   CHECKFILTER(flt);

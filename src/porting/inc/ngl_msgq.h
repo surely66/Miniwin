@@ -4,11 +4,11 @@
 
 NGL_BEGIN_DECLS
 
-DWORD nglMsgQCreate(int howmany, int sizepermag);
-DWORD nglMsgQDestroy(DWORD msgid);
-DWORD nglMsgQSend(DWORD msgid, const void* pvmag, int msgsize, DWORD timeout);
-DWORD nglMsgQReceive(DWORD msgid, const void* pvmag, DWORD msgsize, DWORD timeout);
-DWORD nglMsgQGetCount(DWORD msgid,UINT*count);
+HANDLE nglMsgQCreate(int howmany, int sizepermag);
+DWORD nglMsgQDestroy(HANDLE msgid);
+DWORD nglMsgQSend(HANDLE msgid, const void* pvmag, int msgsize, DWORD timeout);
+DWORD nglMsgQReceive(HANDLE msgid, const void* pvmag, DWORD msgsize, DWORD timeout);
+DWORD nglMsgQGetCount(HANDLE msgid,UINT*count);
 NGL_END_DECLS
 
 #endif

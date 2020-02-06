@@ -6,7 +6,7 @@ namespace nglui{
 class Selector:public AbsListView{
 private:
    class Window* createPopupWindow();
-   typedef std::function<Window*(int w,int h)>CreatePopupListener;
+   typedef Window*(*CreatePopupListener)(int w,int h);
 protected:
    int labelBkColor;
    int label_width_;

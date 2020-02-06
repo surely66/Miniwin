@@ -42,7 +42,7 @@ public:
 #else
         cd =iconv_open(to_charset,from_charset);
 #endif
-        NGLOG_DEBUG_IF(-1==(int)cd,"iconv_open=%d errno=%d sohdl=%p",cd,errno);
+        NGLOG_DEBUG_IF(-1L==(long)cd,"iconv_open=%d errno=%d sohdl=%p",cd,errno);
     }
     ~CodeConverter() {
 #ifdef __GLIBC__

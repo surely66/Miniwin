@@ -559,8 +559,8 @@ void Context::get_font_extents(FontExtents& extents) const
 
 void Context::set_font_face(const RefPtr<const FontFace>& font_face)
 {
-  cairo_set_font_face(cobj(), const_cast<cairo_font_face_t*>(font_face->cobj()));
-  check_object_status_and_throw_exception(*this);
+  //cairo_set_font_face(cobj(), const_cast<cairo_font_face_t*>(font_face->cobj()));
+  //check_object_status_and_throw_exception(*this);
 }
 
 void Context::get_text_extents(const std::string& utf8, TextExtents& extents) const

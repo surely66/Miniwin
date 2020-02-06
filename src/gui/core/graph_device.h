@@ -13,7 +13,7 @@ private:
    std::map<std::string,RefPtr<const FontFace>>fonts;
    class GraphContext*primaryContext;//
    DWORD compose_event;
-   DWORD primarySurface;
+   HANDLE primarySurface;
    static std::vector<class GraphContext*>gSurfaces;
    static GraphDevice*mInst;
    GraphDevice(int format=-1);

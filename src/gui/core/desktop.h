@@ -3,8 +3,8 @@
 #include<window.h>
 namespace nglui{
 
-typedef std::function<bool (int)>KeyHandler;
-typedef std::function<void(DWORD,DWORD,ULONG)>MessageHandler;
+typedef bool (*KeyHandler)(int);
+typedef void (*MessageHandler)(DWORD,DWORD,ULONG);
 class Desktop:public Window{
 private:
    KeyHandler onkeypress;

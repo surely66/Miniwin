@@ -13,6 +13,10 @@
 #include <getopt.h>
 #include <fcntl.h>
 #include <thread>
+#include <ngl_ir.h>
+#include <windowmanager.h>
+#include <mutex>
+
 NGL_MODULE(APP)
 
 void spt_init(int argc, char *argv[]);
@@ -38,15 +42,52 @@ public:
     bool dispatch(EventHandler &func) { return func(*this); }
 
 };
+class IREventSource:public looper::EventSource{
+public:
+    std::mutex mtx;
+private:
+    HANDLE ir_handle_;
+    std::vector<NGLKEYINFO>keys;
+    static void KEYCBK(NGLKEYINFO*k,void*p){
+        NGLOG_DEBUG("key=0x%x/%d",k->key_code,k->key_code);
+        IREventSource*es=(IREventSource*)p;
+        std::lock_guard<std::mutex> lck (es->mtx);
+        es->keys.emplace(es->keys.begin(),*k);
+    }
+public:
+    IREventSource(){
+        nglIrInit();
+        ir_handle_=nglIrOpen(0,nullptr);
+        nglIrRegisterCallback(ir_handle_,KEYCBK,this);
+    }
+    bool prepare(int&) override { return keys.size()>0; }
+    bool check(){
+        return keys.size()>0;
+    }
+    bool dispatch(EventHandler &func) { return func(*this); }
+    bool is_file_source() const override final { return false; }
+    bool processKey(){
+       std::lock_guard<std::mutex> lck (mtx);
+       if(keys.size()==0)return false;
+       NGLKEYINFO key=keys.back();
+       keys.pop_back();
+       if(key.state==NGL_KEY_PRESSED)
+          WindowManager::getInstance()->onKeyPress(key.key_code);
+       else
+          WindowManager::getInstance()->onKeyRelease(key.key_code);
+       return true;
+    }
+};
 App::App(int argc,const char*argv[]){
     struct stat pakstat;
     int option_index,c;
     nglLogParseModules(argc,argv);    
     resmgr=nullptr;
     mInst=this;
-    spt_init(argc,(char**)argv);
-    setName(argv[0]);
-
+    if(argc&&argv){
+       spt_init(argc,(char**)argv);
+       setName(argv[0]);
+    }
     nglGraphInit();
 
     USBManager::getInstance().startMonitor();
@@ -59,6 +100,9 @@ App::App(int argc,const char*argv[]){
         }
     }while(c>=0);
     setOpacity(getArgAsInt("alpha",255));
+    addEventSource(new IREventSource(),[](looper::EventSource&s){
+        return ((IREventSource&)s).processKey();
+    });
 }
 
 App&App::getInstance(){
@@ -135,7 +179,7 @@ int App::exec(){
         WindowManager::getInstance()->runOnce();
         return true;
     });
-    for(int i=0;i<2;i++){
+    /*for(int i=0;i<2;i++){
        char fname[32];
        sprintf(fname,"/dev/input/event%d",i);
        int fd=open(fname,O_RDWR|O_NONBLOCK);
@@ -146,14 +190,14 @@ int App::exec(){
            fe.dumpEvent(e);
            return true;
        });
-    }
+    }*/
     looper.run();
     //std::thread thread_loop(std::bind(&looper::EventLoop::run,&looper));
     //thread_loop.join();
 }
 
 void App::setName(const std::string&appname){
-    setproctitle(appname.c_str());
+    //setproctitle(appname.c_str());
     name=appname;
     getResourceManager();
 }

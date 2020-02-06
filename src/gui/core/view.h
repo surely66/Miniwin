@@ -68,9 +68,9 @@ public:
     WM_CLICK  =4, //wParam is view's id
     WM_CHAR   =5//wparam is unicode char
   };
+typedef void(*ClickListener)(View&v);
+typedef bool(*MessageListener)(View&,DWORD,DWORD,ULONG);
 
-typedef std::function<void(View&v)>ClickListener;//typedef void(*ClickListener)(View&);
-typedef std::function<bool(View&,DWORD,DWORD,ULONG)>MessageListener;
 protected:
     int id_;
     int font_size_;

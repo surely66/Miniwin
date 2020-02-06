@@ -212,31 +212,34 @@ const std::string GetTPString(const TRANSPONDER*tp){
     return buf;
 }
 
+static void onCreateVolumeWindow(Window&w,int){
+     int vol=nglSndGetColume(0);
+     ProgressBar*p=new ProgressBar(390,10);
+     w.addChildView(p);
+     p->setProgress(vol);
+     w.setPos(400,600);
+}
 void ShowVolumeWindow(int timeout){
-    ToastWindow::makeWindow(400,20,0,[&](Window&w,int){
-           int vol=nglSndGetColume(0);
-           ProgressBar*p=new ProgressBar(390,10);
-           w.addChildView(p);
-           p->setProgress(vol);
-           w.setPos(400,600);
-       },timeout);
+    ToastWindow::makeWindow(400,20,0,onCreateVolumeWindow,timeout);
+}
+static void onCreateAudioLanWindow(Window&w,int ){
+     SERVICELOCATOR svc;
+     ELEMENTSTREAM es[16];
+     int cnt,estype;
+     char str[16];
+     DtvGetCurrentService(&svc);
+     cnt=DtvGetServiceElements(&svc,estype,es);
+     ListView*lst=new ListView(390,80);
+     for(int i=0;i<cnt;i++){
+          NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
+          if(es[i].iso639lan[0])
+              lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
+     }
+     w.addChildView(lst);
+     w.setPos(400,600);
 }
 void ShowAudioSelector(int estype,int timeout){//ST_AUDIO
-    ToastWindow::makeWindow(400,100,0,[&](Window&w,int){
-           SERVICELOCATOR svc;
-           ELEMENTSTREAM es[16];
-           char str[16];
-           DtvGetCurrentService(&svc);
-           int cnt=DtvGetServiceElements(&svc,estype,es);
-           ListView*lst=new ListView(390,80);
-           for(int i=0;i<cnt;i++){
-               NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
-               if(es[i].iso639lan[0])
-                   lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
-           }
-           w.addChildView(lst);
-           w.setPos(400,600);
-       },timeout);
+    ToastWindow::makeWindow(400,100,0,onCreateAudioLanWindow,timeout);
 }
 
 }//namespace

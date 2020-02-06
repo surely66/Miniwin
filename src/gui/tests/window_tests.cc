@@ -26,8 +26,10 @@ public:
 };
 
 TEST_F(WINDOW,EmptyWindow){
+   App app(0,NULL);
    Window*w=new Window(100,100,800,600);
    AutoWin aw(w);
+   app.exec();
    nglSleep(1000);
 }
 

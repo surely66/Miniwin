@@ -3,9 +3,9 @@ cmake_minimum_required (VERSION 3.2)
 project(alitest C CXX)
 
 set(CMAKE_BUILD_TYPE "Debug")
-
 set(CMAKE_CXX_STANDARD 11)
-
+set(CAIRO_HAS_NGL_SURFACE TRUE)
+set(CAIRO_HAS_FT_FONT TRUE)
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
 add_subdirectory(src/porting)

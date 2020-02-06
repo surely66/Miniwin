@@ -9,7 +9,9 @@
 #include <preferences.h>
 
 NGL_MODULE(SETTING)
-#define ID_FIRST_EDITABLE_ID 100
+#define IDC_FIRST_EDITABLE_ID 100
+#define IDC_LEFT 101
+#define IDC_RIGHT 102
 
 namespace ntvplus{
 
@@ -54,15 +56,17 @@ public :
         pref=p;
         initContent(NWS_TITLE|NWS_TOOLTIPS);
    }
-   void ItemChangeListener(AbsListView&lv,int index){
+   static void ItemChangeListener(AbsListView&lv,int index){
        //EditableWindow*w=(EditableWindow*)lv.getParent();
        AbsListView::ListItem*itm=lv.getItem(index);
+       EditableWindow*win=(EditableWindow*)lv.getParent();
        NGLOG_DEBUG("index=%d value=%d",index,itm->getId());
-       pref->setValue(getText(),lv.getText(),itm->getId());
-       NTVSettingChanged(id,lv,itm->getId());
+       win->pref->setValue(win->getText(),lv.getText(),itm->getId());
+       NTVSettingChanged(win->id,lv,itm->getId());
    }
-   void OnTextChanged(EditBox&e){
-       NTVSettingChanged(id,e,-1);
+   static void OnTextChanged(EditBox&e){
+       EditableWindow*win=(EditableWindow*)e.getParent();
+       NTVSettingChanged(win->id,e,-1);
    }
 };
 
@@ -86,25 +90,9 @@ public:
        right->setPos(820,70);
        right->setItemPainter(SettingPainter);
        right->setBgColor(0xFF222222).setFgColor(0xFFFFFFFF);
-       addChildView(right);
+       addChildView(right)->setId(IDC_RIGHT);
        right->clearFlag(Attr::ATTR_FOCUSABLE);
-       left->setItemSelectListener([&](AbsListView&lv,int index){
-           SettingItem*itm=(SettingItem*)lv.getItem(index);
-           Json::Value array=itm->value["items"];
-           right->clearAllItems();
-           for(int i=0;i<array.size();i++){
-              Json::Value b,a=array[i];
-              NGLOG_VERBOSE("%d:type:%d %s",i,array.type(),a.toStyledString().c_str());
-              /*if(a.isMember("items")&&a["items"].isString()){
-                   std::string key=a["items"].asString();
-                   if(stacks.size()){
-                      getArray(key,b);a=b;
-                      for(int i=0;i<a.size();i++)right->addItem(new SettingItem(a[i]));
-                   } 
-              }else*/
-              right->addItem(new SettingItem(a));
-           }
-       });
+       left->setItemSelectListener(onItemSelect);
    }
    ~SettingWindow(){
        pref.save("settings.pref");
@@ -114,6 +102,24 @@ public:
    void loadUIItems(EditableWindow*w,Json::Value root,int y);
    Window*createEditable(Json::Value root);
    int getArray(const std::string&key,Json::Value&,Json::Value*root_=nullptr);
+   static void onItemSelect(AbsListView&lv,int index){
+       SettingItem*itm=(SettingItem*)lv.getItem(index);
+       ListView*right=(ListView*)lv.getParent()->findViewById(IDC_RIGHT);
+       Json::Value array=itm->value["items"];
+       right->clearAllItems();
+       for(int i=0;i<array.size();i++){
+           Json::Value b,a=array[i];
+           NGLOG_VERBOSE("%d:type:%d %s",i,array.type(),a.toStyledString().c_str());
+           /*if(a.isMember("items")&&a["items"].isString()){
+                 std::string key=a["items"].asString();
+                 if(stacks.size()){
+                     getArray(key,b);a=b;
+                     for(int i=0;i<a.size();i++)right->addItem(new SettingItem(a[i]));
+                 } 
+             }else*/
+          right->addItem(new SettingItem(a));
+       }
+  }
 };
 
 int SettingWindow::getArray(const std::string&key,Json::Value&array,Json::Value*root_){
@@ -213,7 +219,7 @@ void SettingWindow::loadUIItems(EditableWindow*w,Json::Value root,int y){
                 win->addChildView(lv);
                 return win;
             });
-            s->setItemSelectListener(std::bind(&EditableWindow::ItemChangeListener,w,std::placeholders::_1, std::placeholders::_2));
+            s->setItemSelectListener(EditableWindow::ItemChangeListener);
             s->setBgColor(0xFF000000);s->setFgColor(0xFFFFFFFF);
             s->setLabelColor(0xFF000000);s->setBgColor(0xFF222222);
             w->addChildView(s)->setId(control_id++);
@@ -225,7 +231,7 @@ void SettingWindow::loadUIItems(EditableWindow*w,Json::Value root,int y){
             e->setLabelColor(0xFF000000);
             e->setLabel(v["name"].asCString());
             w->addChildView(e)->setId(control_id++);
-            e->setTextWatcher(std::bind(&EditableWindow::OnTextChanged,w,std::placeholders::_1));
+            e->setTextWatcher(EditableWindow::OnTextChanged);
         }else{
             NGLOG_DEBUG("unknown ui component:%s",ctrl.c_str());
         } 
@@ -255,7 +261,7 @@ Window*SettingWindow::createEditable(Json::Value root){
     w->addTipInfo("help_icon_blue.png","",-1,160);
     w->addTipInfo("help_icon_red.png","",-1,160);
     w->addTipInfo("help_icon_yellow.png","",-1,160);
-    control_id=ID_FIRST_EDITABLE_ID;
+    control_id=IDC_FIRST_EDITABLE_ID;
     loadUIItems(w,root,y);
     
     NTVSettingLoadData(w,w->id);

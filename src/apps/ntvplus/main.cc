@@ -14,6 +14,31 @@ extern "C"{
 NGL_MODULE(MAIN)
 using namespace ntvplus;
 
+static bool onKey(int key){
+     switch(key){
+     case NGL_KEY_MENU:CreateMainMenu();return true;
+     case NGL_KEY_ENTER:CreateChannelList();return true;
+     case NGL_KEY_UP:
+     case NGL_KEY_DOWN:CreateChannelPF();return true;
+     case NGL_KEY_EPG: CreateTVGuide();return true;
+     case NGL_KEY_F4:
+             return true;
+     case NGL_KEY_F5:
+             return true;
+     case NGL_KEY_AUDIO:
+         ShowAudioSelector(ST_AUDIO,4000);return true;
+     case NGL_KEY_POWER:exit(0);
+     case NGL_KEY_VOL_INC:
+     case NGL_KEY_VOL_DEC:
+          {
+              INT vol=nglSndGetColume(0);
+              vol+=key==NGL_KEY_VOL_INC?5:-5;
+              nglSndSetVolume(0,vol);
+              ShowVolumeWindow(2000);
+          }break;
+     default:return false;
+     }
+}
 int main(int argc,const char*argv[]){
     DVBApp app(argc,argv);
     Desktop*desktop=new Desktop();
@@ -22,30 +47,6 @@ int main(int argc,const char*argv[]){
 
     app.setOpacity(app.getArgAsInt("alpha",255));
     app.getString("mainmenu",app.getArg("language","eng"));
-    desktop->setKeyListener([&](int key)->bool{
-         switch(key){
-         case NGL_KEY_MENU:CreateMainMenu();return true;
-         case NGL_KEY_ENTER:CreateChannelList();return true;
-         case NGL_KEY_UP:
-         case NGL_KEY_DOWN:CreateChannelPF();return true;
-         case NGL_KEY_EPG: CreateTVGuide();return true;
-         case NGL_KEY_F4:
-                 return true;
-         case NGL_KEY_F5:
-                 return true;
-         case NGL_KEY_AUDIO:
-             ShowAudioSelector(ST_AUDIO,4000);return true;
-         case NGL_KEY_POWER:exit(0);
-         case NGL_KEY_VOL_INC:
-         case NGL_KEY_VOL_DEC:
-              {
-                  INT vol=nglSndGetColume(0);
-                  vol+=key==NGL_KEY_VOL_INC?5:-5;
-                  nglSndSetVolume(0,vol);
-                  ShowVolumeWindow(2000);
-              }break;
-         default:return false;
-         }
-    });
+    desktop->setKeyListener(onKey);
     return app.exec();
 }

@@ -50,12 +50,12 @@ TEST_F(OSSem,SEM_Acquire_2){
 static void SemPostProc(void*p){
    printf("SemPostProc sem=%p",p);
    sleep(5);
-   nglReleaseSemaphore((DWORD)p);
+   nglReleaseSemaphore(p);
    printf("nglReleaseSemaphore %p",p);
 }
 TEST_F(OSSem,SEM_Acquire_FOREVER){
    NGLSemaphore sem; 
-   DWORD tid;
+   HANDLE tid;
    ASSERT_TRUE(0==nglCreateSemaphore(&sem,0));
    nglCreateThread(&tid,0,0,SemPostProc,(void*)sem);
    ASSERT_TRUE(0==nglAcquireSemaphore(sem,-1));

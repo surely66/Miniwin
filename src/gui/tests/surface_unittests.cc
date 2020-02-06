@@ -255,7 +255,8 @@ TEST_F(CONTEXT,Pattern_Line){
    ctx->set_source(linpat); 
    ctx->fill ();
    ctx->flip();
-   nglSleep(2000); 
+   ctx->dump2png("pat-line.png");
+   nglSleep(20000); 
 }
 TEST_F(CONTEXT,Pattern_Radio){
    RefPtr<GraphContext>ctx(GraphDevice::getInstance()->createContext(1200,600));
@@ -269,7 +270,8 @@ TEST_F(CONTEXT,Pattern_Radio){
    ctx->fill ();
    
    ctx->flip();
-   nglSleep(2000);
+   ctx->dump2png("pat-radio.png");
+   nglSleep(20000);
 }
 
 TEST_F(CONTEXT,Font){

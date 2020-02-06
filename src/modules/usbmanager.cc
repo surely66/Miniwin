@@ -92,7 +92,7 @@ USBManager&USBManager::getInstance(){
     return *mInst;
 }
 void USBManager::startMonitor(){
-    static DWORD threadid=0;
+    static HANDLE threadid=0;
     NGLOG_DEBUG("");
     if(0==threadid)
         nglCreateThread(&threadid,0,0,USBMonitor,mInst);

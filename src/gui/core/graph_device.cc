@@ -10,6 +10,8 @@
 #include <cairomm/context.h>
 #include <cairomm/ngl_surface.h>
 #include <cairomm/region.h>
+#include <cairomm/fontface.h>
+#include <ft2build.h>
 #include <freetype/freetype.h>
 
 using namespace std;
@@ -40,18 +42,21 @@ GraphDevice::GraphDevice(int format){
     cairo_surface_t*surface=cairo_ngl_surface_create(primarySurface);
     primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
     FT_Face ft_face;
+#if defined(__amd64__)||defined(__x86_64__)||defined(_M_AMD64)
+    FT_New_Face(ft_library,"/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",0,&ft_face);
+#else
     FT_New_Face(ft_library,"/usr/lib/fonts/droid_chn.ttf",0,&ft_face);
-    //FT_New_Face(ft_library,"./msyh.ttc",0,&ft_face);
-    NGLOG_DEBUG("ft_library=%p ft_face=%p family=%s",ft_library,ft_face,ft_face->family_name);
+#endif
+    NGLOG_DEBUG_IF(ft_face,"ft_library=%p ft_face=%p family=%s",ft_library,ft_face,ft_face?ft_face->family_name:nullptr);
     RefPtr<FontFace>face=FtFontFace::create(ft_face,FT_LOAD_FORCE_AUTOHINT);
     fonts[ft_face->family_name]=face;
 }
 
 RefPtr<const FontFace>GraphDevice::getFont(const std::string&family){
     RefPtr<const FontFace>face;
-    if(!family.empty())
+    if(!family.empty()&&fonts.size())
         face=fonts[family];
-    if(face==nullptr)
+    if(face==nullptr&&fonts.size())
         face=fonts.begin()->second;
     return face;
 }
@@ -81,7 +86,7 @@ GraphContext*GraphDevice::getPrimaryContext(){
 GraphContext*GraphDevice::createContext(int width,int height){
     unsigned char*data;
     UINT pitch;
-    DWORD nglsurface;
+    HANDLE nglsurface;
     nglCreateSurface(&nglsurface,width,height,0,0);
     cairo_surface_t*surface=cairo_ngl_surface_create(nglsurface);
     GraphContext*graph_ctx=new GraphContext(this,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
@@ -113,7 +118,7 @@ void GraphDevice::remove(GraphContext*ctx){
 
 static void getSurfaceRegion(GraphContext*c,POINT &pt,RectangleInt*r){
     unsigned int w,h,f;
-    DWORD nglsurface =cairo_ngl_surface_get_surface(c->get_target()->cobj());
+    HANDLE nglsurface =cairo_ngl_surface_get_surface(c->get_target()->cobj());
     nglGetSurfaceInfo(nglsurface,&w,&h,(int*)&f);
     r->x=pt.x;
     r->y=pt.y;
@@ -144,7 +149,7 @@ void GraphDevice::ComposeSurfaces(){
     for(auto s:gSurfaces){
         POINT pt=s->screenPos;
         NGLRect srec={pt.x,pt.y,0,0};
-        DWORD nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
+        HANDLE nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
         if(GraphDevice::CheckOverlapped(s,i++))continue;
         nglBlit(primarySurface,nglsurface,nullptr,&srec);
     }

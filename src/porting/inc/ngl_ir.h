@@ -97,10 +97,11 @@ typedef struct{
 typedef void(*NGLKEY_CALLBACK)(NGLKEYINFO*key,void*userdata);
 
 DWORD nglIrInit();
-DWORD nglIrOpen(int deviceid,const char*keymap);
-DWORD nglIrRegisterCallback(DWORD handle,NGLKEY_CALLBACK cbk,void*data);
-DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout);
-DWORD nglIrClose(DWORD handle);
+HANDLE nglIrOpen(int deviceid,const char*keymap);
+DWORD nglIrRegisterCallback(HANDLE handle,NGLKEY_CALLBACK cbk,void*data);
+DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout);
+DWORD nglIrSendKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout);
+DWORD nglIrClose(HANDLE handle);
 
 NGL_END_DECLS
 

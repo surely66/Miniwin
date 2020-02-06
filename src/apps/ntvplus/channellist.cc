@@ -29,6 +29,26 @@ public:
    int loadServices(UINT favid);
 };
 
+static bool EPGMessageListener(View&v,DWORD msg,DWORD wp,ULONG lp){
+    if(msg==1000){
+         TextField*namep,*namef,*descp,*descf;
+         DVBEvent pf[2];
+         NGLOG_VERBOSE("Get Event P/F to ui");
+         char name[256],des[256];
+         ListView*lv=(ListView*)v.findViewById(IDC_CHANNELS);
+         int idx=lv->getIndex();
+         if(idx<0)return false;
+         ChannelItem*itm=(ChannelItem*)lv->getItem(idx);
+         int rc=DtvGetPFEvent(&itm->svc,pf);
+         NGLOG_VERBOSE("DtvGetPFEvent=%d",rc); 
+         namep=(TextField*)v.getParent()->findViewById(IDC_NAMEP);
+         namef=(TextField*)v.getParent()->findViewById(IDC_NAMEF);
+         descp=(TextField*)v.getParent()->findViewById(IDC_DESCP);
+         descf=(TextField*)v.getParent()->findViewById(IDC_DESCF);
+         if(rc&1){pf[0].getShortName(name,des);namep->setText(name);descp->setText(des);}
+         if(rc&2){pf[1].getShortName(name,des);namef->setText(name);descf->setText(des);}           
+    }
+}
 ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     initContent(NWS_TITLE|NWS_TOOLTIPS);
     setText("ChannelList");
@@ -87,23 +107,7 @@ ChannelsWindow::ChannelsWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     addTipInfo("help_icon_exit.png","Exit",-1,260);
     addTipInfo("help_icon_red.png","Sort",-1,160);
     addTipInfo("help_icon_yellow.png","EditChannel",-1,160);
-
-    setMessageListener([this](View&v,DWORD msg,DWORD wp,ULONG lp)->bool{
-        if(msg==1000){
-             DVBEvent pf[2];
-             NGLOG_VERBOSE("Get Event P/F to ui");
-             char name[256],des[256];
-             ListView*lv=(ListView*)v.findViewById(IDC_CHANNELS);
-             int idx=lv->getIndex();
-             if(idx<0)return false;
-             ChannelItem*itm=(ChannelItem*)lv->getItem(idx);
-             int rc=DtvGetPFEvent(&itm->svc,pf);
-             NGLOG_VERBOSE("DtvGetPFEvent=%d",rc); 
-                       
-             if(rc&1){pf[0].getShortName(name,des);namep->setText(name);descp->setText(des);}
-             if(rc&2){pf[1].getShortName(name,des);namef->setText(name);descf->setText(des);}           
-        }
-    });    
+    setMessageListener(EPGMessageListener);
 }
 
 bool ChannelsWindow::onKeyRelease(KeyEvent&k){

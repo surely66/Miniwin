@@ -12,6 +12,7 @@
 #include <dirent.h>
 #define CHANNEL_LIST_ITEM_HEIGHT 40
 #define IDC_CHANNELS 100
+#define IDC_MEDIALIST 101
 
 NGL_MODULE(TVRECORD)
 #define W_ID      100
@@ -99,6 +100,11 @@ public:
        default:return NTVWindow::onKeyRelease(k);
        }
    }
+   static void onMediaItemClick(View&lv){
+      ListView*mdlist=(ListView*)lv.getParent()->findViewById(IDC_MEDIALIST);
+      int index=mdlist->getIndex();
+      PVRItem*itm=(PVRItem*)mdlist->getItem(index);
+   }
 };
 PVRWindow::PVRWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     initContent(NWS_TITLE|NWS_TOOLTIPS);
@@ -121,11 +127,8 @@ PVRWindow::PVRWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     mdlist->setBgColor(getBgColor());
     mdlist->setFgColor(getFgColor());
     mdlist->setItemPainter(PVRPainter);
-    addChildView(mdlist);
-    mdlist->setClickListener([&](View&lv){
-         int index=mdlist->getIndex();
-         PVRItem*itm=(PVRItem*)mdlist->getItem(index);
-    });
+    addChildView(mdlist)->setId(IDC_MEDIALIST);
+    mdlist->setClickListener(onMediaItemClick);
 }
 
 void PVRWindow::setMode(int md){

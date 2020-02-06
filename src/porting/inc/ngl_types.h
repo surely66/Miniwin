@@ -30,6 +30,14 @@
 #define ULONG unsigned long
 #endif
 
+#ifndef LONGLONG
+#define LONGLONG long long
+#endif
+
+#ifndef ULONGLONG
+#define ULONGLONG unsigned long long
+#endif
+
 #ifndef BYTE
 #define BYTE unsigned char
 #endif

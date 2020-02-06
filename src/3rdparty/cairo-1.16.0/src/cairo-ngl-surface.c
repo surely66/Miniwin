@@ -57,7 +57,7 @@ slim_hidden_proto(cairo_ngl_surface_create);
 
 typedef struct _cairo_ngl_surface {
     cairo_image_surface_t image;
-    DWORD  nglsurface;
+    HANDLE  nglsurface;
     DWORD userdata;
 } cairo_ngl_surface_t;
 
@@ -78,6 +78,7 @@ _ngl_to_pixman_format (int format)
     case GPF_UNKNOWN: return 0;
     case GPF_ARGB1555: return PIXMAN_a1r5g5b5;
     case GPF_ARGB: return PIXMAN_a8r8g8b8;
+    case GPF_ABGR: return PIXMAN_a8b8g8r8;
     case GPF_ARGB4444: return PIXMAN_a4r4g4b4;
     default:return 0;
     }
@@ -274,7 +275,7 @@ _cairo_ngl_surface_backend = {
     _cairo_surface_fallback_glyphs,
 };
 
-cairo_surface_t *cairo_ngl_surface_create (DWORD nglsurface)
+cairo_surface_t *cairo_ngl_surface_create (HANDLE nglsurface)
 {
     cairo_ngl_surface_t *surface;
     pixman_format_code_t pixman_format;
@@ -310,7 +311,7 @@ cairo_surface_t *cairo_ngl_surface_create (DWORD nglsurface)
     return &surface->image.base;
 }
 
-DWORD cairo_ngl_surface_get_surface (cairo_surface_t *surface)
+HANDLE cairo_ngl_surface_get_surface (cairo_surface_t *surface)
 {
     if (surface->backend->type == CAIRO_SURFACE_TYPE_NGL)
         return ((cairo_ngl_surface_t*)surface)->nglsurface;

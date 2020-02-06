@@ -2,6 +2,7 @@
 #include <ngl_log.h>
 #include <ngl_ir.h>
 #include <pixman.h>
+#include <string.h>
 
 NGL_MODULE(VIEW)
 

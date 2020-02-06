@@ -10,31 +10,31 @@ static void TunningCBK(INT tuneridx,INT lockedState,void*param){
     *((INT*)params[0])=lockedState;
     printf("lockedState=%d\r\n");
 }
-static void SectionCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData)
+static void SectionCBK(HANDLE dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData)
 {
    printf("SectionCBK flt=0x%x data=%p 0x%02x\n",dwVaFilterHandle,pBuffer,pBuffer[0]);
-   nglSetEvent((DWORD)pUserData);
+   nglSetEvent((HANDLE)pUserData);
 }
 
 
 class TUNER:public testing::Test{
    public :
-   DWORD eventHandle;
+   HANDLE eventHandle;
    INT lockstate;
-   DWORD params[2];
-   DWORD flt;
+   HANDLE params[2];
+   HANDLE flt;
    BYTE mask[8],value[8];
    virtual void SetUp(){
       nglTunerInit();
       nglDmxInit();
       lockstate=0;
       eventHandle=nglCreateEvent(0,0);
-      params[0]=(DWORD)&lockstate;
+      params[0]=(HANDLE)&lockstate;
       params[1]=eventHandle;
       nglTunerRegisteCBK(0,TunningCBK,params);
    }
 
-   DWORD createFilter(){
+   HANDLE createFilter(){
       flt=nglAllocateSectionFilter(0,0/*patpid*/,SectionCBK,(void*)eventHandle,NGL_DMX_SECTION);
       mask[0]=0xFF;value[0]=0x00;//for PAT
       nglSetSectionFilterParameters(flt,mask,value,1); 

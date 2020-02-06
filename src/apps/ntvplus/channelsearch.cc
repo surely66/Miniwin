@@ -67,7 +67,7 @@ SearchWindow::SearchWindow(int x,int y,int w,int h,bool advance):NTVWindow(x,y,w
     tplst->setPopupListener(OnPopupWindow);
     addChildView(satlst);
     addChildView(tplst);
-
+#if __cplusplus>2017000
     tplst->setItemSelectListener([](AbsListView&lv,int index){
         TransponderItem*itm=(TransponderItem*)lv.getItem(index);
         NGLOG_DEBUG("switch to tp %d ",index);
@@ -86,6 +86,7 @@ SearchWindow::SearchWindow(int x,int y,int w,int h,bool advance):NTVWindow(x,y,w
         for(int i=0;i<cnt;i++)tplst->addItem(new TransponderItem(tps[i]));
         tplst->setIndex(0);
     });
+#endif
     /*******************************************/
     if(advance){
         ch_available=new NTVSelector("Channel availability",1000,40);  

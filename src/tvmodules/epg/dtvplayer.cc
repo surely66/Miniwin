@@ -26,12 +26,12 @@ typedef struct {
    void*userdata;
 }DTVNOTIFY;
 
-static DWORD msgQPlayer=0;
+static HANDLE msgQPlayer=0;
 static SERVICELOCATOR cur_svc;
 static std::vector<DTVNOTIFY>gNotifies;
 
 extern void DtvNotify(UINT,const SERVICELOCATOR*,DWORD wp,ULONG lp);
-extern DWORD CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
+extern HANDLE CreateFilter(USHORT pid,NGL_DMX_FilterNotify cbk,void*param,bool start,int masklen,...);
 
 static INT PlayService(BYTE*pmtbuff,const char*lan){
     USHORT pcr;
@@ -59,7 +59,7 @@ static INT PlayService(BYTE*pmtbuff,const char*lan){
     else          nglAvPlay(0,es[vi].pid,es[vi].getType(),es[ai].pid,es[ai].getType(),pcr);
 }
 
-static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
+static void SectionMonitor(HANDLE filter,const BYTE *Buffer,UINT BufferLength, void *UserData){
      PMT p1((BYTE*)UserData,false);
      PMT p2(Buffer,false);
      if( (p1.tableId()==p2.tableId()) &&((p1.version()!=p2.version())||(p1.crc32()!=p2.crc32()))){
@@ -75,8 +75,8 @@ static void SectionMonitor(DWORD filter,const BYTE *Buffer,UINT BufferLength, vo
 
 static void PlayProc(void*param){
     MSGPLAY msg;//0xFFFF  is an invalid serviceid
-    DWORD flt_pmt=0;
-    DWORD flt_cat=0;
+    HANDLE flt_pmt=0;
+    HANDLE flt_cat=0;
     BYTE PMT[1024];
     BYTE CAT[1024];
     int pmtpid;
@@ -114,7 +114,7 @@ static void PlayProc(void*param){
 
 static void Init(){
     if(0==msgQPlayer){
-        DWORD thid;
+        HANDLE thid;
         memset(&cur_svc,0,sizeof(cur_svc));
         msgQPlayer=nglMsgQCreate(10,sizeof(MSGPLAY));
         nglCreateThread(&thid,0,4096,PlayProc,NULL);
