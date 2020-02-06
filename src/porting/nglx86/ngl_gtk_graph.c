@@ -5,10 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h> /* getenv(), etc. */
 #include <unistd.h> 
-#include <sys/time.h>
-#include <rfb/rfb.h>
-#include <rfb/keysym.h>
-#include <rfb/rfbproto.h>
+#include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <ngl_ir.h>
 NGL_MODULE(GRAPH)
 
@@ -21,7 +19,6 @@ typedef struct{
 }NGLSURFACE;
 
 static NGLSURFACE*hwsurface;
-static rfbScreenInfoPtr rfbScreen=NULL;
 
 void SENDKEY(int k){
    NGLKEYINFO ki;
@@ -30,71 +27,11 @@ void SENDKEY(int k){
    ki.state=NGL_KEY_RELEASE;//NGL_KEY_PRESSED:NGL_KEY_RELEASE;
    nglIrSendKey(NULL,&ki,10);
 }
-static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)
-{
-    static int color=0x1010FFFF;
-    if(down) {
-	int x;
-        NGLOG_DEBUG("rcv KEY %d",key);
-        switch(key){
-	case XK_F1:rfbCloseClient(cl);break;
-        case XK_F5:
-		 for(x=0;x<rfbScreen->width*rfbScreen->height;x++)
-			 ((int*)rfbScreen->frameBuffer)[x]=color;
-		 color+=2;
-		 //rfbDoCopyRect(rfbScreen,0,0,rfbScreen->width,rfbScreen->height,0,0);
-		 rfbMarkRectAsModified(cl->screen,0,0,rfbScreen->width,rfbScreen->height);break;
-        case XK_F12: rfbShutdownServer(cl->screen,TRUE);break;
-        case XK_F11:
-        case XK_Page_Up:
-        case XK_Up   : SENDKEY(NGL_KEY_UP)  ;break;
-        case XK_Down : SENDKEY(NGL_KEY_DOWN);break;
-        case XK_Left : SENDKEY(NGL_KEY_LEFT);break;
-        case XK_Right: SENDKEY(NGL_KEY_RIGHT);break;
-        case XK_BackSpace:SENDKEY(NGL_KEY_BACKSPACE);break;
-        case XK_Escape:SENDKEY(NGL_KEY_ESCAPE);break;
-        case XK_Menu : SENDKEY(NGL_KEY_MENU);break;
-        case XK_space: SENDKEY(NGL_KEY_SPACE);break;
-        case XK_Return:SENDKEY(NGL_KEY_ENTER);break;
-        case XK_0     :SENDKEY(NGL_KEY_0);break;
-        case XK_1     :SENDKEY(NGL_KEY_1);break;
-        case XK_2     :SENDKEY(NGL_KEY_2);break;
-        case XK_3     :SENDKEY(NGL_KEY_3);break;
-        case XK_4     :SENDKEY(NGL_KEY_4);break;
-        case XK_5     :SENDKEY(NGL_KEY_5);break;
-        case XK_6     :SENDKEY(NGL_KEY_6);break;
-        case XK_7     :SENDKEY(NGL_KEY_7);break;
-        case XK_8     :SENDKEY(NGL_KEY_8);break;
-        case XK_9     :SENDKEY(NGL_KEY_9);break;
-        }
-    }
-}
-
-static enum rfbNewClientAction onNewClient(rfbClientPtr cl){return RFB_CLIENT_ACCEPT;}
 DWORD nglGraphInit(){
-    int x=0,y=0,*fb;
+    int x=0,y=0,argc=0,*fb;
     HANDLE tid;
     int width=1280,height=720;
-    if(rfbScreen)return NGL_OK;
-
-    rfbScreen = rfbGetScreen(NULL,NULL,width,height,8,3,4);
-    //rfbScreen->desktopName = "RFB";
-    rfbScreen->frameBuffer = (char*)malloc(width*height*4);
-    rfbScreen->alwaysShared = (1==1);
-    rfbScreen->kbdAddEvent=onVNCClientKey;
-    //rfbScreen->newClientHook=onNewClient;
-    //rfbScreen->httpDir = "webclients";
-    //rfbScreen->httpEnableProxyConnect = TRUE;
-    //atexit(graph_done);
-    /*rfbScreen->autoPort=TRUE;
-    rfbScreen->port=8315; 
-    rfbScreen->ptrAddEvent = NULL;//doptr;
-    rfbScreen->kbdAddEvent = NULL;//dokey;
-    rfbScreen->httpEnableProxyConnect = TRUE;
-    */
-    rfbInitServer(rfbScreen);
-    rfbRunEventLoop(rfbScreen,5,TRUE);//non block 
-    NGLOG_DEBUG("VNC Server Inited rfbScreen=%p port=%d framebuffer=%p",rfbScreen,rfbScreen->port,rfbScreen->frameBuffer); 
+    gtk_init(0,NULL);
     return NGL_OK;
 }
 
@@ -139,16 +76,17 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rect,UINT color){
     UINT*fb=(UINT*)(ngs->data+ngs->pitch*rec->y+x*4);
     for(y=0;y<rec->h;y++){
         for(x=0;x<rec->w;x++)
-           fb[x]=color;
+           fb[x]=color&0x00FFFFFF;
         fb+=(ngs->pitch>>2);
     }
+    rfbFillRect(rfbScreen,rec->x,rec->y,rec->x+rec->w,rec->y+rec->h,color);
     rfbMarkRectAsModified(rfbScreen,rec->x,rec->y,rec->x+rec->w,rec->y+rec->h);
     return NGL_OK;
 }
 
 DWORD nglFlip(HANDLE surface){
     NGLSURFACE*ngs=(NGLSURFACE*)surface;
-    //rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
+    rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
     NGLOG_VERBOSE("flip %p",ngs);
     return 0;
 }
@@ -188,11 +126,13 @@ DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NG
      pbd+=dy*(ndst->pitch>>2)+dx;
      NGLOG_VERBOSE("buffer %p->%p pitch=%d/%d sw=%dx%d",pbs,pbd,nsrc->pitch,ndst->pitch,sw,sh);
      for(y=0;y<sh;y++){
-         for(x=0;x<sw;x++)pbd[x]=pbs[x];
+         for(x=0;x<sw;x++)pbd[x]=pbs[x]&0x00FFFFFF;
          pbs+=(nsrc->pitch>>2);
          pbd+=(ndst->pitch>>2);
      }
-     if(ndst->ishw)rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);//sx,sy,sx+sw,sy+sh);
+     //rfbNewFramebuffer(rfbScreen, (char*)rfbScreen->frameBuffer, rfbScreen->width,rfbScreen->height, 8, 3,4);
+     rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);//sx,sy,sx+sw,sy+sh);
+     rfbDoCopyRect(rfbScreen,0,0,rfbScreen->width,rfbScreen->height,0,0);
      return 0;
 }
 
