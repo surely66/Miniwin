@@ -75,8 +75,9 @@ int GraphDevice::getScreenHeight(){
 }
 
 void GraphDevice::flip(GraphContext*ctx){
-    if(ctx)ctx->get_target()->flush();//cairo_surface_flush(ctx->surface);
+    //if(ctx)ctx->get_target()->flush();//cairo_surface_flush(ctx->surface);
     compose_event++;
+    NGLOG_VERBOSE("flip %p",ctx);
 }
 
 GraphContext*GraphDevice::getPrimaryContext(){
@@ -113,7 +114,7 @@ void GraphDevice::remove(GraphContext*ctx){
             break;
        }
     }
-    flip(nullptr);
+    //flip(nullptr);
 }
 
 static void getSurfaceRegion(GraphContext*c,POINT &pt,RectangleInt*r){

@@ -142,13 +142,13 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rect,UINT color){
            fb[x]=color;
         fb+=(ngs->pitch>>2);
     }
-    rfbMarkRectAsModified(rfbScreen,rec->x,rec->y,rec->x+rec->w,rec->y+rec->h);
+    //rfbMarkRectAsModified(rfbScreen,rec->x,rec->y,rec->x+rec->w,rec->y+rec->h);
     return NGL_OK;
 }
 
 DWORD nglFlip(HANDLE surface){
     NGLSURFACE*ngs=(NGLSURFACE*)surface;
-    //rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
+    rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
     NGLOG_VERBOSE("flip %p",ngs);
     return 0;
 }
@@ -171,7 +171,7 @@ DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL ishws
      return NGL_OK;
 }
 
-
+#define MIN(x,y) ((x)>(y)?(y):(x))
 DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NGLRect* dstrect)
 {
      unsigned int x,y,sx,sy,sw,sh,dx,dy;
@@ -180,19 +180,19 @@ DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NG
      UINT *pbs=(UINT*)nsrc->data;
      UINT *pbd=(UINT*)ndst->data;
      sx=srcrect?srcrect->x:0;    sy=srcrect?srcrect->y:0;
-     sw=nsrc->width;      sh=nsrc->height;
+     sw=MIN(ndst->width,nsrc->width);      
+     sh=MIN(ndst->height,nsrc->height);
      dx=dstrect?dstrect->x:0;    dy=dstrect?dstrect->x:0;
 
-     //NGLOG_DEBUG("Blit from %p->%p %d,%d-%d,%d to %p %d,%d buffer=%p->%p",nsrc,ndst,sx,sy,sw,sh,ndst,dx,dy,pbs,pbd);
+     NGLOG_VERBOSE("Blit from %p->%p %d,%d-%d,%d to %p %d,%d buffer=%p->%p",nsrc,ndst,sx,sy,sw,sh,ndst,dx,dy,pbs,pbd);
      pbs+=sy*(nsrc->pitch>>2)+sx;
      pbd+=dy*(ndst->pitch>>2)+dx;
-     NGLOG_VERBOSE("buffer %p->%p pitch=%d/%d sw=%dx%d",pbs,pbd,nsrc->pitch,ndst->pitch,sw,sh);
-     for(y=0;y<sh;y++){
+     for(y=0;y<sh&&(dy+y<ndst->height);y++){
          for(x=0;x<sw;x++)pbd[x]=pbs[x];
          pbs+=(nsrc->pitch>>2);
          pbd+=(ndst->pitch>>2);
      }
-     if(ndst->ishw)rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);//sx,sy,sx+sw,sy+sh);
+     //if(ndst->ishw)rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);//sx,sy,sx+sw,sy+sh);
      return 0;
 }
 

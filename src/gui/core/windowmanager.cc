@@ -210,9 +210,13 @@ bool WindowManager::hasDirtyWindows(){
 
 void WindowManager::drawWindows() {
     // Notify the focused child to draw on this canvas
+    int dirty=0;
     for (auto wind : windows_) {
-        if(wind->isDirty())
-        wind->draw(false);
+        if(wind->isDirty()){
+           wind->draw(false);
+	   dirty++;
+	   NGLOG_DEBUG("window %p is dirty",wind);
+	}
     }
     /*for(auto v:invalidate_views){
         GraphContext*c=v->getCanvas();
@@ -222,9 +226,9 @@ void WindowManager::drawWindows() {
         //v->clip(*canvas);
         v->onDraw(*canvas);
     }*/
-    NGLOG_DEBUG_IF(invalidate_views.size()>1,"invalidate_views.size=%d",invalidate_views.size());
+    NGLOG_DEBUG_IF(dirty||invalidate_views.size()>1,"invalidate_views.size=%d dirty=%d",invalidate_views.size(),dirty);
     invalidate_views.clear();
-    GraphDevice::getInstance()->flip(nullptr);
+    if(dirty)GraphDevice::getInstance()->flip(nullptr);
 }
 
 int WindowManager::hasEvents(){
@@ -240,7 +244,7 @@ void WindowManager::runOnce(){
     int evts=hasEvents();
     NGLOG_VERBOSE("events=%x",evts);
     if (evts&4)drawWindows();
-    if(evts&8)
+    if(evts&0x0C)
        GraphDevice::getInstance()->ComposeSurfaces();
     if(evts&3)popMessage();
 }

@@ -105,8 +105,9 @@ void View::clip(GraphContext&canvas){
         pixman_region32_fini(&rgn);
     }
     int num=pixman_region32_n_rects(invalid_region_);//cairo_region_num_rectangles(invalid_region_);
+    pixman_box32_t*pboxes=pixman_region32_rectangles(invalid_region_,&num);
     for(int i=0;i<num;i++){
-        pixman_box32_t *r=pixman_region32_rectangles(invalid_region_,NULL)+i;//cairo_region_get_rectangle(invalid_region_,i,&r);
+        pixman_box32_t *r=pboxes+i;
         canvas.rectangle(r->x1,r->y1,r->x2-r->x1,r->y2-r->y1);
     }
     canvas.clip();
