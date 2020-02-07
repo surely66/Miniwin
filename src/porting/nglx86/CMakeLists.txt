@@ -12,10 +12,12 @@ set(SRCS_X86
    ngl_tuner.c
    ngl_smc.c
    ngl_video.c
-   ngl_audio.c
+   ngl_snd.c
+   ngl_disp.c
    ngl_disp.c
    ngl_pvr.c
    ngl_ir.cc
+   ngl_panel.c
    ngl_mediaplayer.c
 )
 
@@ -24,7 +26,7 @@ include(platform.cmake)
 find_package(GTK3)
 find_package(X11)
 if (TRUE)
-   set(SRC_GRAPH ngl_vnc_graph.c)
+   set(SRC_GRAPH ngl_rfb_graph.c)
 elseif ( X11_FOUND )
    set(SRC_GRAPH ngl_x11_graph.c)
 elseif ( GTK3_FOUND )

@@ -31,7 +31,7 @@
 #if !defined(_MSC_VER)
 /* XXX: defines in svg-cairo-version.h are currently not used, but what can be done
 to include svg-cairo-version.h.in in Windows builds */
-#include "svg-cairo-version.h"
+//#include "svg-cairo-version.h"
 #endif
 
 #include <stdarg.h>

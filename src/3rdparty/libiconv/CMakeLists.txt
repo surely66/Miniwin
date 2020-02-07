@@ -62,7 +62,7 @@ if ( MINGW )
   configure_file ( srclib/alloca.in.h ${PROJECT_SOURCE_DIR}/srclib/alloca.h )
 endif ()
 
-include_directories ( ${PROJECT_SOURCE_DIR} include srclib)
+include_directories ( ${PROJECT_SOURCE_DIR}  include srclib)
 add_definitions ( -Dset_relocation_prefix=libcharset_set_relocation_prefix -Drelocate=libcharset_relocate -DHAVE_CONFIG_H -DINSTALLPREFIX=NULL -DNO_XMALLOC -DBUILDING_LIBCHARSET -DINSTALLDIR="" -DLIBDIR="" -DENABLE_RELOCATABLE=1 -DIN_LIBRARY )
 
 # libcharset
@@ -77,7 +77,7 @@ if ( NOT MSVC )
 endif()
 target_compile_options (charset PRIVATE -DBUILDING_LIBCHARSET)
 
-if ( NOT MSVC )
+if ( FALSE AND NOT MSVC )
   # libicrt
   set ( SRC_LIBICRT 
     srclib/allocator.c
@@ -98,6 +98,7 @@ if ( NOT MSVC )
     srclib/strerror.c
     srclib/strerror-override.c  
   )
+  #include_directories(${PROJECT_BINARY_DIR}/srclib/)
   add_library ( icrt STATIC ${SRC_LIBICRT} )
 endif()
 # libiconv
@@ -109,7 +110,7 @@ add_library ( iconv ${SRC_LIBICONV} )
 target_link_libraries ( iconv charset )
 set_target_properties ( iconv PROPERTIES COMPILE_FLAGS -DBUILDING_LIBICONV)
 
-if(NOT MSVC)
+if(FALSE AND NOT MSVC)
   add_executable ( iconvcli src/iconv_no_i18n.c )
   target_link_libraries ( iconvcli iconv icrt charset )
   set_target_properties ( iconvcli PROPERTIES OUTPUT_NAME iconv )

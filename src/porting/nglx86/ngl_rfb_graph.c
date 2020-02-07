@@ -32,17 +32,13 @@ void SENDKEY(int k){
 }
 static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)
 {
-    static int color=0x1010FFFF;
     if(down) {
 	int x;
         NGLOG_DEBUG("rcv KEY %d",key);
         switch(key){
 	case XK_F1:rfbCloseClient(cl);break;
+        case XK_F2:SENDKEY(NGL_KEY_MENU);break;
         case XK_F5:
-		 for(x=0;x<rfbScreen->width*rfbScreen->height;x++)
-			 ((int*)rfbScreen->frameBuffer)[x]=color;
-		 color+=2;
-		 //rfbDoCopyRect(rfbScreen,0,0,rfbScreen->width,rfbScreen->height,0,0);
 		 rfbMarkRectAsModified(cl->screen,0,0,rfbScreen->width,rfbScreen->height);break;
         case XK_F12: rfbShutdownServer(cl->screen,TRUE);break;
         case XK_F11:

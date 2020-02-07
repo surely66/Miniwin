@@ -37,7 +37,7 @@ static INT SVC_CBK(const SERVICELOCATOR*loc,const DVBService*svc,void*userdata)
 static SERVICELOCATOR svcs[64];
 static USHORT lcn[64];
 static int cnt=0;
-static void FilterCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData){
+static void FilterCBK(HANDLE dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLength, void *pUserData){
    BAT b(pBuffer);
    NIT n(pBuffer);
    char name[128];
@@ -55,7 +55,7 @@ static void FilterCBK(DWORD dwVaFilterHandle,const BYTE *pBuffer,UINT uiBufferLe
 }
 TEST_F(EPGTest,BAT){
    BYTE mask[8],match[8];
-   DWORD flt=nglAllocateSectionFilter(1,PID_BAT,FilterCBK,NULL,NGL_DMX_SECTION);
+   HANDLE flt=nglAllocateSectionFilter(1,PID_BAT,FilterCBK,NULL,NGL_DMX_SECTION);
    mask[0]=0xFF;
    match[0]=TBID_BAT;
    nglSetSectionFilterParameters(flt,mask,match,1);
@@ -66,7 +66,7 @@ TEST_F(EPGTest,BAT){
 
 TEST_F(EPGTest,NIT){
    BYTE mask[8],match[8];
-   DWORD flt=nglAllocateSectionFilter(1,PID_NIT,FilterCBK,NULL,NGL_DMX_SECTION);
+   HANDLE flt=nglAllocateSectionFilter(1,PID_NIT,FilterCBK,NULL,NGL_DMX_SECTION);
    mask[0]=0xFF;
    match[0]=TBID_NIT;
    nglSetSectionFilterParameters(flt,mask,match,1);
