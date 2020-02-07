@@ -49,7 +49,7 @@ bool Desktop::onKeyRelease(KeyEvent&k){
 bool Desktop::onMessage(DWORD msgid,DWORD wParam,ULONG lParam){
     bool rc=Window::onMessage(msgid,wParam,lParam);
     if(false==rc&&onmessage)
-        onmessage(msgid,wParam,lParam);
+        return onmessage(msgid,wParam,lParam);
 }
 
 }//namespace

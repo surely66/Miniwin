@@ -3,8 +3,8 @@
 #include<window.h>
 namespace nglui{
 
-typedef bool (*KeyHandler)(int);
-typedef void (*MessageHandler)(DWORD,DWORD,ULONG);
+DECLARE_UIEVENT(bool,MessageHandler,DWORD,DWORD,ULONG);
+DECLARE_UIEVENT(bool,KeyHandler,int);
 class Desktop:public Window{
 private:
    KeyHandler onkeypress;

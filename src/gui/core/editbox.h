@@ -6,7 +6,7 @@ namespace nglui{
 
 class EditBox:public Widget{
 public:
-  typedef void (*AfterTextChanged)(EditBox&);
+  DECLARE_UIEVENT(void,AfterTextChanged,EditBox&);
 protected:
   int edit_mode_;//0-->insert mode 1-->replace_mode
   int caretPos;

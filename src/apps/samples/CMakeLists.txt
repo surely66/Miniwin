@@ -1,5 +1,7 @@
 project(gui_test C CXX)
 
+set(CMAKE_CXX_STANDARD 11)
+
 include_directories(
    ${CMAKE_SOURCE_DIR}/include
    ${CMAKE_SOURCE_DIR}/include/gui

@@ -9,7 +9,7 @@ enum{
     LENGTH_SHORT=2000,
     LENGTH_LONG=4000
 };
-typedef void (OnCreateContentListener)(Window&,int);
+DECLARE_UIEVENT(void,OnCreateContentListener,Window&,int);
 public:
     ToastWindow(int w,int h,int timeout);
     ~ToastWindow();

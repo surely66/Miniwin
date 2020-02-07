@@ -4,7 +4,7 @@
 NGL_MODULE(SIMPLEWIN)
 
 static bool onKey(int key){
-    NGLOG_DEBUG("rcvkey %d",key);
+    NGLOG_DEBUG("rcvkey %d c++=%d",key,__cplusplus);
     switch(key){
     case NGL_KEY_ESCAPE:exit(0);
     default:
@@ -15,13 +15,13 @@ static bool onKey(int key){
 }
 
 int main(int argc,const char*argv[]){
+    Window*w=nullptr;
     App app(argc,argv);
     Desktop*desktop=new Desktop();
     int count=0;
-    Window*w=nullptr;
     desktop->setKeyListener(onKey);
     if(argc==1){//it's recomand that use C++11 lambda listener for simple listener function
-#if __cplusplus>201700
+#if 1//__cplusplus>201100
        desktop->setKeyListener([&w](int key)->bool{
              NGLOG_DEBUG("rcvkey %d",key);
              switch(key){
@@ -41,6 +41,7 @@ int main(int argc,const char*argv[]){
             w->setLayout(new LinearLayout());
             w->addChildView(new TextField("HelloWorld!! "+std::to_string(count++),400,80)); 
             desktop->sendMessage(msg,wp,lp,500);
+	    return true;
        });
 #endif
     }else{//if you dont known C++11 lambda,used like following lines

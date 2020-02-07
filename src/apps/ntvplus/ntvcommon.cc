@@ -222,24 +222,25 @@ static void onCreateVolumeWindow(Window&w,int){
 void ShowVolumeWindow(int timeout){
     ToastWindow::makeWindow(400,20,0,onCreateVolumeWindow,timeout);
 }
-static void onCreateAudioLanWindow(Window&w,int ){
-     SERVICELOCATOR svc;
-     ELEMENTSTREAM es[16];
-     int cnt,estype;
-     char str[16];
-     DtvGetCurrentService(&svc);
-     cnt=DtvGetServiceElements(&svc,estype,es);
-     ListView*lst=new ListView(390,80);
-     for(int i=0;i<cnt;i++){
-          NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
-          if(es[i].iso639lan[0])
-              lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
-     }
-     w.addChildView(lst);
-     w.setPos(400,600);
-}
+
 void ShowAudioSelector(int estype,int timeout){//ST_AUDIO
-    ToastWindow::makeWindow(400,100,0,onCreateAudioLanWindow,timeout);
+    ToastWindow::makeWindow(400,100,0,
+	[estype](Window&w,int){
+             SERVICELOCATOR svc;
+             ELEMENTSTREAM es[16];
+             int cnt;
+             char str[16];
+             DtvGetCurrentService(&svc);
+             cnt=DtvGetServiceElements(&svc,estype,es);
+             ListView*lst=new ListView(390,80);
+             for(int i=0;i<cnt;i++){
+                NGLOG_DEBUG("audio[%d] pid=%d type=%d lan=%s",i,es[i].pid,es[i].getType(),es[i].iso639lan);
+                if(es[i].iso639lan[0])
+                   lst->addItem(new ListView::ListItem((const char*)es[i].iso639lan));
+             }
+             w.addChildView(lst);
+             w.setPos(400,600);
+	},timeout);
 }
 
 }//namespace

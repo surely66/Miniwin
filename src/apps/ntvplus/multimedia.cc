@@ -129,13 +129,12 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):NTVWindow(x,y,w,h){
     mdlist->setFgColor(getFgColor());
     mdlist->setItemPainter(MediaPainter);
     addChildView(mdlist);
-#if __cplusplus>=201700
+    
     mdlist->setClickListener([&](View&lv){
         int index=mdlist->getIndex();
         MediaItem*itm=(MediaItem*)mdlist->getItem(index);
         if(itm->isdir)loadMedia(itm->path+"/"+itm->getText(),FILTERS[index]);
     });
-#endif
 }
 
 bool MediaWindow::onKeyRelease(KeyEvent&k){
@@ -162,11 +161,9 @@ bool MediaWindow::onKeyRelease(KeyEvent&k){
            return true;
         }
     case KEY_RED:
-#if __cplusplus>=201700
          mdlist->sort([](const ListView::ListItem&a,const ListView::ListItem&b)->int{
                             return strcmp(a.getText().c_str(),b.getText().c_str())>0;
                        },sort_revert); 
-#endif
          sort_revert=!sort_revert;
          for(int i=0;i<mdlist->getItemCount();i++){
               MediaItem*itm=(MediaItem*)mdlist->getItem(i);

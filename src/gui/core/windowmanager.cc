@@ -121,6 +121,7 @@ void WindowManager::removeWindow(std::shared_ptr<Window>w){
    for(auto win=windows_.begin();win!=windows_.end();win++){
        if((*win)==w){
             windows_.erase(win);
+            GraphDevice::getInstance()->flip(nullptr);
             break;
        }
    } 
@@ -205,27 +206,31 @@ void WindowManager::onKeyChar(uint32_t key) {
 bool WindowManager::hasDirtyWindows(){
     for (auto wind : windows_)
         if(wind->isDirty())return true;
-    return false;//invalidate_views.size()>0;
+    return invalidate_views.size()>0;
 }
 
 void WindowManager::drawWindows() {
     // Notify the focused child to draw on this canvas
     int dirty=0;
+#if 1
     for (auto wind : windows_) {
         if(wind->isDirty()){
            wind->draw(false);
-	   dirty++;
-	   NGLOG_DEBUG("window %p is dirty",wind);
+	   dirty++;invalidate_views.emplace(wind);
+	   NGLOG_DEBUG("window %p is dirty",wind.get());
 	}
     }
-    /*for(auto v:invalidate_views){
+#else
+    for(auto v:invalidate_views){
         GraphContext*c=v->getCanvas();
-        NGLOG_DEBUG_IF(c==nullptr,"canvas=NULL"); 
+        NGLOG_DEBUG("win %p canvas=%p",v,c); 
         if(c==nullptr)continue;
         RefPtr<GraphContext>canvas(c);
         //v->clip(*canvas);
         v->onDraw(*canvas);
-    }*/
+	canvas->flip();
+    }
+#endif
     NGLOG_DEBUG_IF(dirty||invalidate_views.size()>1,"invalidate_views.size=%d dirty=%d",invalidate_views.size(),dirty);
     invalidate_views.clear();
     if(dirty)GraphDevice::getInstance()->flip(nullptr);

@@ -104,7 +104,7 @@ void View::clip(GraphContext&canvas){
         pixman_region32_subtract(invalid_region_,invalid_region_,&rgn);
         pixman_region32_fini(&rgn);
     }
-    int num=pixman_region32_n_rects(invalid_region_);//cairo_region_num_rectangles(invalid_region_);
+    int num;
     pixman_box32_t*pboxes=pixman_region32_rectangles(invalid_region_,&num);
     for(int i=0;i<num;i++){
         pixman_box32_t *r=pboxes+i;
@@ -114,7 +114,7 @@ void View::clip(GraphContext&canvas){
 }
 
 void View::resetClip(){
-    pixman_region32_intersect_rect(invalid_region_,invalid_region_,0,0,0,0);
+    pixman_region32_clear(invalid_region_);
 }
 
 GraphContext*View::getCanvas(){

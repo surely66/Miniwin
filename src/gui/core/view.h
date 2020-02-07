@@ -5,7 +5,15 @@
 #include <layout.h>
 #include <memory>
 #include <vector>
+#include <functional>
 struct pixman_region32;
+
+#ifndef _GLIBCXX_FUNCTIONAL
+#define DECLARE_UIEVENT(type,name,...) typedef type(*name)(__VA_ARGS__)
+#else
+#define DECLARE_UIEVENT(type,name,...) typedef std::function< type(__VA_ARGS__) >name
+#endif
+
 namespace nglui{
 #define SIF_ALL             0xFF//:整个结构都有效
 #define SIF_DISABLENOSCROLL 0x01//:该值仅在设定参数时使用，视控件参数设定的需要来对本结构的成员进行取舍。
@@ -68,9 +76,10 @@ public:
     WM_CLICK  =4, //wParam is view's id
     WM_CHAR   =5//wparam is unicode char
   };
-typedef void(*ClickListener)(View&v);
-typedef bool(*MessageListener)(View&,DWORD,DWORD,ULONG);
-
+//typedef void(*ClickListener)(View&v);
+//typedef bool(*MessageListener)(View&,DWORD,DWORD,ULONG);
+DECLARE_UIEVENT(void,ClickListener,View&);
+DECLARE_UIEVENT(bool,MessageListener,View&,DWORD,DWORD,ULONG);
 protected:
     int id_;
     int font_size_;

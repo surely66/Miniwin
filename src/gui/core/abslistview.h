@@ -21,10 +21,10 @@ public:
      virtual int getId()const{return id_;}
      virtual bool operator==(const ListItem & b)const{return id_==b.id_;}
    };
-   typedef void(*ItemSelectListener)(AbsListView&,int);
-   typedef void(*ItemPainter)(AbsListView&,const ListItem&,int state,GraphContext&);
+   DECLARE_UIEVENT(void,ItemSelectListener,AbsListView&,int);
+   DECLARE_UIEVENT(void,ItemPainter,AbsListView&,const ListItem&,int state,GraphContext&);
+   DECLARE_UIEVENT( int,ItemCompare,const ListItem&a,const ListItem&b);
    static void DefaultPainter(AbsListView&,const ListItem&,int state,GraphContext&);
-   typedef int (*ItemCompare)(const ListItem&a,const ListItem&b);
 protected:
    int index_;
    int top_;
