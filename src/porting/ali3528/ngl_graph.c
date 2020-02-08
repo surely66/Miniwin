@@ -166,7 +166,7 @@ DWORD nglFlip(HANDLE surface){
     return ret;
 }
 
-DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL hwsurface)
+DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
 {
 #ifdef USE_DIRECTFB
      int i,ret;

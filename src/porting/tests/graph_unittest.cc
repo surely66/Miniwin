@@ -41,6 +41,27 @@ TEST_F(GRAPH,CreateSurface){
    nglDestroySurface(surface);
 }
 
+TEST_F(GRAPH,Format){
+    HANDLE surface;
+    UINT width,height;
+    nglGetScreenSize(&width,&height);
+    int formats[]={GPF_ARGB4444, GPF_ARGB1555, GPF_ARGB,  GPF_ABGR,  GPF_RGB32};
+
+    for(int i=0;i<sizeof(formats)/sizeof(int);i++){
+        nglCreateSurface(&surface,width,height,formats[i],1);
+	NGLRect r={100,100,100,100};
+	nglFillRect(surface,&r,0xFFFF0000);
+	r.x+=110;
+	nglFillRect(surface,&r,0xFF00FF00);
+	r.x+=110;
+	nglFillRect(surface,&r,0xFF0000FF);
+
+	nglFlip(surface);
+	nglDestroySurface(surface);
+	nglSleep(5000);
+    }
+}
+
 TEST_F(GRAPH,Surface_Draw){
    HANDLE surface=0;
    UINT width,height;
@@ -63,9 +84,11 @@ TEST_F(GRAPH,Surface_Draw){
 TEST_F(GRAPH,Blit){
    HANDLE hwsurface;
    HANDLE swsurface;
-   nglCreateSurface(&hwsurface,1280,720,0,1);
-   NGLRect r1={0,0,1280,720};
-   nglFillRect(hwsurface,&r1,0x00000);
+   unsigned int width,height;
+   nglGetScreenSize(&width,&height);
+   nglCreateSurface(&hwsurface,width,height,0,1);
+   NGLRect r1={0,0,width,height};
+   nglFillRect(hwsurface,&r1,0xFF00000);
    nglFlip(hwsurface);
 
    nglCreateSurface(&swsurface,800,600,0,0);
@@ -73,9 +96,11 @@ TEST_F(GRAPH,Blit){
    nglFillRect(swsurface,&rf,0xFF444444);
    NGLRect r={100,50,640,480};
    nglFillRect(swsurface,&r,0x0);
-   for(int i=-1;i<10;i++){
-       for(int j=0;j<13;j++){
-           nglBlit(hwsurface,swsurface,NULL,NULL);
+   nglBlit(hwsurface,NULL,swsurface,NULL);
+   for(int y=-800;y<=800;y+=200){
+       for(int x=-1000;x<1000;x+=200){
+	   NGLRect drect={x,y,0,0};
+	   nglBlit(hwsurface,&drect,swsurface,NULL);
            nglFlip(hwsurface);
            nglSleep(200);
        }

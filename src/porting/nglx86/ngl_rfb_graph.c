@@ -177,7 +177,7 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rect,UINT color){
     NGLRect recsurface={0,0,ngs->width,ngs->height};
     NGLRect *rec=(rect?rect:&recsurface);
     NGLOG_VERBOSE("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec->x,rec->y,rec->w,rec->h,color,ngs->pitch);
-    UINT*fb=(UINT*)(ngs->data+ngs->pitch*rec->y+x*4);
+    UINT*fb=(UINT*)(ngs->data+ngs->pitch*rec->y+rec->x*4);
     for(y=0;y<rec->h;y++){
         for(x=0;x<rec->w;x++)
            fb[x]=color;
@@ -189,12 +189,12 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rect,UINT color){
 
 DWORD nglFlip(HANDLE surface){
     NGLSURFACE*ngs=(NGLSURFACE*)surface;
-    rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
+    if(ngs->ishw)rfbMarkRectAsModified(rfbScreen,0,0,rfbScreen->width,rfbScreen->height);
     NGLOG_VERBOSE("flip %p",ngs);
     return 0;
 }
 
-DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL ishwsurface)
+DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL ishwsurface)
 {//XShmCreateImage XShmCreatePixmap
      NGLSURFACE*nglsurface=(NGLSURFACE*)malloc(sizeof(NGLSURFACE));
      if(ishwsurface){
@@ -213,7 +213,7 @@ DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL ishws
 }
 
 #define MIN(x,y) ((x)>(y)?(y):(x))
-DWORD nglBlit(HANDLE dstsurface,NGLRect*dstrect,HANDLE srcsurface,const NGLRect*srcrect)
+DWORD nglBlit(HANDLE dstsurface,const NGLRect*dstrect,HANDLE srcsurface,const NGLRect*srcrect)
 {
      unsigned int x,y,sx,sy,sw,sh,dx,dy;
      NGLSURFACE*ndst=(NGLSURFACE*)dstsurface;

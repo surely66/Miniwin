@@ -15,13 +15,13 @@ typedef enum {
 typedef struct{
     INT x;
     INT y;
-    INT w;
-    INT h;
+    UINT w;
+    UINT h;
 }NGLRect;
 
 DWORD nglGraphInit();
 DWORD nglGetScreenSize(UINT*width,UINT*height);
-DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL hwsurface);
+DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface);
 DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format);
 DWORD nglLockSurface(HANDLE surface,void**buffer,UINT*pitch);
 DWORD nglUnlockSurface(HANDLE surface);
