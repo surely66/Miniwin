@@ -87,7 +87,7 @@ static long AuiSectionCB(aui_hdl filter_handle,unsigned char *section_data,unsig
 {
     NGLDMXFILTER*flt=GetFilter(filter_handle);
     if(flt&&flt->CallBack)
-         flt->CallBack((DWORD)flt,(const BYTE*)section_data,len,flt->userdata); 
+         flt->CallBack((HANDLE)flt,(const BYTE*)section_data,len,flt->userdata); 
 }
 static long AuiRequestBuffer(void *p_user_hdl, unsigned long ul_req_size, void ** pp_req_buf, 
         unsigned long *req_buf_size, struct aui_avsync_ctrl *pst_ctrl_blk){
@@ -100,7 +100,7 @@ static long AuiRequestBuffer(void *p_user_hdl, unsigned long ul_req_size, void *
 static long AuiRecvData(void *p_user_hdl, unsigned long ul_size){
     NGLDMXFILTER*flt=GetFilter(p_user_hdl);
     if(flt&&flt->CallBack)
-         flt->CallBack((DWORD)flt,(const BYTE*)flt->tsBuffer,ul_size,flt->userdata);
+         flt->CallBack((HANDLE)flt,(const BYTE*)flt->tsBuffer,ul_size,flt->userdata);
 }
 
 static long AuiPesCBK(void *p_user_hdl,unsigned char* pbuf,unsigned long ul_size,void *usrdata){
@@ -163,7 +163,7 @@ static int aui_tsi_config(struct aui_tsi_config *tsi_cfg);
 #define MAX_TSI_DEVICE	(AUI_TSG_DEV + 1)
 DWORD nglDmxInit(){
     int i;
-    DWORD thid;
+    HANDLE thid;
     static int sDMX_INITED=0;
     struct aui_attr_tsg attr_tsg;
     struct aui_attr_tsi attr_tsi;

@@ -45,14 +45,14 @@ HANDLE nglMsgQCreate(int howmany, int sizepermag)
 #endif
 }
 
-HANDLE nglMsgQDestroy(DWORD msgid)
+DWORD nglMsgQDestroy(HANDLE msgq)
 {
 #ifndef LINUX
-     aui_hdl hdl=(aui_hdl)msgid;
+     aui_hdl hdl=(aui_hdl)msgq;
      aui_os_msgq_delete(&hdl);
      return NGL_OK;
 #else
-     MSGQUEUE*q=(MSGQUEUE*)msgid;
+     MSGQUEUE*q=(MSGQUEUE*)msgq;
      pthread_cond_destroy(&q->cput);
      pthread_cond_destroy(&q->cget);
      pthread_mutex_destroy(&q->mutex);
@@ -65,7 +65,7 @@ HANDLE nglMsgQDestroy(DWORD msgid)
 DWORD nglMsgQSend(HANDLE msgq, const void* pvmsg, int msgsize, DWORD timeout)
 {
 #ifndef LINUX
-     AUI_RTN_CODE rc=aui_os_msgq_snd((aui_hdl)msgid,(void*)pvmsg,msgsize,timeout);
+     AUI_RTN_CODE rc=aui_os_msgq_snd((aui_hdl)msgq,(void*)pvmsg,msgsize,timeout);
      return rc!=AUI_RTN_SUCCESS;
 #else
     MSGQUEUE*q=(MSGQUEUE*)msgq;
@@ -105,7 +105,7 @@ DWORD nglMsgQReceive(HANDLE msgq, const void* pvmsg, DWORD msgsize, DWORD timeou
     CAASSERT(asize==msgsize);
     return 0;
 #else
-    MSGQUEUE*q=(MSGQUEUE*)msgid;
+    MSGQUEUE*q=(MSGQUEUE*)msgq;
     struct timespec ts;
     int rc=0;
     clock_gettime(CLOCK_MONOTONIC,&ts);
@@ -135,7 +135,7 @@ DWORD nglMsgQReceive(HANDLE msgq, const void* pvmsg, DWORD msgsize, DWORD timeou
 }
 
 DWORD nglMsgQGetCount(HANDLE msgq,UINT*count){
-    MSGQUEUE*q=(MSGQUEUE*)msgid;
+    MSGQUEUE*q=(MSGQUEUE*)msgq;
     pthread_mutex_lock(&q->mutex);
     *count=(q->wridx+q->queSize-q->rdidx)%q->queSize;//it is the same to q->msgCount;
     pthread_mutex_unlock(&q->mutex);

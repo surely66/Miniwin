@@ -23,7 +23,7 @@ typedef struct{
 static IRDEV irdevices[NB_DEV];
 static std::map<std::string,int>name2key;
 static std::map<int,std::string>key2name;
-static DWORD msgQ=0;
+static HANDLE msgQ=0;
 #define REGIST_KEY(x) {name2key[#x]=NGL_##x ;key2name[NGL_##x]=#x;}
 
 DWORD nglIrInit(){
@@ -117,7 +117,7 @@ HANDLE nglIrOpen(int id,const char*keymap){
        NGLOG_VERBOSE("nametokey [%s]-->%x",kname.c_str(),name2key[kname]);
        ir->keymap[key]=name2key[kname];
     }
-    if(rc==0)return (DWORD)ir;
+    if(rc==0)return (HANDLE)ir;
     return 0;
 }
 
