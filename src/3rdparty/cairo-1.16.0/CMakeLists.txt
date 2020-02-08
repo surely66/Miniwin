@@ -9,7 +9,7 @@ find_package(ZLIB REQUIRED)
 find_package(Freetype)
 find_package(Threads)
 #find_package(Fontconfig)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
 
 include(Configure_config.cmake)
 include(Configure_features.cmake)

@@ -17,7 +17,7 @@ typedef struct{
    int msgCount;
    unsigned char*msgs;
 }MSGQUEUE;
-DWORD nglMsgQCreate(int howmany, int sizepermag)
+HANDLE nglMsgQCreate(int howmany, int sizepermag)
 {
 #ifndef LINUX
         aui_hdl hdl;
@@ -41,11 +41,11 @@ DWORD nglMsgQCreate(int howmany, int sizepermag)
      q->rdidx=q->wridx=q->msgCount=0;
      q->msgs=(unsigned char*)nglMalloc(sizepermag*howmany);
      NGLOG_VERBOSE("msgq=%p",q);
-     return (DWORD)q;
+     return (HANDLE)q;
 #endif
 }
 
-DWORD nglMsgQDestroy(DWORD msgid)
+HANDLE nglMsgQDestroy(DWORD msgid)
 {
 #ifndef LINUX
      aui_hdl hdl=(aui_hdl)msgid;
@@ -62,13 +62,13 @@ DWORD nglMsgQDestroy(DWORD msgid)
 #endif
 }
 
-DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
+DWORD nglMsgQSend(HANDLE msgq, const void* pvmsg, int msgsize, DWORD timeout)
 {
 #ifndef LINUX
      AUI_RTN_CODE rc=aui_os_msgq_snd((aui_hdl)msgid,(void*)pvmsg,msgsize,timeout);
      return rc!=AUI_RTN_SUCCESS;
 #else
-    MSGQUEUE*q=(MSGQUEUE*)msgid;
+    MSGQUEUE*q=(MSGQUEUE*)msgq;
     struct timespec ts;
     int rc=0;
     clock_gettime(CLOCK_MONOTONIC,&ts);
@@ -97,11 +97,11 @@ DWORD nglMsgQSend(DWORD msgid, const void* pvmsg, int msgsize, DWORD timeout)
 #endif
 }
 
-DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeout)
+DWORD nglMsgQReceive(HANDLE msgq, const void* pvmsg, DWORD msgsize, DWORD timeout)
 {
 #ifndef LINUX
     unsigned long asize;
-    aui_os_msgq_rcv((aui_hdl)msgid,(void*)pvmsg,msgsize,&asize,timeout);
+    aui_os_msgq_rcv((aui_hdl)msgq,(void*)pvmsg,msgsize,&asize,timeout);
     CAASSERT(asize==msgsize);
     return 0;
 #else
@@ -134,7 +134,7 @@ DWORD nglMsgQReceive(DWORD msgid, const void* pvmsg, DWORD msgsize, DWORD timeou
 #endif
 }
 
-DWORD nglMsgQGetCount(DWORD msgid,UINT*count){
+DWORD nglMsgQGetCount(HANDLE msgq,UINT*count){
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     pthread_mutex_lock(&q->mutex);
     *count=(q->wridx+q->queSize-q->rdidx)%q->queSize;//it is the same to q->msgCount;

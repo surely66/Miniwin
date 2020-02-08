@@ -114,7 +114,7 @@ void GraphDevice::remove(GraphContext*ctx){
             break;
        }
     }
-    //flip(nullptr);
+    flip(nullptr);
 }
 
 static void getSurfaceRegion(GraphContext*c,POINT &pt,RectangleInt*r){
@@ -146,13 +146,13 @@ void GraphDevice::ComposeSurfaces(){
     int i=0;
     NGLRect rr={40,70,320,240}; 
     nglFillRect(primarySurface,nullptr,0);
-    NGLOG_VERBOSE_IF(compose_event,"compose_event=%d",compose_event);
     for(auto s:gSurfaces){
         POINT pt=s->screenPos;
-        NGLRect srec={pt.x,pt.y,0,0};
+	NGLRect drect={pt.x,pt.y,0,0};
         HANDLE nglsurface=cairo_ngl_surface_get_surface(s->get_target()->cobj());
         if(GraphDevice::CheckOverlapped(s,i++))continue;
-        nglBlit(primarySurface,nglsurface,nullptr,&srec);
+	NGLOG_VERBOSE("Blit %p to %d,%d",s,pt.x,pt.y);
+        nglBlit(primarySurface,&drect,nglsurface,nullptr);
     }
     nglFlip(primarySurface);
     compose_event=0;

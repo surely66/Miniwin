@@ -9,9 +9,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/gui
    ${CMAKE_SOURCE_DIR}/include/porting
    ${CMAKE_SOURCE_DIR}/include/cairo
-   ${CMAKE_SOURCE_DIR}/src/3rdparty/cairo-1.16.0/src
    ${CMAKE_SOURCE_DIR}/include/epg
-   ${CMAKE_SOURCE_DIR}/src/3rdparty/breakpad/src
 )
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )

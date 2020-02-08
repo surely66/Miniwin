@@ -13,12 +13,16 @@
 NGL_MODULE(GRAPH)
 
 typedef struct{
-   unsigned int width;
-   unsigned int height;
-   unsigned int pitch;
-   void*data;
-   unsigned int ishw;
+    unsigned int width;
+    unsigned int height;
+    unsigned int pitch;
+    void*data;
+    unsigned int ishw;
 }NGLSURFACE;
+typedef struct ClientData {
+    rfbBool oldButton;
+    int oldx,oldy;
+} RFBClientData;
 
 static NGLSURFACE*hwsurface;
 static rfbScreenInfoPtr rfbScreen=NULL;
@@ -30,6 +34,49 @@ void SENDKEY(int k){
    ki.state=NGL_KEY_RELEASE;//NGL_KEY_PRESSED:NGL_KEY_RELEASE;
    nglIrSendKey(NULL,&ki,10);
 }
+
+static void onClientDone(rfbClientPtr cl){
+   free(cl->clientData);
+   cl->clientData = NULL;
+}
+
+static enum rfbNewClientAction onNewClient(rfbClientPtr cl){
+    cl->clientData = (void*)calloc(sizeof(RFBClientData),1);
+    cl->clientGoneHook = onClientDone;
+    return RFB_CLIENT_ACCEPT;
+}
+
+static void onMousePtr(int buttonMask,int x,int y,rfbClientPtr cl){
+   RFBClientData* cd=cl->clientData;
+   if(x>=0 && y>=0 && x<rfbScreen->width && y<rfbScreen->height) {
+      if(buttonMask) {
+         int i,j,x1,x2,y1,y2;
+
+         if(cd->oldButton==buttonMask) { /* draw a line */
+            rfbDrawLine(cl->screen,x,y,cd->oldx,cd->oldy,0x00FF);
+            x1=x; y1=y;
+            if(x1>cd->oldx) x1++; else cd->oldx++;
+            if(y1>cd->oldy) y1++; else cd->oldy++;
+            rfbMarkRectAsModified(cl->screen,x,y,cd->oldx,cd->oldy);
+         } else { /* draw a point (diameter depends on button) */
+            int w=cl->screen->paddedWidthInBytes;
+            x1=x-buttonMask; if(x1<0) x1=0;
+            x2=x+buttonMask; if(x2>rfbScreen->width) x2=rfbScreen->width;
+            y1=y-buttonMask; if(y1<0) y1=0;
+            y2=y+buttonMask; if(y2>rfbScreen->height) y2=rfbScreen->height;
+
+            for(i=x1*4/*BPP*/;i<x2*4;i++)
+              for(j=y1;j<y2;j++)
+                cl->screen->frameBuffer[j*w+i]=(char)0xff;
+            rfbMarkRectAsModified(cl->screen,x1,y1,x2,y2);
+         }
+      } else
+        cd->oldButton=0;
+      cd->oldx=x; cd->oldy=y; cd->oldButton=buttonMask;
+   }
+   rfbDefaultPtrAddEvent(buttonMask,x,y,cl);
+}
+		 
 static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)
 {
     if(down) {
@@ -65,29 +112,27 @@ static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)
         }
     }
 }
+static int  FileTransferPermitted(struct _rfbClientRec* cl){
+    NGLOG_DEBUG("___");
 
-static enum rfbNewClientAction onNewClient(rfbClientPtr cl){return RFB_CLIENT_ACCEPT;}
+    return TRUE;
+}
 DWORD nglGraphInit(){
     int x=0,y=0,*fb;
     HANDLE tid;
     int width=1280,height=720;
     if(rfbScreen)return NGL_OK;
-
+    InitFileTransfer();    SetFtpRoot("/");
     rfbScreen = rfbGetScreen(NULL,NULL,width,height,8,3,4);
-    //rfbScreen->desktopName = "RFB";
+    rfbScreen->desktopName = "NGL-RFB";
     rfbScreen->frameBuffer = (char*)malloc(width*height*4);
     rfbScreen->alwaysShared = (1==1);
     rfbScreen->kbdAddEvent=onVNCClientKey;
-    //rfbScreen->newClientHook=onNewClient;
-    //rfbScreen->httpDir = "webclients";
-    //rfbScreen->httpEnableProxyConnect = TRUE;
-    //atexit(graph_done);
-    /*rfbScreen->autoPort=TRUE;
-    rfbScreen->port=8315; 
-    rfbScreen->ptrAddEvent = NULL;//doptr;
-    rfbScreen->kbdAddEvent = NULL;//dokey;
-    rfbScreen->httpEnableProxyConnect = TRUE;
-    */
+    rfbScreen->ptrAddEvent=onMousePtr;
+    rfbScreen->newClientHook=onNewClient;
+    rfbScreen->permitFileTransfer=TRUE;
+    rfbScreen->getFileTransferPermission=FileTransferPermitted;
+    rfbRegisterTightVNCFileTransferExtension();
     rfbInitServer(rfbScreen);
     rfbRunEventLoop(rfbScreen,5,TRUE);//non block 
     NGLOG_DEBUG("VNC Server Inited rfbScreen=%p port=%d framebuffer=%p",rfbScreen,rfbScreen->port,rfbScreen->frameBuffer); 
@@ -168,7 +213,7 @@ DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL ishws
 }
 
 #define MIN(x,y) ((x)>(y)?(y):(x))
-DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NGLRect* dstrect)
+DWORD nglBlit(HANDLE dstsurface,NGLRect*dstrect,HANDLE srcsurface,const NGLRect*srcrect)
 {
      unsigned int x,y,sx,sy,sw,sh,dx,dy;
      NGLSURFACE*ndst=(NGLSURFACE*)dstsurface;
@@ -178,7 +223,7 @@ DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NG
      sx=srcrect?srcrect->x:0;    sy=srcrect?srcrect->y:0;
      sw=MIN(ndst->width,nsrc->width);      
      sh=MIN(ndst->height,nsrc->height);
-     dx=dstrect?dstrect->x:0;    dy=dstrect?dstrect->x:0;
+     dx=dstrect?dstrect->x:0;    dy=dstrect?dstrect->y:0;
 
      NGLOG_VERBOSE("Blit from %p->%p %d,%d-%d,%d to %p %d,%d buffer=%p->%p",nsrc,ndst,sx,sy,sw,sh,ndst,dx,dy,pbs,pbd);
      pbs+=sy*(nsrc->pitch>>2)+sx;

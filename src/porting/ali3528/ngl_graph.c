@@ -66,7 +66,7 @@ DWORD nglGetScreenSize(UINT*width,UINT*height){
     return NGL_OK;
 }
 
-DWORD nglLockSurface(DWORD surface,void**buffer,UINT*pitch){
+DWORD nglLockSurface(HANDLE surface,void**buffer,UINT*pitch){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Lock(surf,DSLF_READ | DSLF_WRITE,buffer,pitch);
@@ -82,7 +82,7 @@ DWORD nglLockSurface(DWORD surface,void**buffer,UINT*pitch){
     return ret;
 }
 
-DWORD nglGetSurfaceInfo(DWORD surface,UINT*width,UINT*height,INT *format)
+DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
 {
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -102,7 +102,7 @@ DWORD nglGetSurfaceInfo(DWORD surface,UINT*width,UINT*height,INT *format)
     return NGL_OK;
 }
 
-DWORD nglUnlockSurface(DWORD surface){
+DWORD nglUnlockSurface(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Unlock(surf);
@@ -113,7 +113,7 @@ DWORD nglUnlockSurface(DWORD surface){
     return ret;
 }
 
-DWORD nglSurfaceSetOpacity(DWORD surface,BYTE alpha){
+DWORD nglSurfaceSetOpacity(HANDLE surface,BYTE alpha){
     NGLOG_DEBUG("==setopacity=%x",alpha);
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -125,7 +125,7 @@ DWORD nglSurfaceSetOpacity(DWORD surface,BYTE alpha){
 #endif
 }
 
-DWORD nglFillRect(DWORD surface,const NGLRect*rec,UINT color){
+DWORD nglFillRect(HANDLE surface,const NGLRect*rec,UINT color){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     NGLRect r={0,0,0,0};
@@ -148,7 +148,7 @@ DWORD nglFillRect(DWORD surface,const NGLRect*rec,UINT color){
     return NGL_OK;
 }
 
-DWORD nglFlip(DWORD surface){
+DWORD nglFlip(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Flip( surf, NULL, DSFLIP_ONSYNC);
@@ -166,7 +166,7 @@ DWORD nglFlip(DWORD surface){
     return ret;
 }
 
-DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurface)
+DWORD nglCreateSurface(HANDLE*surface,INT width,INT height,INT format,BOOL hwsurface)
 {
 #ifdef USE_DIRECTFB
      int i,ret;
@@ -217,7 +217,7 @@ DWORD nglCreateSurface(DWORD*surface,INT width,INT height,INT format,BOOL hwsurf
 #endif
 }
 
-DWORD nglSetSurfaceColorKey(DWORD surface,UINT color){
+DWORD nglSetSurfaceColorKey(HANDLE surface,UINT color){
 #ifdef USE_DIRECTFB
       IDirectFBSurface*dfbsrc=(IDirectFBSurface*)surface;
 #else
@@ -226,7 +226,7 @@ DWORD nglSetSurfaceColorKey(DWORD surface,UINT color){
 }
 int blitflag=0;
 int porterduff=0;
-DWORD nglBlit(DWORD dstsurface,DWORD srcsurface,const NGLRect*srcrect,const NGLRect* dstrect)
+DWORD nglBlit(HANDLE dstsurface,const NGLRect*dstrect,HANDLE srcsurface,const NGLRect*srcrect)
 {
 #ifdef USE_DIRECTFB
      IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
@@ -264,7 +264,7 @@ DWORD nglBlit(DWORD dstsurface,DWORD srcsurface,const NGLRect*srcrect,const NGLR
      return ret;
 }
 
-DWORD nglDestroySurface(DWORD surface)
+DWORD nglDestroySurface(HANDLE surface)
 {
 #ifdef USE_DIRECTFB
      destroyed_surface++;

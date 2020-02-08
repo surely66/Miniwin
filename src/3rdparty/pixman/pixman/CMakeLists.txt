@@ -120,9 +120,5 @@ endif(BUILD_STATIC)
 
 install(FILES pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION include/pixman-1)
 
-add_custom_command(TARGET pixman-1_static POST_BUILD
-    COMMAND mkdir -p  ${CMAKE_SOURCE_DIR}/include/pixman
-    COMMAND cp -u pixman.h  pixman-version.h  ${CMAKE_SOURCE_DIR}/include/pixman
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/pixman
-    COMMENT "Copy PIXMAN Header Files")
+file(COPY pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION ${CMAKE_SOURCE_DIR}/include/pixman)
 

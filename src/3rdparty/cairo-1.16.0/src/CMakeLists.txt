@@ -662,10 +662,5 @@ install(FILES ${enabled_cairo_headers} DESTINATION include/cairo)
 install(FILES ../cairo-version.h DESTINATION include/cairo)
 install(FILES ${PROJECT_BINARY_DIR}/cairo-features.h DESTINATION include/cairo)
 
-add_custom_command(TARGET cairo POST_BUILD 
-    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/cairo
-    COMMAND cp -u ${enabled_cairo_headers}  ${CMAKE_SOURCE_DIR}/include/cairo
-    COMMAND cp -u ../cairo-version.h ${PROJECT_BINARY_DIR}/cairo-features.h ${CMAKE_SOURCE_DIR}/include/cairo
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src
-    COMMENT "Copy Cairo Header Files")
-
+file(COPY ../cairo-version.h ${enabled_cairo_headers} ${PROJECT_BINARY_DIR}/cairo-features.h 
+	DESTINATION ${CMAKE_SOURCE_DIR}/include/cairo)

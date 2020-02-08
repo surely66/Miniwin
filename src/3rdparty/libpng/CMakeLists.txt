@@ -922,6 +922,7 @@ add_custom_command(TARGET png POST_BUILD
     COMMAND cp -u pngconf.h  png.h  ${CMAKE_SOURCE_DIR}/include
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
     COMMENT "Copy PNG Header Files")
+file(COPY pngconf.h  png.h  DESTINATION ${CMAKE_SOURCE_DIR}/include)
 
 # what's with libpng-manual.txt and all the extra files?
 

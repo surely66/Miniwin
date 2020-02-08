@@ -90,7 +90,7 @@ static void key_callback(aui_key_info*ki,void*d){
     if(ir->cbk)ir->cbk(&ko,ir->userdata); 
 }
 
-DWORD nglIrOpen(int id,const char*keymap){
+HANDLE nglIrOpen(int id,const char*keymap){
     IRDEV*ir=&irdevices[id];
     std::ifstream fin;
     fin.open(keymap?keymap:"key.map");
@@ -121,14 +121,14 @@ DWORD nglIrOpen(int id,const char*keymap){
     return 0;
 }
 
-DWORD nglIrRegisterCallback(DWORD handle,NGLKEY_CALLBACK cbk,void*data){
+DWORD nglIrRegisterCallback(HANDLE handle,NGLKEY_CALLBACK cbk,void*data){
     IRDEV*ir=(IRDEV*)handle;
     ir->cbk=cbk;
     ir->userdata=data;
     return 0;
 }
 
-DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
+DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
     IRDEV*ir=(IRDEV*)handle;
     aui_key_info info;
 
@@ -156,7 +156,7 @@ DWORD nglIrGetKey(DWORD handle,NGLKEYINFO*key,DWORD timeout){
     return rc==0?NGL_OK:NGL_ERROR;
 }
 
-DWORD nglIrClose(DWORD handle){
+DWORD nglIrClose(HANDLE handle){
     IRDEV*ir=(IRDEV*)handle;
     if(ir<irdevices||ir>=&irdevices[NB_DEV])
         return NGL_INVALID_PARA;

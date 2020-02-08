@@ -31,7 +31,7 @@ DWORD nglSurfaceSetOpacity(HANDLE surface,BYTE alpha);
   color:A8R8G8B8
 */
 DWORD nglFillRect(HANDLE dstsurface,const NGLRect*rect,UINT color);
-DWORD nglBlit(HANDLE dstsurface,HANDLE srcsurface,const NGLRect*srcrect,const NGLRect*dstrect);
+DWORD nglBlit(HANDLE dstsurface,NGLRect*dstrect,HANDLE srcsurface,const NGLRect*srcrect);
 DWORD nglFlip(HANDLE dstsurface);
 DWORD nglDestroySurface(HANDLE surface);
 

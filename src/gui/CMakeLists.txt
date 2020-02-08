@@ -16,16 +16,12 @@ aux_source_directory(luabinding SRCS_LUABIND)
 list(APPEND EXT_LIBS lua)
 endif ()
 
-add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LOOP} ${SRCS_SVG})
-
 include_directories(
     ./ ./core ./core/svg ./luabinding 
-    ${CMAKE_BINARY_DIR}/include/
-    #${CMAKE_BINARY_DIR}/include/cairo
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/cairo-1.16.0/src
-    ${CMAKE_BINARY_DIR}/include/porting
-    #${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src/porting/inc
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/pixman
+    ${CMAKE_SOURCE_DIR}/include/cairo
+    ${CMAKE_SOURCE_DIR}/include/porting
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src/
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvgtiny/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/include
@@ -34,12 +30,9 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
     ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/pixman/pixman
-    ${CMAKE_BINARY_DIR}/src/3rdparty/libjpeg
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libjpeg
 )
 
+add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LOOP} ${SRCS_SVG})
 
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)

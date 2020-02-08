@@ -129,3 +129,8 @@ install_header ( ${PROJECT_BINARY_DIR}/include/iconv.h )
 install_header ( ${PROJECT_BINARY_DIR}/include/libcharset.h )
 install_header ( ${PROJECT_BINARY_DIR}/include/localcharset.h )
 install_data ( README AUTHORS COPYING )
+
+file(COPY ${PROJECT_BINARY_DIR}/include/iconv.h 
+          ${PROJECT_BINARY_DIR}/include/libcharset.h 
+          ${PROJECT_BINARY_DIR}/include/localcharset.h
+	  DESTINATION ${CMAKE_SOURCE_DIR}/include)
