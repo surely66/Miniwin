@@ -29,8 +29,8 @@ DWORD VA_DSCR_Init();
 NGL_MODULE(VA2NGL)
 
 static SERVICELOCATOR lastplayed;
-static DWORD flt_pmt=0;
-static DWORD flt_cat=0;
+static HANDLE flt_pmt=0;
+static HANDLE flt_cat=0;
 static BYTE CATSection[1024];
 static BYTE PMTSection[1024];
 static UINT num_elements=0;
@@ -122,7 +122,7 @@ static void SwitchProgram(BYTE*pmtbuf,UINT pmtlen){
     num_elements=num_new_elements;
 }
 
-static void SectionCBK(DWORD dwVaFilterHandle,const BYTE *Buffer, unsigned int uiBufferLength,void *pUserData){
+static void SectionCBK(HANDLE dwVaFilterHandle,const BYTE *Buffer, unsigned int uiBufferLength,void *pUserData){
     PSITable si(Buffer,0);
     PSITable cat(CATSection,0);
     PSITable pmt(PMTSection,0);
@@ -145,9 +145,9 @@ static void SectionCBK(DWORD dwVaFilterHandle,const BYTE *Buffer, unsigned int u
     }
 }
 
-static DWORD CreateFilter(int pid,int num,...){
+static HANDLE CreateFilter(int pid,int num,...){
     va_list ap;
-    DWORD  hFilter;
+    HANDLE  hFilter;
     BYTE mask[16],value[16];
     int i,idx;
     char buffer[64];

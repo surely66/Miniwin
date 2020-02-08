@@ -1330,7 +1330,7 @@ install(FILES "${CURL_BINARY_DIR}/libcurl.pc"
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/curl"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h")
-
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/include/curl" DESTINATION ${CMAKE_SOURCE_DIR}/include)
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     "${version_config}"

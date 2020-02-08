@@ -23,7 +23,7 @@ include_directories(
      ./ include
      ../../include/
      ../porting/inc/
-     ${CMAKE_BINARY_DIR}/include
+     ${CMAKE_SOURCE_DIR}/include
      ${CMAKE_SOURCE_DIR}/include/curl
      ${CMAKE_SOURCE_DIR}/epg
 )

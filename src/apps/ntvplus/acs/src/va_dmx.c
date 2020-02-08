@@ -27,7 +27,7 @@ typedef enum{
 }FILTERSTAT;
 typedef struct{
   WORD pid;
-  DWORD handle;
+  HANDLE handle;
   tVA_DMX_NotifyFilteredSection CallBack;
   DWORD vaHandle;
   FILTERSTAT state;
@@ -62,7 +62,7 @@ UINT GetCRC32(const BYTE*buffer, size_t size){
     return crc32;
 }
 
-static void NGLSectionCB(DWORD filter_handle,const BYTE *data,UINT len,void*userdata)
+static void NGLSectionCB(HANDLE filter_handle,const BYTE *data,UINT len,void*userdata)
 {
     DMXFILTER*flt=(DMXFILTER*)userdata;
     NGLOG_DEBUG_IF(flt==NULL,"invalida param");

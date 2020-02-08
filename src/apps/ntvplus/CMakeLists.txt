@@ -21,7 +21,6 @@ else()
 endif()
 
 link_directories(acs)
-
 add_executable(ntvplus ${SRCS_NTV_PLUS} ntvplus.pak)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
 target_link_libraries(ntvplus gui dvbepg )
