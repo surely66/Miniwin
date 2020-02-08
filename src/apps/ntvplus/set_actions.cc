@@ -13,7 +13,7 @@ static void time_load(Window*w){
         sprintf(buf,"%02d:00",i);
         s->addItem(new Selector::ListItem(buf,i));
     }
-    printf("zone offset=%d\r\n",timezone/3600);
+    printf("zone offset=%lld\r\n",timezone/3600);
     s->setIndex(12+timezone/3600);
 
     s=(Selector*)w->findViewById(ID_FIRST_EDITABLE_ID+1);
