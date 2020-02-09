@@ -13,15 +13,14 @@ message("NGL_CHIPSET=${NGL_CHIPSET}")
 message("HAL_EXTRA_LIBS=${HAL_EXTRA_LIBS}")
 message("TOOLCHAIN_DIR=${TOOLCHAIN_DIR}")
 
-
+aux_source_directory(./ SRCS_COMMON)
 if( $ENV{USE_RFB_GRAPH} )
   set(RFB_GRAPH ON)
-  set(SRCS_COMMON ngl_log.c ngl_rfb.c)
-  message("EXTRA_LIBS=${HAL_EXTRA_LIBS}")
+  message(" RFB(remote frame buffer is selected to ${NGL_CHIPSET}")
 else()
-  set(SRC_COMMON ngl_log.c)
+  list(FILTER SRCS_COMMON EXCLUDE REGEX ngl_rfb.c)
 endif()
-
+message("SRCCOMMON=${SRCS_COMMON}")
 include_directories(inc 
 	${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
 	${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver)

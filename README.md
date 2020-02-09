@@ -11,8 +11,10 @@ porting guide:
 2,implement your porting api to xxx directory
 3,enter source root directory 
 3,make a dir named outxxx,enter outxxx)
-4,cmake -DCMAKE_TOOLCHAN_FILE="your cmake toolchain path" \
-        -DNGL_CHIPSET=xxx -DNGL_CA=irdeto (NGL_CA is optional) \
+4,cmake -DCMAKE_TOOLCHAN_FILE="your cmake toolchain path" \  
+        -DNGL_CHIPSET=xxx -DNGL_CA=irdeto 
         ..
-5,after step 4,makefile is created in directory outxxx where you can type make to build your program.
+  (NGL_CA is optional) CMAKE_TOOLCHAIN_FILE is optinal for host compile,mandatory for cross compile
 
+5,after step 4,makefile is created in directory outxxx where you can type make to build your program.
+6,you can export USE_RFB_GRAPH=ON before cmake is executed to to use remote framebuffer for test.
