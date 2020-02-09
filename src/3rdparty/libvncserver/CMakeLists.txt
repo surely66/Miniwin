@@ -545,6 +545,9 @@ if(SDL2_FOUND)
     SDLvncviewer
   )
 endif(SDL2_FOUND)
+if ( CMAKE_CROSSCOMPILING )
+  set(LIBVNCCLIENT_EXAMPLES)
+endif()
 
 if(FFMPEG_FOUND)
   set(LIBVNCCLIENT_EXAMPLES
@@ -589,12 +592,14 @@ if(CMAKE_USE_PTHREADS_INIT)
      )
 endif(CMAKE_USE_PTHREADS_INIT)
 
+if(NOT CMAKE_CROSSCOMPILING)
 foreach(t ${SIMPLETESTS})
   add_executable(test_${t} ${TESTS_DIR}/${t}.c)
   set_target_properties(test_${t} PROPERTIES OUTPUT_NAME ${t})
   set_target_properties(test_${t} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test)
   target_link_libraries(test_${t} vncserver vncclient ${ADDITIONAL_TEST_LIBS})
 endforeach(t ${SIMPLETESTS})
+endif()
 
 if(WITH_JPEG AND FOUND_LIBJPEG_TURBO)
   add_executable(test_tjunittest
@@ -623,7 +628,7 @@ if(WITH_JPEG AND FOUND_LIBJPEG_TURBO)
 
 endif(WITH_JPEG AND FOUND_LIBJPEG_TURBO)
 
-if(LIBVNCSERVER_WITH_WEBSOCKETS)
+if( NOT CMAKE_CROSSCOMPILING AND LIBVNCSERVER_WITH_WEBSOCKETS)
   add_executable(test_wstest
     ${TESTS_DIR}/wstest.c
     ${TESTS_DIR}/wstestdata.inc
