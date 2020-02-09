@@ -16,13 +16,17 @@ set(SRCS_3528
    ngl_panel.c
    ngl_pvr.c
    ngl_ir.cc
-   ngl_graph.c
    ngl_mediaplayer.c
 #   ngl_descramble.c
    ngl_dsc.c
 )
+if( NOT RFB_GRAPH )
+   set(ALI_GRAPH_SRC ngl_graph.c)
+else()
+   message("Notice :${NGL_CHIPSET used RFB(Remote FrameBuffer),it's only used for test")
+endif()
 
-add_library(ali3528 STATIC ${SRCS_3528})
+add_library(ali3528 STATIC ${SRCS_3528} ${ALI_GRAPH_SRC})
 include(platform.cmake)
 
 message("DIRECTFB_INCLUDE_DIR=${DIRECTFB_INCLUDE_DIR}")

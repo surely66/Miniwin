@@ -25,8 +25,7 @@ include(platform.cmake)
 
 find_package(GTK3)
 find_package(X11)
-if (TRUE)
-   set(SRC_GRAPH ngl_rfb_graph.c)
+if ( RFB_GRAPH )
 elseif ( X11_FOUND )
    set(SRC_GRAPH ngl_x11_graph.c)
 elseif ( GTK3_FOUND )
@@ -35,14 +34,18 @@ else()
    set(SRC_GRAPH ngl_fb_graph.c)
 endif()
 
-add_library(nglx86 STATIC ${SRCS_X86} ${SRC_GRAPH})
+add_library(x86 STATIC ${SRCS_X86} ${SRC_GRAPH})
+if ( RFB_GRAPH )
+   message("RFB_GRAPH is used")
+elseif (SRC_GRAPH)
+   message("SRC_GRAPH=${SRC_GRAPH}")
+else()
+   message(FATAL_ERROR "no graph module is selected,please check your enviroment!")
+endif()
 
-message("==SRC_GRAPH=${SRC_GRAPH}")
-message("HAL_EXTRA_INCDIRS=${HAL_EXTRA_INCDIRS}")
-message("HAL_EXTRA_LIBS=${HAL_EXTRA_LIBS}")
+include_directories(
+	./ 
+	../inc 
+	${HAL_EXTRA_INCDIRS})
 
-include_directories(${HAL_EXTRA_INCDIRS}
-  ../inc ./)
-
-
-install (TARGETS nglx86  DESTINATION lib)
+install (TARGETS x86  DESTINATION lib)

@@ -13,14 +13,26 @@ message("NGL_CHIPSET=${NGL_CHIPSET}")
 message("HAL_EXTRA_LIBS=${HAL_EXTRA_LIBS}")
 message("TOOLCHAIN_DIR=${TOOLCHAIN_DIR}")
 
-aux_source_directory(./ SRCS_COMMON)
+
+if( $ENV{USE_RFB_GRAPH} )
+  set(RFB_GRAPH ON)
+  set(SRCS_COMMON ngl_log.c ngl_rfb.c)
+  message("EXTRA_LIBS=${HAL_EXTRA_LIBS}")
+else()
+  set(SRC_COMMON ngl_log.c)
+endif()
+
+include_directories(inc 
+	${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
+	${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver)
+
 add_library(tvhal SHARED ${SRCS_COMMON})
 add_library(tvhal_static STATIC ${SRCS_COMMON})
-include_directories(inc)
-add_subdirectory(${NGL_CHIPSET})
+
 target_link_libraries(tvhal ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
 target_link_libraries(tvhal_static ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
 
+add_subdirectory(${NGL_CHIPSET})
 add_subdirectory(tests)
 
 add_custom_command(TARGET tvhal POST_BUILD 
