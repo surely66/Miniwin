@@ -156,6 +156,10 @@ DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
     return rc==0?NGL_OK:NGL_ERROR;
 }
 
+DWORD nglIrSendKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
+    return nglMsgQSend(msgQ,key,sizeof(NGLKEYINFO),timeout);
+}
+
 DWORD nglIrClose(HANDLE handle){
     IRDEV*ir=(IRDEV*)handle;
     if(ir<irdevices||ir>=&irdevices[NB_DEV])

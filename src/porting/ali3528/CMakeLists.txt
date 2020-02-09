@@ -23,7 +23,7 @@ set(SRCS_3528
 if( NOT RFB_GRAPH )
    set(ALI_GRAPH_SRC ngl_graph.c)
 else()
-   message("Notice :${NGL_CHIPSET used RFB(Remote FrameBuffer),it's only used for test")
+   message("Notice :${NGL_CHIPSET} used RFB(Remote FrameBuffer),it's only used for test")
 endif()
 
 add_library(ali3528 STATIC ${SRCS_3528} ${ALI_GRAPH_SRC})

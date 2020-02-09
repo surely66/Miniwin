@@ -19,7 +19,3 @@ else()
   endif()
 endif()
 
-#set(NGL_PLATFORM_INCDIRS ${GTK3_INCLUDE_DIRS} CACHE INTERNAL "platform dependence include")
-#set(NGL_PLATFORM_LIBDIRS )
-
-#set(NGL_PLATFORM_LIBS ${GTK3_LIBRARIES} CACHE INTERNAL "platform dependence libs")
