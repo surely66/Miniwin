@@ -1,5 +1,4 @@
 #include<ngl_ir.h>
-//#include<aui_input.h>
 #include<map>
 #include<iostream>
 #include<fstream>

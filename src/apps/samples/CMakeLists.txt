@@ -1,3 +1,4 @@
+cmake_minimum_required (VERSION 2.6)
 project(gui_test C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -9,7 +10,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/cairo
    ${CMAKE_SOURCE_DIR}/include/epg
 )
-
+set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --no-allow-shlib-undefined ${CMAKE_EXE_LINKER_FLAGS}")
 add_executable(helloworld helloworld.cc)
 add_executable(simplewin simplewin.cc)
 add_executable(multiwin multiwindow.cc)

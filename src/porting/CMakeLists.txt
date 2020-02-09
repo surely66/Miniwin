@@ -18,7 +18,7 @@ if( $ENV{USE_RFB_GRAPH} )
   set(RFB_GRAPH ON)
   message(" RFB(remote frame buffer is selected to ${NGL_CHIPSET}")
 else()
-  list(FILTER SRCS_COMMON EXCLUDE REGEX ngl_rfb.c)
+  list(REMOVE_ITEM SRCS_COMMON .//ngl_rfb.c)
 endif()
 message("SRCCOMMON=${SRCS_COMMON}")
 include_directories(inc 
