@@ -10,13 +10,13 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/cairo
    ${CMAKE_SOURCE_DIR}/include/epg
 )
-set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --no-allow-shlib-undefined ${CMAKE_EXE_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --no-allow-shlib-undefined -lz ${CMAKE_EXE_LINKER_FLAGS}")
 add_executable(helloworld helloworld.cc)
 add_executable(simplewin simplewin.cc)
 add_executable(multiwin multiwindow.cc)
 add_executable(2048 game2048.cc)
 
-target_link_libraries(helloworld gui)
+target_link_libraries(helloworld tvhal gui)
 target_link_libraries(simplewin gui)
 target_link_libraries(multiwin gui)
 target_link_libraries(2048 gui)

@@ -16,6 +16,7 @@ typedef struct{
     unsigned int width;
     unsigned int height;
     unsigned int pitch;
+    int format;
     void*data;
     unsigned int ishw;
 }NGLSURFACE;
@@ -159,7 +160,7 @@ DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
     NGLSURFACE*ngs=(NGLSURFACE*)surface;
     *width=ngs->width;
     *height=ngs->height;
-    *format=GPF_ABGR;
+    *format=ngs->format;//GPF_ABGR;
     return NGL_OK;
 }
 
@@ -207,6 +208,7 @@ DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL ish
      nglsurface->width=width;
      nglsurface->height=height;
      nglsurface->pitch=width*4;
+     nglsurface->format=GPF_ABGR;
      *surface=(HANDLE)nglsurface;
      NGLOG_DEBUG("surface=%p/%p framebuffer=%p size=%dx%d hw=%d",nglsurface,*surface,nglsurface->data,width,height,ishwsurface);
      return NGL_OK;

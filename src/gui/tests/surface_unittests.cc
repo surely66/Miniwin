@@ -21,7 +21,7 @@ public :
       ts=gettime();
    }
    void tmend(const char*txt){
-      printf("%s:used time %dms\r\n",txt,gettime()-ts);
+      printf("%s:used time %lldms\r\n",txt,gettime()-ts);
    }
    unsigned long long gettime(){
        struct timeval tv;

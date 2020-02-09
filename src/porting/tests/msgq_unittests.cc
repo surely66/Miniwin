@@ -22,18 +22,18 @@ class OSMsgQ:public testing::Test{
 
 TEST_F(OSMsgQ,Create_1){
    HANDLE q=nglMsgQCreate(10,10);
-   ASSERT_FALSE(0==q);
+   ASSERT_FALSE(nullptr==q);
    ASSERT_TRUE(0==nglMsgQDestroy(q));
 }
 
 TEST_F(OSMsgQ,Create_Error_1){
    HANDLE q=nglMsgQCreate(0,10);
-   ASSERT_TRUE(0==q);
+   ASSERT_TRUE(nullptr==q);
 }
 
 TEST_F(OSMsgQ,Create_Error_2){
    HANDLE q=nglMsgQCreate(10,0);
-   ASSERT_TRUE(0==q);
+   ASSERT_TRUE(nullptr==q);
 }
 
 static void MsgQProc(void*p){

@@ -20,6 +20,20 @@ class GRAPH:public testing::Test{
        gettimeofday(&tv,NULL);
        return tv.tv_sec*1000+tv.tv_usec/1000;
    }
+   unsigned int getPixel(HANDLE surface,int x,int y){
+       BYTE*buffer;
+       UINT w,h,f,pitch;
+       nglLockSurface(surface,(void**)&buffer,&pitch);
+       nglGetSurfaceInfo(surface,&w,&h,(int*)&f);
+       buffer+=pitch*y;
+       switch(f){
+       case GPF_ARGB4444:
+       case GPF_ARGB1555:return *(USHORT*)(buffer+2*x);
+       case GPF_ARGB:
+       case GPF_ABGR:
+       case GPF_RGB32:return *(UINT*)(buffer+4*x);
+       }
+   }
 };
 
 TEST_F(GRAPH,Graph_GetScreen){
@@ -41,20 +55,37 @@ TEST_F(GRAPH,CreateSurface){
    nglDestroySurface(surface);
 }
 
+typedef struct {
+   int format;
+   unsigned int rgb[4];
+}TSTPIXEL;
 TEST_F(GRAPH,Format){
+    //this case show four color block ,RED,GREEN,BLUE,WHITE.
     HANDLE surface;
     UINT width,height;
     nglGetScreenSize(&width,&height);
-    int formats[]={GPF_ARGB4444, GPF_ARGB1555, GPF_ARGB,  GPF_ABGR,  GPF_RGB32};
+    TSTPIXEL fpixels[]={
+       {GPF_ARGB,    {0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFFFFFFF}},
+       {GPF_ABGR,    {0xFF0000FF,0xFF00FF00,0xFFFF0000,0xFFFFFFFF}},
+       {GPF_RGB32,   {0xFF0FF000,0xFF00FF00,0xFF0000FF,0xFFFFFFFF}},
+       {GPF_ARGB4444,{0xFF00,0xF0F0,0xF00F,0xFFFF}},
+       {GPF_ARGB1555,{0xFC00,0xFFE0,0x801F,0x1FFF}}
+    };
 
-    for(int i=0;i<sizeof(formats)/sizeof(int);i++){
-        nglCreateSurface(&surface,width,height,formats[i],1);
+    for(int i=0;i<sizeof(fpixels)/sizeof(TSTPIXEL)-3;i++){
+        nglCreateSurface(&surface,width,height,fpixels[i].format,1);
 	NGLRect r={100,100,100,100};
 	nglFillRect(surface,&r,0xFFFF0000);
+	ASSERT_EQ(getPixel(surface,101,101),fpixels[i].rgb[0]);
 	r.x+=110;
 	nglFillRect(surface,&r,0xFF00FF00);
+	ASSERT_EQ(getPixel(surface,221,101),fpixels[i].rgb[1]);
 	r.x+=110;
 	nglFillRect(surface,&r,0xFF0000FF);
+	ASSERT_EQ(getPixel(surface,331,101),fpixels[i].rgb[2]);
+	r.x+=110,
+	nglFillRect(surface,&r,0xFFFFFFFF);
+	ASSERT_EQ(getPixel(surface,441,101),fpixels[i].rgb[3]);
 
 	nglFlip(surface);
 	nglDestroySurface(surface);
