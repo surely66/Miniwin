@@ -12,15 +12,10 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/epg
 )
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
-    set(NGL_CHIP_PLATFORM "nglx86" CACHE INTERNAL "x86 emulator porting")
-else()
-    set(CA_PLATFORM "viaccess" CACHE INTERNAL "CA TYPE")
-    set(NGL_CHIP_PLATFORM "ali3528" CACHE INTERNAL "defined which porting layer to used")
+if (NGL_CA STREQUAL "acs")
     add_subdirectory(acs)
+    link_directories(acs)
 endif()
-
-link_directories(acs)
 add_executable(ntvplus ${SRCS_NTV_PLUS} ntvplus.pak)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
 target_link_libraries(ntvplus gui dvbepg )

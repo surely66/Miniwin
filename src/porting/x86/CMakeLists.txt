@@ -38,10 +38,10 @@ endif()
 add_library(nglx86 STATIC ${SRCS_X86} ${SRC_GRAPH})
 
 message("==SRC_GRAPH=${SRC_GRAPH}")
-message("NGL_PLATFORM_INCDIRS=${NGL_PLATFORM_INCDIRS}")
-message("NGL_PLATFORM_LIBS=${NGL_PLATFORM_LIBS}")
+message("HAL_EXTRA_INCDIRS=${HAL_EXTRA_INCDIRS}")
+message("HAL_EXTRA_LIBS=${HAL_EXTRA_LIBS}")
 
-include_directories(${NGL_PLATFORM_INCDIRS}
+include_directories(${HAL_EXTRA_INCDIRS}
   ../inc ./)
 
 

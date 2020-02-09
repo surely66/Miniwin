@@ -27,7 +27,7 @@ include(platform.cmake)
 
 message("DIRECTFB_INCLUDE_DIR=${DIRECTFB_INCLUDE_DIR}")
 
-include_directories(${DIRECTFB_INCLUDE_DIR} ${NGL_PLATFORM_INCDIRS}
+include_directories(${HAL_EXTRA_INCLUDE_DIR} ${HAL_EXTRA_INCDIRS}
   ../inc ./)
 
 #target_link_libraries(alitest rt direct directfb pthread aui)
