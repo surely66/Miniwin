@@ -4,28 +4,29 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 #find_package(pixman REQUIRED)
-find_package(PNG REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(Freetype)
+find_package(PNG )
+find_package(ZLIB)
+find_package(freetype)
 find_package(Threads)
 #find_package(Fontconfig)
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
 
 include(Configure_config.cmake)
 include(Configure_features.cmake)
-include_directories(${cairo_BINARY_DIR}
-   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
-   ../pixman/pixman
-   ../freetype-2.10.0/include
-   ../zlib-1.2.11/
+include_directories(
+   ${cairo_BINARY_DIR}
+   ${CMAKE_SOURCE_DIR}/include/
    ${CMAKE_SOURCE_DIR}/include/porting
-   ${CMAKE_SOURCE_DIR}/src/porting/inc
+   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
+   ${CMAKE_SOURCE_DIR}/include/pixman
 )
-
-set(ZLIB_FOUND 1)
-
+if ( NOT ZLIB_FOUND )
+set(ZLIB_LIBRARIES zlib)
+set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(ZLIB_FOUND TRUE)
+endif()
 if(CAIRO_HAS_PTHREAD)
-	list(APPEND CAIRO_LIBS -lpthread)
+    list(APPEND CAIRO_LIBS -lpthread)
 endif()
 
 if (WIN32)

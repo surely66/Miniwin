@@ -29,6 +29,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libvncserver ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
+set(WITH_PNG OFF)
+set(WITH_JPEG OFF)
+set(WITH_LZO OFF)
+set(WITH_FFMPEG OFF)
+set(WITH_SDL OFF)
+set(WITH_GNUTLS OFF)
+set(WITH_GCRYPT OFF)
+set(WITH_OPENSSL OFF)
+
 # all the build configuration switches
 option(LIBVNCSERVER_INSTALL "Generate installation target" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ${UNIX})
@@ -628,7 +637,7 @@ if(WITH_JPEG AND FOUND_LIBJPEG_TURBO)
 
 endif(WITH_JPEG AND FOUND_LIBJPEG_TURBO)
 
-if( NOT CMAKE_CROSSCOMPILING AND LIBVNCSERVER_WITH_WEBSOCKETS)
+if( LIBVNCSERVER_WITH_WEBSOCKETS )
   add_executable(test_wstest
     ${TESTS_DIR}/wstest.c
     ${TESTS_DIR}/wstestdata.inc

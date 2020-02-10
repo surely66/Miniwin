@@ -1,3 +1,4 @@
+cmake_minimum_required (VERSION 3.2)
 if( CMAKE_COMPILER_IS_GNUCXX )
     #Get compiler version.
     execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
@@ -34,7 +35,8 @@ endif()
 
 if(NOT (HAVE_CLOCALE AND HAVE_LCONV_SIZE AND HAVE_DECIMAL_POINT AND HAVE_LOCALECONV))
     message(WARNING "Locale functionality is not supported")
-    add_compile_definitions(JSONCPP_NO_LOCALE_SUPPORT)
+    #add_compile_definitions(JSONCPP_NO_LOCALE_SUPPORT)
+    add_definitions(-DJSONCPP_NO_LOCALE_SUPPORT)
 endif()
 
 set( JSONCPP_INCLUDE_DIR ../../include )

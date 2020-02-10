@@ -33,14 +33,17 @@ set(PNGLIB_VERSION ${PNGLIB_MAJOR}.${PNGLIB_MINOR}.${PNGLIB_RELEASE})
 include(GNUInstallDirs)
 
 # needed packages
-
 # Allow users to specify location of Zlib.
 # Useful if zlib is being built alongside this as a sub-project.
 option(PNG_BUILD_ZLIB "Custom zlib Location, else find_package is used" OFF)
 
-if(NOT PNG_BUILD_ZLIB)
-  find_package(ZLIB REQUIRED)
+find_package(ZLIB)
+if( ZLIB_FOUND )
   include_directories(${ZLIB_INCLUDE_DIR})
+else()
+  set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include )
+  set(ZLIB_LIBRARY zlib)
+  set(ZLIB_FOUND TRUE)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT BEOS AND NOT HAIKU)

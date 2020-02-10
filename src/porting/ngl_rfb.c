@@ -113,11 +113,19 @@ static void onVNCClientKey(rfbBool down,rfbKeySym key,rfbClientPtr cl)
         }
     }
 }
+
 static int  FileTransferPermitted(struct _rfbClientRec* cl){
     NGLOG_DEBUG("___");
-
     return TRUE;
 }
+static void onChatText(struct _rfbClientRec* cl, int length, char *string){
+    NGLOG_DEBUG("RCV ChatText:%s",string);
+}
+#define PRINTFMT(f) NGLOG_DEBUG("trucolor=%d ,depth=%d bitsPerPixel=%d rgbmax=%x/%x/%x rgbshift=%x/%x/%x",\
+	       	!!(f)->serverFormat.trueColour,(f)->serverFormat.depth,(f)->serverFormat.bitsPerPixel,\
+		(f)->serverFormat.redMax,(f)->serverFormat.greenMax,(f)->serverFormat.blueMax,\
+  		(f)->serverFormat.redShift,(f)->serverFormat.greenShift,(f)->serverFormat.blueShift)
+
 DWORD nglGraphInit(){
     int x=0,y=0,*fb;
     HANDLE tid;
@@ -131,10 +139,12 @@ DWORD nglGraphInit(){
     rfbScreen->kbdAddEvent=onVNCClientKey;
     rfbScreen->ptrAddEvent=onMousePtr;
     rfbScreen->newClientHook=onNewClient;
+    rfbScreen->setTextChat=onChatText;
     rfbScreen->permitFileTransfer=TRUE;
     rfbScreen->getFileTransferPermission=FileTransferPermitted;
     rfbRegisterTightVNCFileTransferExtension();
     rfbInitServer(rfbScreen);
+    PRINTFMT(rfbScreen);
     rfbRunEventLoop(rfbScreen,5,TRUE);//non block 
     NGLOG_DEBUG("VNC Server Inited rfbScreen=%p port=%d framebuffer=%p",rfbScreen,rfbScreen->port,rfbScreen->frameBuffer); 
     return NGL_OK;
@@ -161,6 +171,7 @@ DWORD nglGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
     *width=ngs->width;
     *height=ngs->height;
     *format=ngs->format;//GPF_ABGR;
+    if(rfbScreen)PRINTFMT(rfbScreen);
     return NGL_OK;
 }
 
