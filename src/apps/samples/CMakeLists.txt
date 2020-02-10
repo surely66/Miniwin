@@ -10,7 +10,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/include/cairo
    ${CMAKE_SOURCE_DIR}/include/epg
 )
-set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --no-allow-shlib-undefined -lz ${CMAKE_EXE_LINKER_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
 add_executable(helloworld helloworld.cc)
 add_executable(simplewin simplewin.cc)
 add_executable(multiwin multiwindow.cc)
