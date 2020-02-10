@@ -922,11 +922,11 @@ if(NOT SKIP_INSTALL_EXPORT AND NOT SKIP_INSTALL_ALL)
 endif()
 
 add_custom_command(TARGET genfiles POST_BUILD
-    COMMAND cp -u pngconf.h  png.h  ${CMAKE_SOURCE_DIR}/include
+    COMMAND cp -u pngconf.h  png.h  ${CMAKE_CURRENT_BINARY_DIR}/pnglibconf.h  ${CMAKE_SOURCE_DIR}/include
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
     COMMENT "Copy PNG Header Files")
 
-file(COPY pngconf.h  png.h ${CMAKE_CURRENT_BINARY_DIR}/pnglibconf.h DESTINATION ${CMAKE_SOURCE_DIR}/include)
+file(COPY pngconf.h  png.h DESTINATION ${CMAKE_SOURCE_DIR}/include)
 
 # what's with libpng-manual.txt and all the extra files?
 
