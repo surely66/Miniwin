@@ -7,6 +7,7 @@
 #include <cairomm/basicbitmap.h>
 #include <sys/time.h>
 #include <resourcemanager.h>
+using namespace nglui;
 class CONTEXT:public testing::Test{
 protected:
    unsigned long long ts;
