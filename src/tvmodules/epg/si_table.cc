@@ -43,23 +43,23 @@ PSITable& PSITable::operator=(const PSITable &b){
     return *this;
 }
 
-bool PSITable::operator!=(PSITable & b)const {
+bool PSITable::operator!=(const PSITable & b)const {
     return extTableId()!=b.extTableId()||tableId()!=b.tableId()||sectionNo()!=b.sectionNo();
 }
 
-bool PSITable::operator>=(PSITable & b)const {
+bool PSITable::operator>=(const PSITable & b)const {
     return extTableId()>=b.extTableId()||tableId()>=b.tableId()||sectionNo()>=b.sectionNo();
 }
 
-bool PSITable::operator<=(PSITable & b)const {
+bool PSITable::operator<=(const PSITable & b)const {
     return extTableId()<=b.extTableId()||tableId()<=b.tableId()||sectionNo()<=b.sectionNo();
 }
 
-bool PSITable::operator>(PSITable & b)const {
+bool PSITable::operator>(const PSITable & b)const {
     return extTableId()>b.extTableId()||tableId()>b.tableId()||sectionNo()>b.sectionNo();
 }
 
-bool PSITable::operator<(PSITable & b)const {
+bool PSITable::operator<(const PSITable & b)const {
     long l1=(extTableId()<<16)|(tableId()<<8)|sectionNo();
     long l2=(b.extTableId()<<16)|(b.tableId()<<8)|b.sectionNo();
     return l1<l2;//extTableId()<b.extTableId()||sectionNo()<b.sectionNo()||(tableId()&0xC0)<(b.tableId()&0xC0);

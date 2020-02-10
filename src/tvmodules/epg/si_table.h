@@ -119,11 +119,11 @@ public:
         BYTE*p=data+sectionLength()-1;
         return p[0]<<24|p[1]<<16|p[2]<<8|p[3];
     }
-    bool operator!=(PSITable & b)const;
-    bool operator>=(PSITable & b)const;
-    bool operator<=(PSITable & b)const;
-    bool operator>(PSITable & b)const;
-    bool operator<(PSITable & b)const;
+    bool operator!=(const PSITable & b)const;
+    bool operator>=(const PSITable & b)const;
+    bool operator<=(const PSITable & b)const;
+    bool operator>(const PSITable & b)const;
+    bool operator<(const PSITable & b)const;
     bool operator==(const PSITable & b)const;
     PSITable&operator=(const PSITable &b);
     operator const BYTE*(){return data;}
