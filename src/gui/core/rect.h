@@ -1,15 +1,15 @@
 #ifndef __UIBASE_H__
 #define __UIBASE_H__
-
 #define    DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName&);                \
     TypeName& operator=(const TypeName&)
+namespace nglui{
 
-typedef struct{
+typedef struct Point{
     int x;
     int y;
     void set(int x,int y);
-}Point ,POINT;
+}POINT;
 
 typedef struct Rectangle{
     int x;
@@ -25,15 +25,15 @@ typedef struct Rectangle{
     bool intersect(const Rectangle&a,const Rectangle&b);
     bool intersect(const Rectangle&b);
     bool intersect(int x_,int y_);
-}Rectangle,RECT;
+}RECT;
 
-typedef struct{
+typedef struct Size{
     int x;
     int y;
     void set(int x_,int y_){x=x_;y=y_;}
     int width(){return x;}
     int height(){return y;}
 }SIZE;
-
+}
 #endif
 

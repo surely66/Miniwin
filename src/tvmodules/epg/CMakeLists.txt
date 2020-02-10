@@ -3,9 +3,6 @@ project(dvbepg C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
-#set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fPIC")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
 aux_source_directory(./ SRCS_EPG)
 add_definitions(-DLIBICONV_PLUG)
 add_library(dvbepg SHARED ${SRCS_EPG})

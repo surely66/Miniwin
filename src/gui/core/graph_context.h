@@ -6,6 +6,8 @@
 #include <graph_device.h>
 using namespace Cairo;
 
+namespace nglui{
+
 enum SCALETYPE{
     ST_CENTER,
     ST_CENTER_CROP,
@@ -60,6 +62,6 @@ public:
     void flip();
     void dump2png(const char*fname);
 };
-
+}//namspace
 #endif
 

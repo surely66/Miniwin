@@ -2,6 +2,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
+#include<functional>
 #include <stdio.h>
 #include <stdarg.h>
 #include <ngl_types.h>
@@ -258,7 +259,7 @@ static void  SearchProc(void*p)
              break;
         case MSG_FINISHED_TP:
              NGLOG_VERBOSE("MSG_FINISHED_TP wp=%d",msg.param1);
-             std::sort(ts.pmt.begin(),ts.pmt.end(),[](PSITable&t1,PSITable&t2){return t1<t2;});//TableCompare);
+             std::sort(ts.pmt.begin(),ts.pmt.end(),std::less<PSITable>());
              if(ts.sdt.size()){
                  SDT sdt(ts.sdt.back());
                  ts.netid=sdt.getNetId();

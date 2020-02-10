@@ -5,6 +5,7 @@
 #include <map>
 
 using namespace Cairo;
+namespace nglui{
 class GraphDevice{
 private:
    int width;
@@ -32,6 +33,6 @@ public:
    GraphContext*getPrimaryContext();
    void remove(GraphContext*ctx);
 };
-
+}
 #endif
 

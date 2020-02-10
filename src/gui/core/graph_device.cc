@@ -19,6 +19,8 @@ using namespace Cairo;
 
 NGL_MODULE(GraphDevice)
 
+namespace nglui{
+
 std::vector<GraphContext*>GraphDevice::gSurfaces;
 GraphDevice*GraphDevice::mInst=nullptr;
 
@@ -157,4 +159,4 @@ void GraphDevice::ComposeSurfaces(){
     nglFlip(primarySurface);
     compose_event=0;
 }
-
+}//end namespace

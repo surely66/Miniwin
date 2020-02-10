@@ -1,5 +1,5 @@
 #include <rect.h>
-
+namespace nglui{
 void Point::set(int x_,int y_){
     x=x_;
     y=y_;
@@ -61,4 +61,4 @@ bool Rectangle::intersect(const Rectangle&a,const Rectangle&b){
     int i_h = thisHBorder > otherHBorder ? otherHBorder - i_y : thisHBorder - i_y;
     set(i_x,i_y,i_w,i_h);
 }
-
+}//end namespace

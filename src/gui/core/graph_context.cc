@@ -12,7 +12,7 @@ using namespace std;
 #define PI 3.1415926
 
 NGL_MODULE(GraphContext)
-
+namespace nglui{
 GraphContext::GraphContext(GraphDevice*_dev,const RefPtr<Surface>& target)
    :Context(target){
     dev=_dev;
@@ -312,4 +312,4 @@ void GraphContext::flip(){
 void GraphContext::dump2png(const char*fname){
     get_target()->write_to_png(fname);
 }
-
+}//namespace

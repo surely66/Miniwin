@@ -37,7 +37,7 @@ int AddEITPFSection(const EIT&eit,int *pchanged){
     int changed=(itr==epgpf.end());
     if(changed){
         epgpf.push_back(eit);
-        std::sort(epgpf.begin(),epgpf.end(),[](PSITable&t1,PSITable&t2){return (EIT&)t1<(EIT&)t2;});
+        std::sort(epgpf.begin(),epgpf.end(),std::less<PSITable>());
     }
     if(pchanged)*pchanged=changed;
     return epgpf.size();
@@ -54,7 +54,7 @@ int AddEITSSection(const EIT &eit,int*pchanged){
          changed=(itr==secs->end());
          if(changed){
               secs->push_back(eit);
-              std::sort(secs->begin(),secs->end(),[](PSITable&t1,PSITable&t2){return (EIT&)t1<(EIT&)t2;});
+              std::sort(secs->begin(),secs->end(),std::less<PSITable>());
          }else{
               changed=(itr->crc32()!=eit.crc32());
               *itr=eit;
@@ -81,9 +81,7 @@ int AddBATSection(const BAT&bat,int*pchanged){
          NGLOG_VERBOSE("addbat tableid %x %d.%d",bat.tableId(),bat.extTableId(),bat.sectionNo());
     }
     if(pchanged)*pchanged=changed;
-    std::sort(bats.begin(),bats.end(),[](PSITable&t1,PSITable&t2){
-          return (BAT&)t1<(BAT&)t2;
-    });
+    std::sort(bats.begin(),bats.end(),std::less<PSITable>());
     NGLOG_VERBOSE_IF(changed,"rcv BAT %d",bat.extTableId()); 
     return bats.size();
 }
