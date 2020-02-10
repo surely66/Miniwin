@@ -37,6 +37,7 @@ set(WITH_SDL OFF)
 set(WITH_GNUTLS OFF)
 set(WITH_GCRYPT OFF)
 set(WITH_OPENSSL OFF)
+set(WITH_WEBSOCKET OFF)
 
 # all the build configuration switches
 option(LIBVNCSERVER_INSTALL "Generate installation target" ON)

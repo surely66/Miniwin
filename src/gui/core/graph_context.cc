@@ -187,7 +187,7 @@ void GraphContext::draw_text(const RECT&rect,const std::string&text,int text_ali
         }
         move_to(x+te.x_bearing,y);
         show_text(text);
-        NGLOG_VERBOSE("%s Rect(%d,%d,%d,%d) drawpos=%.3f,%.3f width=%.3f height=%.3f advance=%.3f/%.3f bearing=%.3f/%.3f  alignment=0x%02x",text,
+        NGLOG_VERBOSE("%s Rect(%d,%d,%d,%d) drawpos=%.3f,%.3f width=%.3f height=%.3f advance=%.3f/%.3f bearing=%.3f/%.3f  alignment=0x%02x",text.c_str(),
            rect.x,rect.y,rect.width,rect.height,x+te.x_bearing,y,te.width,te.height,te.x_advance,te.y_advance,te.x_bearing,te.y_bearing,text_alignment);
     }else {
         y=rect.y;

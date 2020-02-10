@@ -223,7 +223,7 @@ void WindowManager::drawWindows() {
 
     for(auto v:invalidate_views){
         GraphContext*c=v->getCanvas();
-        NGLOG_DEBUG("win %p canvas=%p pos:%d,%d",v,c,v->getX(),v->getY()); 
+        NGLOG_DEBUG("win %p canvas=%p pos:%d,%d",v.get(),c,v->getX(),v->getY()); 
         if(c==nullptr||v->getParent()==nullptr)continue;
         RefPtr<GraphContext>canvas(c);
         //v->clip(*canvas);

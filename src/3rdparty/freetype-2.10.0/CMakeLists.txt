@@ -136,7 +136,7 @@ project(freetype C)
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "10")
 set(VERSION_PATCH "0")
-
+set(FT_WITH_HARFBUZZ OFF)
 # SOVERSION scheme: CURRENT.AGE.REVISION
 #   If there was an incompatible interface change:
 #     Increment CURRENT. Set AGE and REVISION to 0
@@ -214,7 +214,6 @@ if (UNIX)
   check_include_file("unistd.h" HAVE_UNISTD_H)
   check_include_file("fcntl.h" HAVE_FCNTL_H)
   check_include_file("stdint.h" HAVE_STDINT_H)
-
   file(READ "${PROJECT_SOURCE_DIR}/builds/unix/ftconfig.in"
     FTCONFIG_H)
   if (HAVE_UNISTD_H)
@@ -260,7 +259,7 @@ if (PNG_FOUND)
     "/\\* +(#define +FT_CONFIG_OPTION_USE_PNG) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
-if (HARFBUZZ_FOUND)
+if (HARFBUZZ_FOUND AND FALSE)
   string(REGEX REPLACE
     "/\\* +(#define +FT_CONFIG_OPTION_USE_HARFBUZZ) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
