@@ -56,10 +56,9 @@ GraphDevice::GraphDevice(int format){
 
 RefPtr<const FontFace>GraphDevice::getFont(const std::string&family){
     RefPtr<const FontFace>face;
-    if(!family.empty()&&fonts.size())
-        face=fonts[family];
-    if(face==nullptr&&fonts.size())
-        face=fonts.begin()->second;
+    if(fonts.size(){
+        face=family.empty()?fonts->begin()->second:fonts[family];
+    }
     return face;
 }
 
