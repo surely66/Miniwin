@@ -157,6 +157,12 @@ DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
 }
 
 DWORD nglIrSendKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
+    IRDEV*ir=&irdevices[0];
+    NGLOG_DEBUG("ir=%p cbk=%p key=%x",ir,(ir?ir->cbk:NULL),key->key_code);
+    if(ir&&ir->cbk){
+        ir->cbk(key,ir->userdata);
+        return NGL_OK;
+    }
     return nglMsgQSend(msgQ,key,sizeof(NGLKEYINFO),timeout);
 }
 
