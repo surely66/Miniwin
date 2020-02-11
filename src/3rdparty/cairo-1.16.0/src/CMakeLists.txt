@@ -652,7 +652,7 @@ set(SOURCES ${enabled_cairo_sources})
 
 add_library(cairo SHARED ${SOURCES})
 target_link_libraries(cairo ${CAIRO_LIBS})
-add_library(cairo-static ${SOURCES} ${STATIC_SOURCES})
+add_library(cairo-static STATIC ${SOURCES} ${STATIC_SOURCES})
 target_link_libraries(cairo-static ${CAIRO_LIBS})
 
 install(TARGETS cairo RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

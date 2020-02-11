@@ -43,7 +43,7 @@ link_directories(
     ${CMAKE_BINARY_DIR}/src/3rdparty/lua 
     ${CMAKE_BINARY_DIR}/lib)
 
-target_link_libraries(gui  pthread pixman-1 png jpeg cairo-static freetype
+target_link_libraries(gui  pthread pixman-1 png jpeg cairo freetype
        	tvhal jsoncpp_lib unibreak usbmanager ${EXT_LIBS}
 	#svg cairosvg
 )
