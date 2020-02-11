@@ -29,9 +29,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libvncserver ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
-set(WITH_PNG OFF)
-set(WITH_JPEG OFF)
-set(WITH_LZO OFF)
 set(WITH_FFMPEG OFF)
 set(WITH_SDL OFF)
 set(WITH_GNUTLS OFF)
@@ -63,14 +60,28 @@ option(WITH_SASL "Build with SASL support" ON)
 
 if(WITH_ZLIB)
   find_package(ZLIB)
+  if( NOT ZLIB_FOUND )
+  set( ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+  set( ZLIB_LIBRARIES zlib)
+  set(ZLIB_FOUND TRUE)
+  endif()
 endif(WITH_ZLIB)
 
 if(WITH_LZO)
   find_package(LZO)
+  if( NOT LZO_FOUND )
+  set(LZO_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/3rdparty/lzo-2.10/include)
+  set(LZO_LIBRARIES lzo_shared_lib)
+  set(LZO_FOUND TRUE)
+  endif()
 endif()
-
 if(WITH_JPEG)
   find_package(JPEG)
+  if(NOT JPEG_FOUND)
+  set(JPEG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+  set(JPEG_LIBRARIES jpeg)
+  set(JPEG_FOUND)
+  endif()
   if(JPEG_FOUND)
     # Check whether the version of libjpeg we found was libjpeg-turbo and print a
     # warning if not.
@@ -115,6 +126,11 @@ endif(WITH_JPEG)
 
 if(WITH_PNG)
   find_package(PNG)
+  if(NOT PNG_FOUND)
+  set(PNG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+  set(PNG_LIBRARIES png)
+  set(PNG_FOUND)
+  endif()
 endif(WITH_PNG)
 
 
