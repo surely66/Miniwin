@@ -1,8 +1,8 @@
 
-project(nglx86 C CXX)
+project(gx3213 C CXX)
 
 
-set(SRCS_X86 
+set(SRCS_GX3213
    ngl_os.c
    ngl_msgq.c
    ngl_dmx.c
@@ -23,18 +23,11 @@ set(SRCS_X86
 
 include(platform.cmake)
 
-find_package(GTK3)
-find_package(X11)
-if ( RFB_GRAPH )
-elseif ( X11_FOUND )
-   set(SRC_GRAPH ngl_x11_graph.c)
-elseif ( GTK3_FOUND )
-   set(SRC_GRAPH ngl_gtk_graph.c)
-else()
+if ( NOT RFB_GRAPH )
    set(SRC_GRAPH ngl_fb_graph.c)
 endif()
 
-add_library(x86 STATIC ${SRCS_X86} ${SRC_GRAPH})
+add_library(gx3213 STATIC ${SRCS_GX3213} ${SRC_GRAPH})
 if ( RFB_GRAPH )
    message("RFB_GRAPH is used")
 elseif (SRC_GRAPH)
@@ -48,4 +41,4 @@ include_directories(
 	../inc 
 	${HAL_EXTRA_INCDIRS})
 
-install (TARGETS x86  DESTINATION lib)
+install (TARGETS gx3213  DESTINATION lib)

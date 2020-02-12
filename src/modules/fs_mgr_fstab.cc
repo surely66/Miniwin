@@ -60,7 +60,7 @@ static struct flag_list fs_mgr_flags[] = {
     { 0,             0 },
 };
 
-size_t strlcat( char* dst, const char* src, size_t siz );
+#define strlcat strncat 
 
 static int parse_flags(char *flags, struct flag_list *fl,
                        struct fs_mgr_flag_values *flag_vals,
@@ -418,35 +418,4 @@ int fs_mgr_is_noemulatedsd(struct fstab_rec *fstab)
     return fstab->fs_mgr_flags & MF_NOEMULATEDSD;
 }
 
-
-
-size_t strlcat( char* dst, const char* src, size_t siz )
-{
-    char*        d = dst;
-    const char*    s = src;
-    size_t        n = siz;
-    size_t        dlen;
-
-    if (s == 0 || d == 0) return 0;
-
-    while (n-- != 0 && *d != '\0') {
-        d++;
-    }
-    dlen = d - dst;
-    n = siz - dlen;
-
-    if (n == 0){
-        return(dlen + strlen(s));
-    }
-    while (*s != '\0'){
-        if (n != 1) {
-            *d++ = *s;
-            n--;
-        }
-        s++;
-    }
-    *d = '\0';
-
-    return(dlen + (s - src));
-}
 

@@ -310,6 +310,8 @@ void GraphContext::flip(){
 }
 
 void GraphContext::dump2png(const char*fname){
+#ifdef CAIRO_HAS_PN_SURFACE
     get_target()->write_to_png(fname);
+#endif
 }
 }//namespace

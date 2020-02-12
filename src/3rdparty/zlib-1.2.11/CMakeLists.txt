@@ -231,6 +231,7 @@ endif()
 #============================================================================
 # Example binaries
 #============================================================================
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_executable(example test/example.c)
 target_link_libraries(example zlib)
@@ -250,7 +251,4 @@ if(HAVE_OFF64_T)
     set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
 endif()
 
-add_custom_command(TARGET zlib POST_BUILD
-    COMMAND cp -u ${CMAKE_CURRENT_BINARY_DIR}/zconf.h zlib.h  ${CMAKE_SOURCE_DIR}/include/
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Copy ZLIB Header Files")
+file(COPY ${ZLIB_PUBLIC_HDRS} DESTINATION ${CMAKE_SOURCE_DIR}/include )

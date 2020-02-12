@@ -1,7 +1,6 @@
 project(gui C CXX)
 
 add_subdirectory(tests)
-add_subdirectory(tools)
 
 option( LUA_BINDINGS "UI Lua script bindings" OFF)
 
@@ -57,7 +56,7 @@ target_link_libraries(gui  pthread pixman-1 png jpeg cairo freetype
 
 add_executable(respackt core/filepak.cc core/gzstream.cc)
 target_compile_definitions(respackt PRIVATE -DPACK_TOOL)
-target_link_libraries(respackt z)
+target_link_libraries(respackt zlib)
  
 add_custom_command(TARGET gui POST_BUILD 
     COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/gui/cairomm

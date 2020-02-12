@@ -38,7 +38,9 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 # Disallow in-source builds. Note that you will still have to manually
 # clean up a few files if you accidentally try an in-source build.
+set(CMAKE_INSTALL_FULL_LIBDIR ON)
 set(ENABLE_SHARED ON)
+set(ENABLE_STATIC ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 if(",${CMAKE_SOURCE_DIR}," STREQUAL ",${CMAKE_BINARY_DIR},")
@@ -53,7 +55,7 @@ project(lzo VERSION 2.10 LANGUAGES C)
 
 # configuration options
 option(ENABLE_STATIC "Build static LZO library." ON)
-option(ENABLE_SHARED "Build shared LZO library." OFF)
+option(ENABLE_SHARED "Build shared LZO library." ON)
 if(NOT ENABLE_STATIC AND NOT ENABLE_SHARED)
     set(ENABLE_STATIC ON)
 endif()
@@ -274,6 +276,8 @@ set(f include/lzo/lzo1.h include/lzo/lzo1a.h include/lzo/lzo1b.h
     include/lzo/lzoutil.h
 )
 install(FILES ${f} DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}/lzo")
+install(FILES ${f} DESTINATION "${CMAKE_SOURCE_DIR}/include/lzo")
+file(COPY ${f} DESTINATION ${CMAKE_SOURCE_DIR}/include/lzo)
 
 if(ENABLE_STATIC)
     install(TARGETS lzo_static_lib ARCHIVE DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")

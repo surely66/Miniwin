@@ -3,7 +3,6 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <fts.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>

@@ -11,6 +11,25 @@ find_package(Threads)
 #find_package(Fontconfig)
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wno-attributes -fPIC")
 
+if ( NOT ZLIB_FOUND )
+set(ZLIB_LIBRARY zlib)
+set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(ZLIB_FOUND TRUE)
+endif()
+
+if (NOT PNG_FOUND )
+set(PNG_LIBRARY png)
+set(PNG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(CAIRO_HAS_PNG_FUNCTIONS TRUE)
+set(PNG_FOUND TRUE)
+endif()
+
+if(NOT PIXMAN_FOUND)
+set(PIXMAN_LIBRARY pixman-1)
+set(PIXMAN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(PIXMAN_FOUND TRUE)
+endif()
+
 include(Configure_config.cmake)
 include(Configure_features.cmake)
 include_directories(
@@ -20,11 +39,7 @@ include_directories(
    ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
    ${CMAKE_SOURCE_DIR}/include/pixman
 )
-if ( NOT ZLIB_FOUND )
-set(ZLIB_LIBRARIES zlib)
-set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-set(ZLIB_FOUND TRUE)
-endif()
+
 if(CAIRO_HAS_PTHREAD)
     list(APPEND CAIRO_LIBS -lpthread)
 endif()

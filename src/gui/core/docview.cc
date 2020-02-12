@@ -9,12 +9,19 @@ DocumentView::DocumentView(int width, int height)
 bool DocumentView::loadDocument(const std::string&fname){
     int rc=1;
     std::string ext=fname.substr(fname.rfind(".")+1);
-    if(strcasecmp(ext.c_str(),"pdf")==0)
+    if(strcasecmp(ext.c_str(),"pdf")==0){
+#ifdef CAIRO_HAS_PDF_SURFACE
          doc_surface=PdfSurface::create(fname.c_str(),1280,720);
-    else if((rc=strcasecmp(ext.c_str(),"png"))==0)
+#endif
+    }else if((rc=strcasecmp(ext.c_str(),"png"))==0){
+#ifdef CAIRO_HAS_PNG_FUNCTIONS
          doc_surface=ImageSurface::create_from_png(fname.c_str());
-    else if((rc=strcasecmp(ext.c_str(),"jpg"))==0||(rc=strcasecmp(ext.c_str(),"jpeg"))==0)
+#endif
+    }else if((rc=strcasecmp(ext.c_str(),"jpg"))==0||(rc=strcasecmp(ext.c_str(),"jpeg"))==0){
+#ifdef CAIRO_HAS_JPEG_SURFACE
          doc_surface=ImageSurface::create_from_jpg(fname.c_str());
+#endif
+    }
     //else  doc_surface.clear();
     return rc==0;
 }

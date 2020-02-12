@@ -70,9 +70,13 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
          //img=nano_loadSVG((const char*)closure.data,closure.size);
          //img=loadSVG((const char*)closure.data,closure.size);
      }else if(ext=="png"){
+#ifdef CAIRO_HAS_PNG_FUNCTIONS
          img=ImageSurface::create_from_png(pak_read,&closure);
+#endif
      }else if(ext=="jpg"||ext=="jpeg"){
+#ifdef CAIRO_HAS_JPEG_SURFACE
          img=ImageSurface::create_from_jpg(pak_read,&closure);
+#endif
      }else if(ext=="bmp"){
          BasicBitmap*bmp=BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL);//
          NGLOG_VERBOSE("bmp size=%dx%d fmt=%d pitch=%d",bmp->Width(),bmp->Height(),bmp->Format(),bmp->Pitch());

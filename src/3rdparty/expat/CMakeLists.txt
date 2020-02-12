@@ -42,7 +42,8 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/expat_config.h
 )
 
-include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR})
+include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR})
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4996)
 endif(MSVC)
@@ -79,7 +80,7 @@ configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc)
 
 install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
-
+file(COPY lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_SOURCE_DIR}/include)
 
 
 if(BUILD_tools AND NOT WINCE)
