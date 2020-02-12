@@ -5,8 +5,8 @@ if( CMAKE_SYSTEM_NAME MATCHES "Linux" )
 add_definitions(-DLINUX=1)
 endif()
 
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O3 -fPIC")
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -fPIC")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS}  -fPIC")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  -fPIC")
 
 include(${NGL_CHIPSET}/platform.cmake)
 message("NGL_CHIPSET=${NGL_CHIPSET}  USE_RFB_GRAPH=${USE_RFB_GRAPH}")
@@ -28,6 +28,8 @@ include_directories(inc
 
 add_library(tvhal SHARED ${SRCS_COMMON})
 add_library(tvhal_static STATIC ${SRCS_COMMON})
+
+#set_property(TARGET tvhal PROPERTY POSITION_INDEPENDENT_CODE)
 
 target_link_libraries(tvhal ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
 target_link_libraries(tvhal_static ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})

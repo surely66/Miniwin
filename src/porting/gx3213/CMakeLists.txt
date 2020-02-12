@@ -18,14 +18,13 @@ set(SRCS_GX3213
    ngl_pvr.c
    ngl_ir.cc
    ngl_panel.c
-   ngl_gx_graph.c
    ngl_mediaplayer.c
 )
 
 include(platform.cmake)
 
 if ( NOT RFB_GRAPH )
-   set(SRC_GRAPH ngl_fb_graph.c)
+   set(SRC_GRAPH ngl_gx_graph.c)
 endif()
 
 add_library(gx3213 STATIC ${SRCS_GX3213} ${SRC_GRAPH})

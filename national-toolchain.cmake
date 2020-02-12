@@ -2,11 +2,7 @@
 SET(CMAKE_SYSTEM_NAME Linux)
 
 SET(TOOLCHAIN_DIR /opt/nationalchip-toolchain/)
-message("TOOLCHAIN_DIR=${TOOLCHAIN_DIR}")
 set(CMAKE_CROSSCOMPILING true)
-
-#set(CMAKE_C_COMPILER_FORCED TRUE)
-#set(CMAKE_CXX_COMPILER_FORCED TRUE)
 
 SET(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-nationalchip-linux-uclibcgnueabihf-c++)
 SET(CMAKE_C_COMPILER ${TOOLCHAIN_DIR}/bin/arm-nationalchip-linux-uclibcgnueabihf-cc)

@@ -6,13 +6,19 @@
 #include<ngl_msgq.h>
 #include<ngl_timer.h>
 #include<string.h>
+#include "gxcore.h"
+#include "gxos/gxcore_os_core.h"
+#include <sys/ioctl.h>
+
+#include "bsp_dev_panel.h"
 
 NGL_MODULE(IRINPUT)
 
 //static aui_hdl hdl_key=NULL;
 
 typedef struct{
-  // aui_hdl hdl;
+   int ir_fd;
+   int pnl_fd;
    std::map<int,int>keymap;
    NGLKEY_CALLBACK cbk;
    void*userdata;
@@ -30,7 +36,6 @@ DWORD nglIrInit(){
     NGLOG_DEBUG("cplusplus=%d",__cplusplus);
     if(msgQ)return 0;
     msgQ=nglMsgQCreate(16,sizeof(NGLKEYINFO));//sizeof(aui_key_info));
-    //aui_key_init(NULL,NULL);
     //for(int i=0;i<NB_DEV;i++)irdevices[i].hdl=NULL;
     //REGIST_KEY(KEY_LEFT);it the same as keynames["KEY_LEFT"]=NGL_KEY_LEFT;
     REGIST_KEY(KEY_BACKSPACE);
@@ -73,19 +78,15 @@ DWORD nglIrInit(){
 
 }
 
-/*static void key_callback(aui_key_info*key,void*d){
-    int rc=nglMsgQSend(msgQ,key,sizeof(aui_key_info),100);
-}*/
-
 HANDLE nglIrOpen(int id,const char*keymap){
     IRDEV*ir=&irdevices[id];
     std::ifstream fin;
     fin.open(keymap?keymap:"key.map");
     char line[256];
-    
-    int rc=0;//aui_key_open(0,NULL,&ir->hdl);
-    //rc= aui_key_set_ir_rep_interval(ir->hdl, 1000, 1000);
-    //rc=aui_key_callback_register(ir->hdl,key_callback);
+        
+    int rc=0;
+    ir->ir_fd = GxCore_Open("/dev/gxirr0", "r");
+    ir->pnl_fd= GxCore_Open("/dev/gxpanel0", "r");
 #define SEP " \t,;:"
     while(fin.is_open()&&fin.getline(line,256)){
 //read keymap format as KEY_NAME ,key_code
@@ -119,7 +120,23 @@ DWORD nglIrSendKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
 
 DWORD nglIrGetKey(HANDLE handle,NGLKEYINFO*key,DWORD timeout){
     IRDEV*ir=(IRDEV*)handle;
-    //aui_key_info info;
+    int max_fd = -1;
+    unsigned int code = 0;
+    fd_set fds;
+    struct timeval to;
+
+    FD_ZERO(&fds);
+    FD_SET(ir->ir_fd, &fds);
+    FD_SET(ir->pnl_fd,&fds);
+    to.tv_sec = 1;
+    to.tv_usec = 60 * 1000;
+
+    if (select(max_fd + 1, &fds, NULL, NULL, &to) > 0){
+        if (FD_ISSET(ir->ir_fd, &fds))
+            GxCore_Read(ir->ir_fd, &code, sizeof(code), 1);
+        else if (FD_ISSET(ir->pnl_fd, &fds))
+            GxCore_Read(ir->pnl_fd, &code, sizeof(code), 1);
+    }
 
     if(ir<irdevices||ir>=&irdevices[NB_DEV]){
         NGLOG_DEBUG("invalid para");

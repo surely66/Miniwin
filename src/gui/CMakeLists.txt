@@ -4,12 +4,14 @@ add_subdirectory(tests)
 
 option( LUA_BINDINGS "UI Lua script bindings" OFF)
 
+#set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS}  -fPIC")
+#set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC")
+
 aux_source_directory(core SRCS_GUICORE)
 #aux_source_directory(core/svg SRCS_SVG)
 aux_source_directory(core/cairomm   SRCS_CAIROMM)
 aux_source_directory(looper SRCS_LOOP)
 message("UI Lua script bindings is ${LUA_BINDINGS}")
-message("=======CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
 if ( LUA_BINDINGS )
 aux_source_directory(luabinding SRCS_LUABIND)
 list(APPEND EXT_LIBS lua)
@@ -36,7 +38,7 @@ add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LO
 file(GLOB MMHEADERS   ${PROJECT_SOURCE_DIR}/core/cairomm/*.h)
 file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
 file(GLOB LOOPERHEADERS  ${PROJECT_SOURCE_DIR}/looper/*.h)
-message("LOOPERHEADERS=${LOOPERHEADERS}")
+
 link_directories(
     ${CMAKE_BINARY_DIR}/src/3rdparty/libpng/
     ${CMAKE_BINARY_DIR}/src/3rdparty/lua 
