@@ -18,7 +18,7 @@ add_subdirectory(src/3rdparty)
 add_subdirectory(src/tvmodules)
 
 if(NOT CMAKE_CROSSCOMPILING)
-  add_subdirectory(stc/tools)
+  add_subdirectory(src/tools)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --no-allow-shlib-undefined ${CMAKE_EXE_LINKER_FLAGS}")

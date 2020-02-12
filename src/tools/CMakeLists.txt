@@ -7,17 +7,17 @@ set(SRCS_PAK ${CMAKE_SOURCE_DIR}/src/gui/core/filepak.cc
              ${CMAKE_SOURCE_DIR}/src/gui/core/gzstream.cc
              ./main.cc
 )
-include_directories(  ../core/
+include_directories(  
+  ./
   ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/src/gui/core/
   ${CMAKE_SOURCE_DIR}/src/3rdparty/jsoncpp/include
   ./
 )
 
-find_package(z)
-
 add_executable(respack ${SRCS_PAK})
 
-target_link_libraries(respack z)
+target_link_libraries(respack zlib)
 
 link_directories(${CMAKE_PROJECT_DIR}/libs)
 #add_executable(lansplit lansplit.cc)

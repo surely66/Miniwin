@@ -18,6 +18,7 @@ set(SRCS_GX3213
    ngl_pvr.c
    ngl_ir.cc
    ngl_panel.c
+   ngl_gx_graph.c
    ngl_mediaplayer.c
 )
 

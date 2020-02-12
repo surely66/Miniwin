@@ -1,12 +1,12 @@
 #set platform include dirs & library path
-
+set(GX_ROOT $ENV{HOME}/gx3213/irdeto_cca/dvt/platform/library/arm-linux)
 if ( TRUE )
-	set(HAL_EXTRA_LIBS vncserver CACHE INTERNAL "platform dependence libs")
+	set(HAL_EXTRA_LIBS
+           ${GX_ROOT}/lib/libgxcore.a
+           CACHE INTERNAL "platform dependence libs")
 	set(HAL_EXTRA_INCDIRS 
-        ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver/
-        ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver/
-        ${CMAKE_SOURCE_DIR}/src/3rdparty/trfb/src
-        CACHE INTERNAL "platform dependence include")
+           ${GX_ROOT}/include/
+           CACHE INTERNAL "platform dependence include")
 else()
   find_package(GTK3)
   find_package(X11)
