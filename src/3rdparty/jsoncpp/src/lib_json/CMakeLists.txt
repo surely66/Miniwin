@@ -69,16 +69,15 @@ else(JSONCPP_WITH_CMAKE_PACKAGE)
     set(INSTALL_EXPORT)
 endif()
 
-if(BUILD_SHARED_LIBS)
-    add_compile_definitions( JSON_DLL_BUILD )
-endif()
-
-
 add_library(jsoncpp_lib ${PUBLIC_HEADERS} ${jsoncpp_sources})
 set_target_properties( jsoncpp_lib PROPERTIES VERSION ${JSONCPP_VERSION} SOVERSION ${JSONCPP_SOVERSION})
 set_target_properties( jsoncpp_lib PROPERTIES OUTPUT_NAME jsoncpp
                         DEBUG_OUTPUT_NAME jsoncpp${DEBUG_LIBNAME_SUFFIX} )
 set_target_properties( jsoncpp_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(jsoncpp_lib PRIVATE JSON_DLL_BUILD )
+endif()
 
 # Set library's runtime search path on OSX
 if(APPLE)
