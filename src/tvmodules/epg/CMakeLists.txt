@@ -16,7 +16,6 @@ include_directories(
 )
 file(GLOB TVHEADERS   ${PROJECT_SOURCE_DIR}/*.h)
 target_link_libraries(dvbepg tvhal iconv jsoncpp_lib dl)
-message("###DIR=${PROJECT_SOURCE_DIR}")
 file(COPY ${TVHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/epg)
 add_subdirectory(tests)
 

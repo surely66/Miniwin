@@ -2,7 +2,6 @@
 SET(CMAKE_SYSTEM_NAME Linux)
 
 SET(TOOLCHAIN_DIR $ENV{HOME}/toolchain_mti)
-message("TOOLCHAIN_DIR=${TOOLCHAIN_DIR}")
 set(CMAKE_CROSSCOMPILING true)
 
 SET(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/host/usr/bin/mips-mti-linux-gnu-g++)

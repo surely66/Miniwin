@@ -23,11 +23,6 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include/pixman
     ${CMAKE_BINARY_DIR}/include/cairo
     ${CMAKE_BINARY_DIR}/include/porting
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src/
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvgtiny/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/bx/include
-    ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
 )
@@ -39,9 +34,8 @@ file(GLOB GUIHEADERS  ${PROJECT_SOURCE_DIR}/core/*.h)
 file(GLOB LOOPERHEADERS  ${PROJECT_SOURCE_DIR}/looper/*.h)
 
 link_directories(
-    ${CMAKE_BINARY_DIR}/src/3rdparty/libpng/
     ${CMAKE_BINARY_DIR}/src/3rdparty/lua 
-    ${CMAKE_BINARY_DIR}/lib)
+)
 
 target_link_libraries(gui  pthread pixman-1 png jpeg cairo freetype
        	tvhal jsoncpp_lib unibreak usbmanager ${EXT_LIBS}

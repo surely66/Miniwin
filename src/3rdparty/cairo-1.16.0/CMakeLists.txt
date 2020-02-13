@@ -37,7 +37,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include/
    ${CMAKE_BINARY_DIR}/include/porting
    ${CMAKE_BINARY_DIR}/include/pixman
-   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
 )
 
 if(CAIRO_HAS_PTHREAD)

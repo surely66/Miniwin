@@ -1,7 +1,7 @@
 
 add_subdirectory(freetype-2.10.0)
 add_subdirectory(libpng)
-add_subdirectory(libjpeg)
+add_subdirectory(libjpeg-turbo)
 add_subdirectory(pixman)
 add_subdirectory(cairo-1.16.0)
 add_subdirectory(libunibreak)
