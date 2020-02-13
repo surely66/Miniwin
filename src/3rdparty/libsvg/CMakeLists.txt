@@ -3,7 +3,7 @@ project(svg C CXX)
 aux_source_directory(./src SRCS_SVG)
 set(CMAKE_BUILD_TYPE Debug)
 include_directories(./ ./src
-  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_BINARY_DIR}/include
   ${CMAKE_SOURCE_DIR}/src/3rdparty/uriparser/include
 )
 

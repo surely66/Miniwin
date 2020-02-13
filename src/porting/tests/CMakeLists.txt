@@ -4,13 +4,11 @@ project(haltest C CXX)
 aux_source_directory(./ SRCS_HAL_TESTS)
 include_directories(
    ./
-   ${CMAKE_SOURCE_DIR}/include
-   ${CMAKE_SOURCE_DIR}/include/porting
-   ${CMAKE_BINARY_DIR}/include/
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/porting
    ${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver
    ${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
-   ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
-   ${CMAKE_SOURCE_DIR}/src/3rdparty/pixman/pixman
+   ${CMAKE_BINARY_DIR}/include/pixman
    ${CMAKE_BINARY_DIR}/include/freetype2
 )
 add_executable(hal_tests ${SRCS_HAL_TESTS}) 

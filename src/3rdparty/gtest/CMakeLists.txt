@@ -383,10 +383,4 @@ if (build_all_gtest_tests)
   py_test(gtest_xml_output_unittest)
 endif()
 
-add_custom_command(TARGET gtest POST_BUILD
-    COMMAND mkdir -p  ${CMAKE_SOURCE_DIR}/include/gtest/internal
-    COMMAND cp -ur include/gtest/*.h  ${CMAKE_SOURCE_DIR}/include/gtest
-    COMMAND cp -ur include/gtest/internal/*.h  ${CMAKE_SOURCE_DIR}/include/gtest/internal
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Copy GTEST Header Files")
-
+file(COPY include/ DESTINATION ${CMAKE_BINARY_DIR}/include)
