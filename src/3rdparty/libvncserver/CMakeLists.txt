@@ -29,12 +29,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libvncserver ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
-set(WITH_FFMPEG OFF)
-set(WITH_SDL OFF)
-set(WITH_GNUTLS OFF)
-set(WITH_GCRYPT OFF)
-set(WITH_OPENSSL OFF)
-set(WITH_WEBSOCKET OFF)
 
 # all the build configuration switches
 option(LIBVNCSERVER_INSTALL "Generate installation target" ON)
@@ -56,6 +50,12 @@ option(WITH_IPv6 "Enable IPv6 Support" ON)
 option(WITH_WEBSOCKETS "Build with websockets support" ON)
 option(WITH_SASL "Build with SASL support" ON)
 
+set(WITH_FFMPEG OFF)
+set(WITH_SDL OFF)
+set(WITH_GNUTLS OFF)
+set(WITH_GCRYPT OFF)
+set(WITH_OPENSSL OFF)
+set(WITH_WEBSOCKET OFF)
 
 
 if(WITH_ZLIB)
