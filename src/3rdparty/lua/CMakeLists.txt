@@ -169,6 +169,7 @@ install_header ( src/lua.h src/lualib.h src/lauxlib.h etc/lua.hpp ${CMAKE_CURREN
 install_doc ( doc/ )
 install_foo ( etc/ )
 install_test ( test/ )
+file(COPY src/lua.h src/lualib.h src/lauxlib.h etc/lua.hpp ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h DESTINATION ${CMAKE_BINARY_DIR}/include/lua )
 
 ## TESTS
 set ( LUA lua )

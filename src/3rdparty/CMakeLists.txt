@@ -19,7 +19,7 @@ add_subdirectory(id3)
 #add_subdirectory(breakpad)
 
 add_subdirectory(libvncserver)
-#add_subdirectory(lua)
+add_subdirectory(lua)
 #add_subdirectory(mupdf)//compiled  failed
 
 #add_subdirectory(libcroco)
