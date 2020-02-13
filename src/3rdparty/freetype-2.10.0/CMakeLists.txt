@@ -508,10 +508,6 @@ set(CPACK_COMPONENT_HEADERS_GROUP "Development")
 
 include(CPack)
 
-add_custom_command(TARGET freetype POST_BUILD
-    COMMAND mkdir -p  ${CMAKE_SOURCE_DIR}/include/freetype
-    COMMAND cp -ur ${PROJECT_SOURCE_DIR}/include/*  ${CMAKE_SOURCE_DIR}/include/ 
-#    COMMAND cp -u ${PROJECT_SOURCE_DIR}/include/freetype/*.h  ${CMAKE_SOURCE_DIR}/include/freetype
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-    COMMENT "Copy Freetype Header Files")
-
+file(COPY include/ft2build.h DESTINATION ${CMAKE_BINARY_DIR}/include)
+file(COPY include/freetype/ DESTINATION ${CMAKE_BINARY_DIR}/include/freetype)
+file(COPY include/freetype/config/ DESTINATION ${CMAKE_BINARY_DIR}/include/freetype/config)

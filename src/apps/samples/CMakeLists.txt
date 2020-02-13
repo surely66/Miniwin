@@ -4,11 +4,11 @@ project(gui_test C CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(
-   ${CMAKE_SOURCE_DIR}/include
-   ${CMAKE_SOURCE_DIR}/include/gui
-   ${CMAKE_SOURCE_DIR}/include/porting
-   ${CMAKE_SOURCE_DIR}/include/cairo
-   ${CMAKE_SOURCE_DIR}/include/epg
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/cairo
+   ${CMAKE_BINARY_DIR}/include/epg
 )
 set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
 add_executable(helloworld helloworld.cc)

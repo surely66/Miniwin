@@ -13,20 +13,20 @@ find_package(Threads)
 
 if ( NOT ZLIB_FOUND )
 set(ZLIB_LIBRARY zlib)
-set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 set(ZLIB_FOUND TRUE)
 endif()
 
 if (NOT PNG_FOUND )
 set(PNG_LIBRARY png)
-set(PNG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(PNG_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 set(CAIRO_HAS_PNG_FUNCTIONS TRUE)
 set(PNG_FOUND TRUE)
 endif()
 
 if(NOT PIXMAN_FOUND)
 set(PIXMAN_LIBRARY pixman-1)
-set(PIXMAN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(PIXMAN_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 set(PIXMAN_FOUND TRUE)
 endif()
 
@@ -34,10 +34,10 @@ include(Configure_config.cmake)
 include(Configure_features.cmake)
 include_directories(
    ${cairo_BINARY_DIR}
-   ${CMAKE_SOURCE_DIR}/include/
-   ${CMAKE_SOURCE_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/pixman
    ${CMAKE_BINARY_DIR}/src/3rdparty/pixman/pixman
-   ${CMAKE_SOURCE_DIR}/include/pixman
 )
 
 if(CAIRO_HAS_PTHREAD)
@@ -64,6 +64,5 @@ else()
     list(APPEND CAIRO_LIBS freetype zlib)
 endif()
 
-message("CMAKE_C_FLAGS=${CMAKE_C_FLAGS}")
 include_directories(src)
 add_subdirectory(src)

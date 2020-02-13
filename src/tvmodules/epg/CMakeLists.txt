@@ -8,9 +8,9 @@ add_definitions(-DLIBICONV_PLUG)
 add_library(dvbepg SHARED ${SRCS_EPG})
 include_directories(
    ./
-   ${CMAKE_SOURCE_DIR}/include
-   ${CMAKE_SOURCE_DIR}/include/porting
-   ${CMAKE_SOURCE_DIR}/include/jsoncpp
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/jsoncpp
    ../
 )
 

@@ -120,5 +120,5 @@ endif(BUILD_STATIC)
 
 install(FILES pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION include/pixman-1)
 
-file(COPY pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION ${CMAKE_SOURCE_DIR}/include/pixman)
+file(COPY pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION ${CMAKE_BINARY_DIR}/include/pixman)
 

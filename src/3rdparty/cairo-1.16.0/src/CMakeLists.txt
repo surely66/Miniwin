@@ -663,4 +663,4 @@ install(FILES ../cairo-version.h DESTINATION include/cairo)
 install(FILES ${PROJECT_BINARY_DIR}/cairo-features.h DESTINATION include/cairo)
 
 file(COPY ../cairo-version.h ${enabled_cairo_headers} ${PROJECT_BINARY_DIR}/cairo-features.h 
-	DESTINATION ${CMAKE_SOURCE_DIR}/include/cairo)
+	DESTINATION ${CMAKE_BINARY_DIR}/include/cairo)

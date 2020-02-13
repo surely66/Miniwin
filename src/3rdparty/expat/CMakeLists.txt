@@ -80,7 +80,7 @@ configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc)
 
 install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
-file(COPY lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_SOURCE_DIR}/include)
+file(COPY lib/expat.h lib/expat_external.h DESTINATION ${CMAKE_BINARY_DIR}/include)
 
 
 if(BUILD_tools AND NOT WINCE)

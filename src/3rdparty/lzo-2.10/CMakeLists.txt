@@ -277,7 +277,7 @@ set(f include/lzo/lzo1.h include/lzo/lzo1a.h include/lzo/lzo1b.h
 )
 install(FILES ${f} DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}/lzo")
 install(FILES ${f} DESTINATION "${CMAKE_SOURCE_DIR}/include/lzo")
-file(COPY ${f} DESTINATION ${CMAKE_SOURCE_DIR}/include/lzo)
+file(COPY ${f} DESTINATION ${CMAKE_BINARY_DIR}/include/lzo)
 
 if(ENABLE_STATIC)
     install(TARGETS lzo_static_lib ARCHIVE DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")

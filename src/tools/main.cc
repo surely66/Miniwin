@@ -24,6 +24,11 @@ int main(int argc,const char*argv[]){
            cout<<"  size:"<<r->size<<"  offset:"<<r->offset<<" name:"<<r->name<<" fullname:"<<r->fullname<<std::endl;
            pak.getPAKEntryData(nm);
        }
+   }else{
+       cout<<"1: package a dir to resource pak "<<endl;
+       cout<<"    "<<argv[0]<<" pakfile resource_dir"<<endl;
+       cout<<"2: list resources of resourcepak"<<endl;
+       cout<<"    "<<argv[0]<<" pak_file"<<endl;
    }
    return 0;
 }

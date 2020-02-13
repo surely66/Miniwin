@@ -5,11 +5,11 @@ aux_source_directory(./ SRCS_NTV_PLUS)
 include_directories(
    ./
    ./acs/include
-   ${CMAKE_SOURCE_DIR}/include
-   ${CMAKE_SOURCE_DIR}/include/gui
-   ${CMAKE_SOURCE_DIR}/include/porting
-   ${CMAKE_SOURCE_DIR}/include/cairo
-   ${CMAKE_SOURCE_DIR}/include/epg
+   ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
+   ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_BINARY_DIR}/include/cairo
+   ${CMAKE_BINARY_DIR}/include/epg
 )
 
 if (NGL_CA STREQUAL "acs")

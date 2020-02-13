@@ -90,8 +90,4 @@ if ( BUILD_TESTS )
     testoutt.jpg )
 endif ()
 
-add_custom_command(TARGET jpeg POST_BUILD
-    COMMAND cp -u ${HEADERS}  ${CMAKE_SOURCE_DIR}/include/
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Copy JPEG Header Files")
-
+file(COPY ${HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include)

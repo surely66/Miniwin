@@ -19,10 +19,10 @@ endif ()
 
 include_directories(
     ./ ./core ./core/svg ./luabinding 
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/pixman
-    ${CMAKE_SOURCE_DIR}/include/cairo
-    ${CMAKE_SOURCE_DIR}/include/porting
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/pixman
+    ${CMAKE_BINARY_DIR}/include/cairo
+    ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg/src/
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvgtiny/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/simple-svg/include
@@ -30,7 +30,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libsvg-cairo/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
-    ${CMAKE_BINARY_DIR}/include
 )
 
 add_library(gui SHARED ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LOOP} ${SRCS_SVG})
@@ -51,23 +50,13 @@ target_link_libraries(gui  pthread pixman-1 png jpeg cairo freetype
 
 # simplesvg)
 
-#add_custom_command(TARGET gui PRE_BUILD 
-#           COMMAND g++ filepak.cc gzstream.cc -std=c++11 -I./ -lz -DPACK_TOOL -o ${CMAKE_SOURCE_DIR}/respack 
-#           WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/core
-#           COMMENT "compile resource package tools")
-
 add_executable(respackt core/filepak.cc core/gzstream.cc)
 target_compile_definitions(respackt PRIVATE -DPACK_TOOL)
 target_link_libraries(respackt zlib)
  
-add_custom_command(TARGET gui POST_BUILD 
-    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/gui/cairomm
-    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/looper
-    COMMAND cp -u *.h  ${CMAKE_SOURCE_DIR}/include/gui/   
-    COMMAND cp -u cairomm/*.h  ${CMAKE_SOURCE_DIR}/include/gui/cairomm   
-    COMMAND cp -u ../looper/*.h  ${CMAKE_SOURCE_DIR}/include/looper   
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/core
-    COMMENT "Copy GUI Header Files")
+file(COPY ${GUIHEADERS}    DESTINATION ${CMAKE_BINARY_DIR}/include/gui PATTERN "*.h")
+file(COPY ${MMHEADERS}     DESTINATION ${CMAKE_BINARY_DIR}/include/gui/cairomm PATTERN "*.h")
+file(COPY ${LOOPERHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/looper PATTERN "*.h")
 
 install (TARGETS gui  DESTINATION lib)
 install (TARGETS respackt  DESTINATION bin)

@@ -133,4 +133,4 @@ install_data ( README AUTHORS COPYING )
 file(COPY ${PROJECT_BINARY_DIR}/include/iconv.h 
           ${PROJECT_BINARY_DIR}/include/libcharset.h 
           ${PROJECT_BINARY_DIR}/include/localcharset.h
-	  DESTINATION ${CMAKE_SOURCE_DIR}/include)
+	  DESTINATION ${CMAKE_BINARY_DIR}/include)

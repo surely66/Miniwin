@@ -37,15 +37,9 @@ target_link_libraries(tvhal_static ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
 add_subdirectory(${NGL_CHIPSET})
 add_subdirectory(tests)
 
-add_custom_command(TARGET tvhal POST_BUILD 
-    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/include/porting
-    COMMAND cp -u ${PROJECT_SOURCE_DIR}/inc/*.h  ${CMAKE_SOURCE_DIR}/include/porting
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Copy NGL Porting Header Files")
-
 file(GLOB HAL_HEADERS  ${PROJECT_SOURCE_DIR}/inc/*.h)
 
 install (TARGETS tvhal  DESTINATION lib)
 install (TARGETS tvhal_static  DESTINATION lib)
 install (FILES ${HAL_HEADERS} DESTINATION include/porting/)
-file(COPY ${HAL_HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/include/porting)
+file(COPY ${HAL_HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/porting)
