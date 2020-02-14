@@ -7,8 +7,8 @@ namespace nglui{
 
 class Preferences{
 protected:
-   Json::Value root;
-   void getSection(const std::string&section,Json::Value&value);
+   void*doc;
+//   void getSection(const std::string&section,Json::Value&value);
 public:
    Preferences();
    void load(const std::string&fname);

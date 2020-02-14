@@ -3,7 +3,12 @@
 #include <tvdata.h>
 #include <string>
 #include <vector>
-#include <json/json.h>
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/memorystream.h>
 #include <iostream>
 #include <fstream>
 
@@ -35,58 +40,59 @@ int FavInit(const char*favpath){
 }
 
 int FavSaveData(const char*fname){
-    Json::Value root;
+    rapidjson::Document d;
+    std::ofstream fout(fname);
+    d.SetArray();
     int idx=0;
     for(auto g:favgroups){
         if(g.id&(GROUP_SYSTEM|GROUP_BAT))continue;
-        root[idx]["id"]=g.id;
-        root[idx]["name"]=g.grpname;
+        d[idx]["id"]=g.id;
+        d[idx]["name"].SetString(g.grpname.c_str(),d.GetAllocator());
         for(int j=0;j<g.services.size();j++){
              SERVICELOCATOR& s=g.services[j];
-             Json::Value js;
+             rapidjson::Value js(rapidjson::kObjectType);
              js["netid"]=s.netid;
              js["tsid"]=s.tsid;
              js["sid"]=s.sid;
-             root["services"][j]=js;
+             d[idx]["services"].PushBack(js,d.GetAllocator());
         }idx++;
     }
-    Json::StreamWriterBuilder builder;
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    std::ofstream fout(fname);
-    writer->write(root,&fout);
+    rapidjson::OStreamWrapper out(fout);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    d.Accept(writer);
     return idx;
 }
 
 int FavLoadData(const char*fname){
-    Json::CharReaderBuilder builder;
+    rapidjson::Document d;
     std::ifstream fin(fname);
-    Json::Value root;
-    Json::String errs;
-    bool rc=Json::parseFromStream(builder,fin, &root, &errs);
-    NGLOG_DEBUG_IF(!rc,"json.parse=%d %s",rc,errs.c_str());
-    if(!root.isArray()){
+    rapidjson::IStreamWrapper isw(fin);
+    d.ParseStream(isw);
+
+    NGLOG_DEBUG("json.parse= %s",fname);
+    if(!d.IsArray()){
         NGLOG_ERROR("%s not found or format is error",fname);
         return NGL_ERROR;
     }
-    for(int i=0;i<root.size();i++){
-        Json::Value g=root[i];
-        UINT favid=g["id"].asInt();
+    for(int i=0;i<d.Size();i++){
+        rapidjson::Value& g=d[i];
+        UINT favid=g["id"].GetInt();
         if( favid&(GROUP_SYSTEM|GROUP_BAT) ){
              NGLOG_DEBUG("invalid favid %x",favid);
              continue;
         }
-        FavAddGroupWithID(favid,g["name"].asCString());
-        for(int j=0;j<g["services"].size();j++){
+        FavAddGroupWithID(favid,g["name"].GetString());
+        for(int j=0;j<g["services"].Size();j++){
              SERVICELOCATOR l;
-             Json::Value v=g["services"][j];
-             l.netid=v["netid"].asInt();
-             l.tsid=v["tsid"].asInt();
-             l.sid=v["sid"].asInt();
+             rapidjson::Value& v=g["services"][j];
+             l.netid=v["netid"].GetInt();
+             l.tsid=v["tsid"].GetInt();
+             l.sid=v["sid"].GetInt();
              FavAddService(favid,&l);
         }
     }
-    NGLOG_DEBUG("load %d favorites",root.size());
-    return root.size();
+    NGLOG_DEBUG("load %d favorites",d.Size());
+    return d.Size();
 }
 
 int FavGetGroupCount(){

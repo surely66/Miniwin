@@ -7,7 +7,13 @@
 #include <ngl_log.h>
 #include <ngl_dmx.h>
 #include <favorite.h>
-#include <json/json.h>
+//#include <json/json.h>
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include "rapidjson/istreamwrapper.h"
+#include "rapidjson/ostreamwrapper.h"
+
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -530,43 +536,41 @@ INT DtvGetServiceItem(const SERVICELOCATOR*svc,SERVICE_KEYITEM item,INT*value){
 }
 
 INT LoadServiceAdditionals(const char*fname){
-    Json::CharReaderBuilder builder;
-    Json::Value root;
-    Json::String errs;
+    rapidjson::Document d;
     std::ifstream fin(fname);
-    builder["collectComments"] = false;
-    bool rc=Json::parseFromStream(builder,fin, &root, &errs);
-    NGLOG_DEBUG_IF(!rc,"json.parse=%d %s",rc,errs.c_str());
-    Json::Value jssvcs=root["services"];
-    for(int i=0;i<jssvcs.size();i++){
-        Json::Value jssvc=jssvcs[i];
+    rapidjson::IStreamWrapper isw(fin);
+    d.ParseStream(isw);
+
+    for(int i=0;i<d.Size();i++){
+        rapidjson::Value& jssvc=d[i];
         SERVICELOCATOR svc;
-        svc.netid=jssvc["netid"].asInt();
-        svc.tsid =jssvc["tsid"].asInt();
-        svc.sid  =jssvc["sid"].asInt();
-        service_lcn[svc]->deleted=jssvc["deleted"].asInt();//additinal data
+        svc.netid=jssvc["netid"].GetInt();
+        svc.tsid =jssvc["tsid"].GetInt();
+        svc.sid  =jssvc["sid"].GetInt();
+        service_lcn[svc]->deleted=jssvc["deleted"].GetInt();//additinal data
     }
-    return jssvcs.size();
+    return d.Size();
 }
 
 INT SaveServiceAdditionals(const char*fname){
     INT rc=0;
-    Json::Value root;
+    rapidjson::Document d;
+    rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+    std::ofstream fout(fname);
+    rapidjson::OStreamWrapper out(fout);
+    d.SetArray();
     std::unordered_map<SERVICELOCATOR,ServiceData*>::const_iterator itr;
     for(itr=service_lcn.begin();itr!=service_lcn.end();itr++,rc++){
         SERVICELOCATOR svc=itr->first;
-        Json::Value jssvc;
+        rapidjson::Value jssvc(rapidjson::kObjectType);
         jssvc["netid"]=svc.netid;
         jssvc["tsid"]=svc.tsid;
         jssvc["sid"]=svc.sid;
         jssvc["deleted"]=itr->second->deleted;//addtional data
-        root["services"].append(jssvc);
+        d.PushBack(jssvc,d.GetAllocator());
     }
-    Json::StreamWriterBuilder builder;
-    builder["commentStyle"] = "None";
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    std::ofstream fout(fname);
-    writer->write(root,&fout);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    d.Accept(writer);
     return rc;
 }
 
