@@ -20,7 +20,7 @@ add_executable(ntvplus ${SRCS_NTV_PLUS} ntvplus.pak)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
 target_link_libraries(ntvplus gui dvbepg )
 else()
-target_link_libraries(ntvplus gui dvbepg acs)
+target_link_libraries(ntvplus jsoncpp_lib gui dvbepg acs)
 endif()
 
 message("CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
