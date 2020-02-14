@@ -15,6 +15,8 @@ add_subdirectory(curl)
 add_subdirectory(gtest)
 add_subdirectory(expat)
 add_subdirectory(jsoncpp)
+add_subdirectory(gason)
+add_subdirectory(rapidjson)
 add_subdirectory(id3)
 #add_subdirectory(breakpad)
 
