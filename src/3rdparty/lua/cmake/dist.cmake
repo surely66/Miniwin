@@ -51,7 +51,7 @@ message ( "DIST_DEPENDS: ${DIST_DEPENDS}")
 ## INSTALL DEFAULTS (Relative to CMAKE_INSTALL_PREFIX)
 # Primary paths
 set ( INSTALL_BIN bin CACHE PATH "Where to install binaries to." )
-set ( INSTALL_LIB lib CACHE PATH "Where to install libraries to." )
+set ( INSTALL_LIB ${CMAKE_BINARY_DIR}/lib CACHE PATH "Where to install libraries to." )
 set ( INSTALL_INC include CACHE PATH "Where to install headers to." )
 set ( INSTALL_ETC etc CACHE PATH "Where to store configuration files" )
 set ( INSTALL_SHARE share CACHE PATH "Directory for shared data." )
