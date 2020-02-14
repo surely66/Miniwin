@@ -87,10 +87,11 @@ int LoadSatelliteFromDB(const char*fname){
     int done=0;
     std::ifstream fin(fname);
     
+    NGLOG_DEBUG("load from %s",fname);
     rapidjson::IStreamWrapper isw(fin);
     rapidjson::Document d;
     d.ParseStream(isw);
-
+    NGLOG_DEBUG("=========size=%d",d.Size());
     for(int i=0;i<d.Size();i++){
         SATELLITE sat;
         rapidjson::Value&js=d[i];

@@ -1,5 +1,4 @@
-{
-   "satellites":[
+    [
         {"satellite":"Eutelsat 36B/36","position":123,"lnb":"none","22k":"off","diseqc":"B","direction":"east","transponders":[
                  {"transponder":1,"frequency":12322000,"symbolrate":27500,"polarity":"horizontal"},
                  {"transponder":2,"frequency":12399000,"symbolrate":27500,"polarity":"horizontal"},
@@ -12,5 +11,4 @@
                  {"transponder":7,"frequency":12399000,"symbolrate":27500,"polarity":"horizontal"}
              ]}
    ]
-}
 

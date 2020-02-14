@@ -5,6 +5,7 @@
 #include <freetype/ftcache.h>
 #include <ngl_types.h>
 #include <map>
+#include <vector>
 
 namespace nglui{
 
@@ -23,6 +24,8 @@ public:
    static FontManager&getInstance();
    int loadFonts(const char*dir);
    int loadFonts(const char**dirs,int count);
+   int getFamilies(std::vector<std::string>&fms);
+   std::string getFontFile(const std::string &family);
    FT_Error getFace(FTC_FaceID face_id,FT_Face*aface);
    unsigned int getGraphIndex(FT_Face face,unsigned int c);
    FT_Error getCharBitmap(FTC_FaceID face_id,unsigned int gidx,FTC_SBit*sbit);

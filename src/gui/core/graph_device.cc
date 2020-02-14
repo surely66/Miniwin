@@ -13,7 +13,7 @@
 #include <cairomm/fontface.h>
 #include <ft2build.h>
 #include <freetype/freetype.h>
-
+#include <fontmanager.h>
 using namespace std;
 using namespace Cairo;
 
@@ -29,6 +29,8 @@ GraphDevice*GraphDevice::GraphDevice::getInstance(){
         DWORD tid;
         nglGraphInit();
         mInst=new GraphDevice();
+        FontManager::getInstance().loadFonts("/usr/share/fonts");
+        FontManager::getInstance().loadFonts("/usr/lib/fonts");
     }
     return mInst;
 }
@@ -43,15 +45,15 @@ GraphDevice::GraphDevice(int format){
 
     cairo_surface_t*surface=cairo_ngl_surface_create(primarySurface);
     primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
-    FT_Face ft_face;
-#if defined(__amd64__)||defined(__x86_64__)||defined(_M_AMD64)
-    FT_New_Face(ft_library,"/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",0,&ft_face);
-#else
-    FT_New_Face(ft_library,"/usr/lib/fonts/droid_chn.ttf",0,&ft_face);
-#endif
-    NGLOG_DEBUG_IF(ft_face,"ft_library=%p ft_face=%p family=%s",ft_library,ft_face,ft_face?ft_face->family_name:nullptr);
-    RefPtr<FontFace>face=FtFontFace::create(ft_face,FT_LOAD_FORCE_AUTOHINT);
-    fonts[ft_face->family_name]=face;
+    std::vector<std::string>families;
+    FontManager::getInstance().getFamilies(families);
+    for(int i=0;i<families.size();i++){
+        FT_Face ft_face;
+        std::string path=FontManager::getInstance().getFontFile(families[i]);
+        FT_New_Face(ft_library,path.c_str(),0,&ft_face);
+        RefPtr<FontFace>face=FtFontFace::create(ft_face,FT_LOAD_FORCE_AUTOHINT);
+        fonts[families[i]]=face;
+    }
 }
 
 RefPtr<const FontFace>GraphDevice::getFont(const std::string&family){

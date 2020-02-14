@@ -16,8 +16,8 @@ NGL_MODULE(PREFERENCE)
 
 namespace nglui{
 Preferences::Preferences(){
-   rapidjson::Document*d=new rapidjson::Document();
-   doc=d;
+   doc=new rapidjson::Document();
+   ((rapidjson::Document*)doc)->SetObject();
 }
 
 void Preferences::load(const std::string&fname){
@@ -25,7 +25,8 @@ void Preferences::load(const std::string&fname){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     std::ifstream fin(fname);
     rapidjson::IStreamWrapper isw(fin);
-    d.ParseStream(isw);
+    if(fin.good())
+        d.ParseStream(isw);
 
     NGLOG_VERBOSE("parse=%s",fname.c_str());
 }

@@ -67,8 +67,9 @@ int FavLoadData(const char*fname){
     rapidjson::Document d;
     std::ifstream fin(fname);
     rapidjson::IStreamWrapper isw(fin);
+    if(!fin.good())
+        return 0;
     d.ParseStream(isw);
-
     NGLOG_DEBUG("json.parse= %s",fname);
     if(!d.IsArray()){
         NGLOG_ERROR("%s not found or format is error",fname);

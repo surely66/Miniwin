@@ -39,22 +39,27 @@ namespace nglui{
 
     int FontManager::loadFonts(const char*path){
         int rc=0;
+        struct stat st;
+        if(stat(path,&st)==-1)
+            return 0;
+        if( S_ISREG(st.st_mode) ){
+             FT_Face face; 
+             if( FT_New_Face(library,path,0,&face)!=FT_Err_Ok)
+                return 0;
+             families[face->family_name]=path;
+             NGLOG_DEBUG("font[%s]-->%s",face->family_name,path);
+             FT_Done_Face(face);
+             return 1;
+        }
         DIR *dir=opendir(path);
         struct dirent *entry;
-        NGLOG_DEBUG("fontpath=%s dir=%p",path,dir);
         while(dir&&(entry=readdir(dir))){
-            FT_Face face;
-            struct stat st;
             std::string s=path;
+            if(entry->d_name[0]=='.')
+               continue;
             s.append("/");
             s.append(entry->d_name);
-            if(stat(s.c_str(),&st)==-1)continue;
-            if( (S_ISREG(st.st_mode)) && (FT_New_Face(library,s.c_str(),0,&face)==FT_Err_Ok) ){
-                families[face->family_name]=s;
-                NGLOG_DEBUG("family:%s style:%s file:%s glyphs:%d",face->family_name,face->style_name,s.c_str(),face->num_glyphs);
-                FT_Done_Face(face);
-                rc++;
-            }
+            rc+=loadFonts(s.c_str());
         }
         if(dir)
             closedir(dir);
@@ -73,6 +78,15 @@ namespace nglui{
         }
         return rc;
     }
+   int FontManager::getFamilies(std::vector<std::string>&fms){
+       for(auto f:families)
+          fms.push_back(f.first);
+       return fms.size();
+   }
+
+   std::string FontManager::getFontFile(const std::string &family){
+       return families[family];
+   }
 
     FT_Error FontManager::getFace(FTC_FaceID face_id,FT_Face*aface){
         FT_Error err;

@@ -51,7 +51,7 @@
 #include <unistd.h>
 #include <cairo.h>
 #include <jpeglib.h>
-
+#include <turbojpeg.h>
 #include "cairo_jpg.h"
 
 /*! Macro to activate main() function. This is only used for testing. Comment

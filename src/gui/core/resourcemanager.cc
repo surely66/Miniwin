@@ -67,7 +67,7 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      closure.data=(unsigned char*)pak->getPAKEntryData(resname);
      closure.size=(size_t)pak->getPAKEntrySize(resname); 
      closure.pos=0;
-     NGLOG_DEBUG_IF(nullptr==closure.data,"name:%s data=%p size=%d  ext=%s",resname.c_str(),closure.data,closure.size,ext.c_str());
+     NGLOG_DEBUG_IF(1||nullptr==closure.data,"name:%s data=%p size=%d  ext=%s",resname.c_str(),closure.data,closure.size,ext.c_str());
      RefPtr<ImageSurface>img;
      if(closure.data==nullptr)return img;
      if(ext=="svg"){
@@ -78,9 +78,7 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
          img=ImageSurface::create_from_png(pak_read,&closure);
 #endif
      }else if(ext=="jpg"||ext=="jpeg"){
-#ifdef CAIRO_HAS_JPEG_SURFACE
          img=ImageSurface::create_from_jpg(pak_read,&closure);
-#endif
      }else if(ext=="bmp"){
          BasicBitmap*bmp=BasicBitmap::LoadBmpFromMemory(closure.data,closure.size,NULL);//
          NGLOG_VERBOSE("bmp size=%dx%d fmt=%d pitch=%d",bmp->Width(),bmp->Height(),bmp->Format(),bmp->Pitch());
@@ -114,12 +112,14 @@ const std::string ResourceManager::getString(const std::string& id,const std::st
          closure.data=(unsigned char*)pak->getPAKEntryData(resname);
          closure.size=(size_t)pak->getPAKEntrySize(resname);
 
+         NGLOG_DEBUG("data=%p size=%d",closure.data,closure.size);
          NGLOG_ERROR_IF(closure.size==0||closure.data==NULL,"resource file %s not found",resname.c_str());
          rapidjson::MemoryStream ims((char*)closure.data,closure.size);
          d.ParseStream(ims);
 
          for (rapidjson::Value::MemberIterator m = d.MemberBegin(); m != d.MemberEnd(); ++m){
              strings[m->name.GetString()]=m->value.GetString();
+             NGLOG_VERBOSE("%s:%s",m->name.GetString(),m->value.GetString());
          }
      }
      auto itr=strings.find(id);

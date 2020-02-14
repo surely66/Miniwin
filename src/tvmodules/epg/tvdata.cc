@@ -539,6 +539,7 @@ INT LoadServiceAdditionals(const char*fname){
     rapidjson::Document d;
     std::ifstream fin(fname);
     rapidjson::IStreamWrapper isw(fin);
+    if(!fin.good())return 0;
     d.ParseStream(isw);
 
     for(int i=0;i<d.Size();i++){
