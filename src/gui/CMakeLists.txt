@@ -38,7 +38,7 @@ link_directories(
 )
 
 target_link_libraries(gui  pthread pixman-1 png jpeg cairo freetype
-       	tvhal jsoncpp_lib unibreak usbmanager ${EXT_LIBS}
+       	tvhal unibreak usbmanager ${EXT_LIBS}
 	#svg cairosvg
 )
 

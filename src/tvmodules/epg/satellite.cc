@@ -2,7 +2,12 @@
 #include <vector>
 #include <ngl_log.h>
 #include <dvbepg.h>
-#include <json/json.h>
+//#include <json/json.h>
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include "rapidjson/istreamwrapper.h"
+#include "rapidjson/ostreamwrapper.h"
 #include <stdio.h>
 #include <diseqc.h>
 #include <map>
@@ -58,18 +63,18 @@ static const char*Value2Name(const std::string key,int v){
     return NULL;
 }
 
-static int getValue(const Json::Value&obj,const std::string&key,int default_value=0){
+static int getValue(const rapidjson::Value&obj,const std::string&key,int default_value=0){
     char value[128];
-    if(!obj.isMember(key)){
+    if(!obj.HasMember(key.c_str())){
         NGLOG_ERROR("jsonobject no field %s",key.c_str());
         return default_value;
     }
-    if(obj[key].isString()){
-        int v=Name2Value(key,obj[key].asCString());
+    if(obj[key].IsString()){
+        int v=Name2Value(key,obj[key].GetString());
         NGLOG_VERBOSE("%s=%d",key.c_str(),v);
         return v;
-    }else if(obj[key].isInt()){
-        return obj[key].asInt();
+    }else if(obj[key].IsInt()){
+        return obj[key].GetInt();
     }else{
         NGLOG_DEBUG("invalid json data");
         return default_value;
@@ -80,38 +85,37 @@ int LoadSatelliteFromDB(const char*fname){
     FILE*file;
     char buf[256];
     int done=0;
-    Json::CharReaderBuilder builder;
-    Json::Value root;
-    Json::String errs;
     std::ifstream fin(fname);
-    builder["collectComments"] = false;
-    bool rc=Json::parseFromStream(builder,fin, &root, &errs);
-    NGLOG_DEBUG_IF(!rc,"json.parse=%d %s",rc,errs.c_str());
-    Json::Value jssats=root["satellites"];
-    for(int i=0;i<jssats.size();i++){
+    
+    rapidjson::IStreamWrapper isw(fin);
+    rapidjson::Document d;
+    d.ParseStream(isw);
+
+    for(int i=0;i<d.Size();i++){
         SATELLITE sat;
-        Json::Value js=jssats[i];
+        rapidjson::Value&js=d[i];
         memset(&sat,0,sizeof(SATELLITE));
-        strncpy(sat.name,js["name"].asCString(),MAX_SATELLITE_NAME_LEN);
+        strncpy(sat.name,js["satellite"].GetString(),MAX_SATELLITE_NAME_LEN);
         sat.position=getValue(js,"position");
         sat.lnb=getValue(js,"lnb");
         sat.k22=getValue(js,"22k");
         sat.diseqc=getValue(js,"diseqc");
         sat.direction=0;
-        Json::Value jstps=js["transponders"];
+        rapidjson::Value& jstps=js["transponders"];
         AddSatellite(&sat);
         NGLOG_DEBUG("sat:%s lnb:%d diseqc:%d",sat.name,sat.lnb,sat.diseqc);
-        for(int j=0;j<jstps.size();j++){
-             Json::Value jtp=jstps[j];
+        for(int j=0;j<jstps.Size();j++){
+             rapidjson::Value& jtp=jstps[j];
              TRANSPONDER tp;
              memset(&tp,0,sizeof(TRANSPONDER));
              tp.delivery_type=DELIVERY_S;
              tp.u.s.frequency=getValue(jtp,"frequency");
-             tp.u.s.tpid=getValue(jtp,"id");
+             tp.u.s.tpid=getValue(jtp,"transponder");
              tp.u.s.symbol_rate=getValue(jtp,"symbolrate");
              tp.u.s.polar=(NGLNimPolar)getValue(jtp,"polarity");//polarity
-             NGLOG_DEBUG("\tfreq:%d symb:%d tpid:%d polar:%s",tp.u.s.frequency,tp.u.s.symbol_rate,tp.u.s.tpid,Value2Name("polarity",tp.u.s.polar));
-             if(jtp.isMember("frequency"))
+             NGLOG_DEBUG("\tfreq:%d symb:%d tpid:%d polar:%s",tp.u.s.frequency,tp.u.s.symbol_rate,
+                    tp.u.s.tpid,Value2Name("polarity",tp.u.s.polar));
+             if(jtp.HasMember("frequency"))
                   AddTp2Satellite(i,&tp);
         }
     }
@@ -119,32 +123,34 @@ int LoadSatelliteFromDB(const char*fname){
 }
 
 int SaveSatellite2DB(const char*fname){
-    Json::Value root;
+    rapidjson::Document d;
+    rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+    d.SetArray();
+    rapidjson::Value root(rapidjson::kArrayType);
     for(auto isat:gSatellites){
          SATELLITE& s=isat.sat;
-         Json::Value js;
-         js["name"]=s.name;
+         rapidjson::Value js(rapidjson::kObjectType);
+         js["satellite"].SetString(s.name,allocator);
          js["position"]=s.position;
-         js["lnb"]=Value2Name("lnb",s.lnb);
-         js["22k"]=Value2Name("22k",s.k22);
-         js["diseqc"]=Value2Name("diseqc",s.diseqc);
+         js["lnb"].SetString(Value2Name("lnb",s.lnb),allocator);
+         js["22k"].SetString(Value2Name("22k",s.k22),allocator);
+         js["diseqc"].SetString(Value2Name("diseqc",s.diseqc),allocator);
          js["direction"]="east";
          for(auto it:isat.tps){
               TRANSPONDER&t=it;
-              Json::Value jt;
-              jt["id"]=t.u.s.tpid;
+              rapidjson::Value jt(rapidjson::kObjectType);
+              jt["transponder"]=t.u.s.tpid;
               jt["frequency"]=t.u.s.frequency;
               jt["symbolrate"]=t.u.s.symbol_rate;
-              jt["polarity"]=Value2Name("polarity",t.u.s.polar);
-              js["transponders"].append(jt); 
+              jt["polarity"].SetString(Value2Name("polarity",t.u.s.polar),allocator);
+              js["transponders"].PushBack(jt,allocator); 
          }   
-         root["satellites"].append(js);
+         d.PushBack(js,allocator);
     } 
-    Json::StreamWriterBuilder builder;
-    builder["commentStyle"] = "None";
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
     std::ofstream fout(fname);
-    writer->write(root,&fout);
+    rapidjson::OStreamWrapper out(fout);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    d.Accept(writer);
     return 0; 
 }
 

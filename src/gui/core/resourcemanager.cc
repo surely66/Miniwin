@@ -5,9 +5,13 @@
 #include<ngl_types.h>
 #include<ngl_log.h>
 #include<cairomm/context.h>
-#include<json/json.h>
-#include <iostream>
-#include <strstream>
+
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/memorystream.h>
 
 NGL_MODULE(RESOURCEMANAGER)
 
@@ -99,10 +103,8 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
 }
 
 const std::string ResourceManager::getString(const std::string& id,const std::string&lan){
-     Json::Value root;
-     Json::String errs; 
-     Json::CharReaderBuilder builder;
      if((!lan.empty())&&(osdlanguage!=lan)){
+         rapidjson::Document d;
          std::string resname="strings-";
          resname.append(lan);
          resname.append(".json");
@@ -113,15 +115,11 @@ const std::string ResourceManager::getString(const std::string& id,const std::st
          closure.size=(size_t)pak->getPAKEntrySize(resname);
 
          NGLOG_ERROR_IF(closure.size==0||closure.data==NULL,"resource file %s not found",resname.c_str());
-         std::istrstream sin((char*)closure.data,closure.size);
-         bool rc=Json::parseFromStream(builder,sin, &root, &errs);
-         NGLOG_DEBUG_IF(rc==false,"json parse error :%s",errs.c_str());
+         rapidjson::MemoryStream ims((char*)closure.data,closure.size);
+         d.ParseStream(ims);
 
-         Json::Value::Members mem = root.getMemberNames();
- 	 Json::Value::Members::const_iterator  it;
-
-         for (auto k:mem){
-             strings[k]=root[k].asString();
+         for (rapidjson::Value::MemberIterator m = d.MemberBegin(); m != d.MemberEnd(); ++m){
+             strings[m->name.GetString()]=m->value.GetString();
          }
      }
      auto itr=strings.find(id);
