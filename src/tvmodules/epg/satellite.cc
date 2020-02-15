@@ -89,6 +89,7 @@ int LoadSatelliteFromDB(const char*fname){
     NGLOG_DEBUG("load from %s",fname);
     rapidjson::IStreamWrapper isw(fin);
     rapidjson::Document d;
+    if(!fin.good())return 0;
     d.ParseStream(isw);
     NGLOG_DEBUG("=========size=%d",d.Size());
     for(int i=0;i<d.Size();i++){
