@@ -7,10 +7,13 @@ namespace nglui{
 
 class Preferences{
 protected:
+   int update;
+   std::string pref_file;
    void*doc;
 //   void getSection(const std::string&section,Json::Value&value);
 public:
    Preferences();
+   ~Preferences();
    void load(const std::string&fname);
    void save(const std::string&fname);
    bool getBool(const std::string&section,const std::string&key,bool def=false);
