@@ -25,10 +25,8 @@ endif()
 
 message("CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 
-add_custom_command (TARGET ntvplus PRE_BUILD
-#  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/resource.h   #输出文件
-  COMMAND ${CMAKE_SOURCE_DIR}/respack ntvplus.pak assets/
-  COMMAND cp ntvplus.pak ${CMAKE_CURRENT_BINARY_DIR}/
+add_custom_command (TARGET ntvplus POST_BUILD
+  COMMAND ${CMAKE_SOURCE_DIR}/respack assets ${CMAKE_CURRENT_BINARY_DIR}/ntvplus.pak
   BYPRODUCTS ntvplus
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   DEPENDS respack

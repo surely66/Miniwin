@@ -1,5 +1,5 @@
 {
-   "items":[/*对于最后一级可编辑的界面必须设置id值,id<0表示定制界面*/
+   "items":[
     {"name":"language","id":0,
         "items":[
             {"name":"menu","type":"selector","focused":true,"items":"languages"},

@@ -84,9 +84,9 @@ App::App(int argc,const char*argv[]){
     nglLogParseModules(argc,argv);    
     resmgr=nullptr;
     mInst=this;
+    setName(argv[0]);
     if(argc&&argv){
        spt_init(argc,(char**)argv);
-       setName(argv[0]);
     }
     nglGraphInit();
 
