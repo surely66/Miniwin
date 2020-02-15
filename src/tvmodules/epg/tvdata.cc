@@ -10,7 +10,7 @@
 //#include <json/json.h>
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/ostreamwrapper.h"
 
@@ -570,7 +570,7 @@ INT SaveServiceAdditionals(const char*fname){
         jssvc["deleted"]=itr->second->deleted;//addtional data
         d.PushBack(jssvc,d.GetAllocator());
     }
-    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(out);
     d.Accept(writer);
     return rc;
 }

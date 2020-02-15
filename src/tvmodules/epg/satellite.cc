@@ -2,10 +2,9 @@
 #include <vector>
 #include <ngl_log.h>
 #include <dvbepg.h>
-//#include <json/json.h>
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/ostreamwrapper.h"
 #include <stdio.h>
@@ -150,7 +149,7 @@ int SaveSatellite2DB(const char*fname){
     } 
     std::ofstream fout(fname);
     rapidjson::OStreamWrapper out(fout);
-    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(out);
     d.Accept(writer);
     return 0; 
 }

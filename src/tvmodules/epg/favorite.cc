@@ -5,7 +5,7 @@
 #include <vector>
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/memorystream.h>
@@ -58,7 +58,7 @@ int FavSaveData(const char*fname){
         }idx++;
     }
     rapidjson::OStreamWrapper out(fout);
-    rapidjson::Writer<rapidjson::OStreamWrapper> writer(out);
+    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(out);
     d.Accept(writer);
     return idx;
 }
