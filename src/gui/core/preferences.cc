@@ -16,18 +16,24 @@ NGL_MODULE(PREFERENCE)
 
 namespace nglui{
 Preferences::Preferences(){
-   doc=new rapidjson::Document();
-   ((rapidjson::Document*)doc)->SetObject();
+   rapidjson::Document*d=new rapidjson::Document();
+   doc=d;
+   update=0;
 }
 
+Preferences::~Preferences(){
+   if(update&&!pref_file.empty())
+       save(pref_file);
+}
 void Preferences::load(const std::string&fname){
 
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     std::ifstream fin(fname);
     rapidjson::IStreamWrapper isw(fin);
-    if(fin.good())
+    if(fin.good()){
         d.ParseStream(isw);
-
+        pref_file=fname;
+    }
     NGLOG_VERBOSE("parse=%s",fname.c_str());
 }
 void Preferences::save(const std::string&fname){
@@ -86,27 +92,32 @@ const std::string& Preferences::getString(const std::string&section,const std::s
 void Preferences::setValue(const std::string&section,const std::string&key,bool v){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     d[section][key]=v;
+    update++;
     //NGLOG_VERBOSE("json=%s",root.toStyledString().c_str());
 }
 void Preferences::setValue(const std::string&section,const std::string&key,int v){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     d[section][key]=v;
+    update++;
     //NGLOG_VERBOSE("after setint json=%s",root.toStyledString().c_str());
 }
 void Preferences::setValue(const std::string&section,const std::string&key,float v){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     d[section][key]=v;
+    update++;
     //NGLOG_VERBOSE("json=%s",root.toStyledString().c_str());
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,const std::string& v){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     d[section][key].SetString(v.c_str(),d.GetAllocator());
+    update++;
     //NGLOG_VERBOSE("json=%s",root.toStyledString().c_str());
 }
 void Preferences::setValue(const std::string&section,const std::string&key,double v){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
     d[section][key]=v;
+    update++;
     //NGLOG_VERBOSE("json=%s",root.toStyledString().c_str());
 }
 
