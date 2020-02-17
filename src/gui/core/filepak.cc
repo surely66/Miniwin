@@ -1,5 +1,4 @@
 #include "filepak.h"
-
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -8,9 +7,10 @@
 #include <dirent.h>
 #include <gzstream.h>
 #include <memory>
+#include <stddef.h>
 
 namespace nglui{
-
+#define ENTRY_SIZE offsetof(PAKFileEntry,fullname)
 FilePAK::FilePAK(void){
     pakloaded = false;
 }
@@ -20,12 +20,44 @@ FilePAK::~FilePAK(void){
     entries.clear();
 }
 
+int FilePAK::readDirectory(const std::string&entryPath,const vector<std::string>&correctTypes,const std::string&basedir){
+    DIR*dir;
+    dirent*entry;
+    int rc=0;
+    if((dir=opendir(entryPath.c_str()))==nullptr)
+        return 0;
+    while(entry=readdir(dir)){
+        if(entry->d_type==DT_DIR && entry->d_name[0]!='.'){
+            std::string path=entryPath+"/";
+            path+=entry->d_name;
+            rc+=readDirectory(path,correctTypes,basedir);
+        }else if(entry->d_type==DT_REG){
+            bool correctType = correctTypes.size()==0;
+            for(unsigned int i = 0; i < correctTypes.size(); i++){
+                std::string comparestr = entry->d_name;
+                int found = comparestr.find_last_of('.');
+                comparestr = comparestr.substr(found);
+                if(!comparestr.compare(correctTypes[i]))
+                     correctType = true;
+            }
+            if(correctType){
+                if(!createEntry(entryPath, entry->d_name)){
+                    printf("%s/%s package error\r\n",entryPath.c_str(),entry->d_name);
+                    continue;
+                }rc++;
+            }
+        }
+    }
+    closedir(dir);
+    return rc;
+}
+
 bool FilePAK::createPAK(const std::string& name, const std::string& entryPath, const std::string& types)
 {
     pakloaded = false;
     pakname = name;
     srand((unsigned) time(NULL)); //seedin'
-    ogzstream PAKout;
+    ogzstream outpak;
     ifstream fileIn;
     int numberFiles = 0;
 
@@ -33,63 +65,39 @@ bool FilePAK::createPAK(const std::string& name, const std::string& entryPath, c
     memcpy(header.version, "1.0\0", 4);
 
     vector<std::string> correctTypes = filetypes(types);
-    DIR *dir; //dirent.h stuff to accumulate all files within a folder
-    dirent *entry;
-    if(dir = opendir(entryPath.c_str())){
-        while(entry = readdir(dir)){
-            if(entry->d_type != DT_DIR && entry->d_type == DT_REG){ //if it's not a folder and a regular file
-	 	bool correctType = false;
-		if(types.empty()) correctType = true;
-	        else{
-		   for(unsigned int i = 0; i < correctTypes.size(); i++){
-	 	        std::string comparestr = entry->d_name;
-		        int found = comparestr.find_last_of('.');
-		        comparestr = comparestr.substr(found);
-                        if(!comparestr.compare(correctTypes[i]))
-                            correctType = true;
-                    }
-                }
-	        if(correctType){
-	            numberFiles++;
-	            if(!createEntry(entryPath, entry->d_name)) return false;
-	        }
-	    }
-        }
-    }
-
-    delete dir, entry;
-
+    numberFiles=readDirectory(entryPath,correctTypes,entryPath);
+    
     header.numberFiles = numberFiles;
 
-    int offset = sizeof(PAKheader) + (numberFiles * sizeof(PAKfileEntry)); //there's always 1 header, and there's a PAKfileEntry for every file so find the sum of
-    for(unsigned int i = 0; i < entries.size(); i++){						//their sizes to find the offset for the first file
+    int offset = sizeof(PAKHeader) + (numberFiles * ENTRY_SIZE);
+    //there's always 1 header, and there's a PAKfileEntry for every file so find the sum of
+    for(unsigned int i = 0; i < entries.size(); i++){//their sizes to find the offset for the first file
         entries[i].offset = offset; //calculate all the offsets for each file
         offset += entries[i].size;
     }
-
+    printf("package %d resource to %s\r\n",numberFiles,name.c_str());
     if(numberFiles){ //if any files were found at all
-         PAKout.open(name.c_str());//ofstream::binary | ofstream::trunc
-         PAKout.write((char *) &header, sizeof(header)); //write the header
- 	 char *buffer;
+         outpak.open(name.c_str());//ofstream::binary | ofstream::trunc
+         outpak.write((char *) &header, sizeof(header)); //write the header
+ 	 char *buffer=new char[512];
  	 for(unsigned int i = 0; i < entries.size(); i++){
-	     buffer = new char[sizeof(PAKfileEntry)]; //char array to hold each table of contents entry
-	     memcpy(buffer, &(entries[i]), sizeof(PAKfileEntry)); //copy over the current entry in the for loop
-             PAKout.write(buffer, sizeof(PAKfileEntry)); //finally write the entry
-	     delete [] buffer; //no memory leaks in this code, no sir
+	     memcpy(buffer, &(entries[i]), ENTRY_SIZE); //copy over the current entry in the for loop
+             outpak.write(buffer, ENTRY_SIZE); //finally write the entry
 	 }
 	 for(unsigned int i = 0; i < entries.size(); i++){
 	     int size = entries[i].size;
-	     buffer = new char[size];
 
 	     fileIn.open(entries[i].fullname, ifstream::binary);
 	     if(!fileIn.is_open()) return false;
-	     fileIn.read(buffer, size); //read in the file so it can be encrypted then written into the PAK file
-	     PAKout.write(buffer, size); //write it out
-             delete [] buffer;
+             while(size>0){
+	         int sz=fileIn.readsome(buffer,512); //read in the file so it can be encrypted then written into the PAK file
+	         outpak.write(buffer,sz); //write it out
+                 size-=sz;
+             }
              fileIn.close();
          }
-         PAKout.close();
-	 //else return false; //PAKout not open
+         delete []buffer;
+         outpak.close();
     }
     if(numberFiles < 1) return false; //no files found :(
 
@@ -99,7 +107,7 @@ bool FilePAK::createPAK(const std::string& name, const std::string& entryPath, c
 bool FilePAK::createEntry(const std::string& path, const std::string& name)
 {
     ifstream fileIn;
-    PAKfileEntry fentry; //creates a new table of contents entry
+    PAKFileEntry fentry; //creates a new table of contents entry
 
     string entryName; //Sets up the path/name strings
     entryName += path;
@@ -126,22 +134,21 @@ bool FilePAK::readPAK(const std::string& PAKpath)
     igzstream PAKread;
     pakname=PAKpath;
     PAKread.open(PAKpath.c_str());//,ios::binary);
-    PAKread.read((char *) &header, sizeof(PAKheader)); //read in the header information so you can decrypt
+    PAKread.read((char *) &header, sizeof(PAKHeader)); //read in the header information so you can decrypt
     if(strcmp(header.fileID, "DBPAK") != 0 || !(header.numberFiles > 0) || strcmp(header.version, "1.0") != 0) {
         //if the fileIDs or versions don't match or if there's 0 or less files
         PAKread.close(); 
         return false;
     }
     entries.clear(); //entries could be full from createPAK()
-    char *buffer;
+    char buffer[ENTRY_SIZE];
 
     for(int i = 0; i < header.numberFiles; i++){
-        buffer = new char[sizeof(PAKfileEntry)];
-        PAKfileEntry entry;
-        PAKread.read(buffer, sizeof(PAKfileEntry));
-        memcpy(&entry, buffer, sizeof(PAKfileEntry)); //store the decrypted stuff into the entry
+        PAKFileEntry entry;
+        memset(&entry,0,sizeof(entry));
+        PAKread.read(buffer, ENTRY_SIZE);
+        memcpy(&entry,buffer,ENTRY_SIZE); //store the decrypted stuff into the entry
         entries.push_back(entry); //append to the vector
-        delete [] buffer;
     }
     PAKread.close();
     pakloaded = true;
@@ -158,7 +165,7 @@ bool FilePAK::rebuildPAK()
 
     int numberFiles = 0;
 
-    vector<PAKfileEntry> original(entries);
+    vector<PAKFileEntry> original(entries);
 
     for(unsigned int i = 0; i < changes.size(); i++)
        if(changes[i] >= 0) //count all changes that aren't deletions
@@ -166,7 +173,7 @@ bool FilePAK::rebuildPAK()
 
        header.numberFiles = numberFiles;
 
-       int offset = sizeof(PAKheader) + (numberFiles * sizeof(PAKfileEntry));
+       int offset = sizeof(PAKHeader) + (numberFiles * ENTRY_SIZE);
        for(unsigned int i = 0; i < entries.size(); i++){ //find out new offsets
    	   if(changes[i] == -1) continue; //don't factor in deletions
 	   entries[i].offset = offset;
@@ -175,19 +182,14 @@ bool FilePAK::rebuildPAK()
 
        if(PAKout.is_open()){
   	   PAKout.write((char *) &header, sizeof(header)); //write out header		
-	   char *buffer;
   	   for(unsigned int i = 0; i < entries.size(); i++){
 	       if(changes[i] == -1){ //if this change is a deletion
 	   	   continue;
 	       }
-	       buffer = new char[sizeof(PAKfileEntry)]; //char array to hold each table of contents entry
-	       memcpy(buffer, &(entries[i]), sizeof(PAKfileEntry)); //copy over the current entry in the for loop
-
-	       PAKout.write(buffer, sizeof(PAKfileEntry)); //finally write the entry
-	       delete [] buffer; //no memory leaks in this code, no sir
+	       PAKout.write((char*)&entries[i], ENTRY_SIZE); //finally write the entry
 	   }
-
 	   for(unsigned int i = 0; i < entries.size(); i++){
+	       char *buffer;
 	       if(changes[i] == -1) continue; //again, don't factor in deletions
 	       if(changes[i] == 1){
 	    	   PAKin.open(entries[i].fullname, ifstream::binary); //if it's an addition, load the file
@@ -254,7 +256,7 @@ bool FilePAK::appendFile(const std::string& name)
 
 char* FilePAK::getPAKEntryData(const std::string& name)
 {
-    if( PAKfileEntry *entry = getPAKEntry( name ) )	{
+    if( PAKFileEntry *entry = getPAKEntry( name ) )	{
         char *buffer = NULL;
 
         igzstream PAKread;
@@ -275,7 +277,7 @@ char* FilePAK::getPAKEntryData(const std::string& name)
     return NULL; //PAK file isn't loaded, or entry isn't found
 }
 
-FilePAK::PAKfileEntry *FilePAK::getPAKEntry(const std::string& name){
+FilePAK::PAKFileEntry *FilePAK::getPAKEntry(const std::string& name){
     if(pakloaded){
         for(int i = 0; i < header.numberFiles; i++){
             if(strcmp(entries[i].name, name.c_str()) == 0){

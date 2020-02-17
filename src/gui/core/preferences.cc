@@ -17,6 +17,7 @@ NGL_MODULE(PREFERENCE)
 namespace nglui{
 Preferences::Preferences(){
    rapidjson::Document*d=new rapidjson::Document();
+   d->SetObject();
    doc=d;
    update=0;
 }
@@ -50,7 +51,7 @@ void Preferences::save(const std::string&fname){
 
 bool Preferences::getBool(const std::string&section,const std::string&key,bool def){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
-    if(!d.HasMember(section))return def;
+    if(!d.IsObject()||!d.HasMember(section))return def;
     if(!d[section].HasMember(key))return def;
     if(!d[section][key].IsBool())return def;
     return d[section][key].GetBool();
@@ -58,7 +59,7 @@ bool Preferences::getBool(const std::string&section,const std::string&key,bool d
 
 int Preferences::getInt(const std::string&section,const std::string&key,int def){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
-    if(!d.HasMember(section))return def;
+    if(!d.IsObject()||!d.HasMember(section))return def;
     if(!d[section].HasMember(key))return def;
     if(!d[section][key].IsInt())return def;
     NGLOG_VERBOSE("%s.%s=%d",section.c_str(),key.c_str(),d[section][key].GetInt());
@@ -67,7 +68,7 @@ int Preferences::getInt(const std::string&section,const std::string&key,int def)
 
 float Preferences::getFloat(const std::string&section,const std::string&key,float def){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
-    if(!d.HasMember(section))return def;
+    if(!d.IsObject()||!d.HasMember(section))return def;
     if(!d[section].HasMember(key))return def;
     if(!d[section][key].IsDouble())return def;
     return d[section][key].GetFloat();
@@ -75,7 +76,7 @@ float Preferences::getFloat(const std::string&section,const std::string&key,floa
 
 double Preferences::getDouble(const std::string&section,const std::string&key,double def){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
-    if(!d.HasMember(section))return def;
+    if(!d.IsObject()||!d.HasMember(section))return def;
     if(!d[section].HasMember(key))return def;
     if(!d[section][key].IsDouble())return def;
     return d[section][key].GetDouble();
@@ -83,7 +84,7 @@ double Preferences::getDouble(const std::string&section,const std::string&key,do
 
 const std::string& Preferences::getString(const std::string&section,const std::string&key,const std::string&def){
     rapidjson::Document&d=*(rapidjson::Document*)doc;
-    if(!d.HasMember(section))return def;
+    if(!d.IsObject()||!d.HasMember(section))return def;
     if(!d[section].HasMember(key))return def;
     if(!d[section][key].IsString())return def;
     return d[section][key].GetString();

@@ -30,7 +30,7 @@ int main(int argc,const char*argv[]){
        pak.readPAK(argv[1]);
        std::vector<std::string>names=pak.getAllPAKEntries();
        for(auto nm:names){
-           FilePAK::PAKfileEntry*r=pak.getPAKEntry(nm);
+           FilePAK::PAKFileEntry*r=pak.getPAKEntry(nm);
            cout<<"  size:"<<r->size<<"  offset:"<<r->offset<<" name:"<<r->name<<" fullname:"<<r->fullname<<std::endl;
            pak.getPAKEntryData(nm);
        }

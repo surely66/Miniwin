@@ -35,7 +35,7 @@ add_custom_command (TARGET respack POST_BUILD
   COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/respack  ${CMAKE_SOURCE_DIR}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   DEPENDS respack
-  COMMENT "cp respack "
+  COMMENT "copy respack "
   )
 
 install(TARGETS respack DESTINATION bin)
