@@ -195,7 +195,7 @@ bool FilePAK::rebuildPAK()
 	    	   PAKin.open(entries[i].fullname, ifstream::binary); //if it's an addition, load the file
 	       }else{ //if it's already in the PAK file, load it from there
 	           PAKin.open(pakname, ifstream::binary);
-		   PAKin.seekg(original[i].offset);
+		   PAKin.seekg(original[i].offset);//get filecurrent postion as resource offset
 	       }
 
 	       if(PAKin.is_open()){
@@ -380,7 +380,7 @@ int main(int argc,const char*argv[]){
        pak.readPAK(argv[1]);
        std::vector<std::string>names=pak.getAllPAKEntries();
        for(auto nm:names){
-           FilePAK::PAKfileEntry*r=pak.getPAKEntry(nm);
+           FilePAK::PAKFileEntry*r=pak.getPAKEntry(nm);
            cout<<"  size:"<<r->size<<"  offset:"<<r->offset<<" name:"<<r->name<<" fullname:"<<r->fullname<<std::endl;
            pak.getPAKEntryData(nm);
        }
