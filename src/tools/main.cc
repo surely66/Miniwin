@@ -32,7 +32,8 @@ int main(int argc,const char*argv[]){
        for(auto nm:names){
            FilePAK::PAKFileEntry*r=pak.getPAKEntry(nm);
            cout<<"  size:"<<r->size<<"  offset:"<<r->offset<<" name:"<<r->name<<" fullname:"<<r->fullname<<std::endl;
-           pak.getPAKEntryData(nm);
+           void*data=pak.getPAKEntryData(nm);
+           FilePAK::freeEntryData(data);
        }
    }else if(argc==1){
        cout<<"1: package a dir to resource pak "<<endl;

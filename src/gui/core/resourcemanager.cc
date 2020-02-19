@@ -12,6 +12,7 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/memorystream.h>
+#include <rapidjson/error/en.h>
 
 NGL_MODULE(RESOURCEMANAGER)
 
@@ -47,15 +48,44 @@ private:
 };
 
 size_t ResourceManager::loadFile(const std::string&fname,unsigned char**buffer)const{
-     PAKCLOSURE closure;
+     PAKCLOSURE closure; 
+     closure.size=pak->getPAKEntrySize(fname);
      closure.data=(unsigned char*)pak->getPAKEntryData(fname);
-     closure.size=(size_t)pak->getPAKEntrySize(fname);
      closure.pos=0;
      *buffer=(unsigned char*)closure.data;
      return closure.size;      
 } 
 
-RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool cache){
+void ResourceManager::loadStrings(const std::string&lan){
+     vector<string>fnames =pak->getAllPAKEntries();
+     for(auto f:fnames){
+         PAKCLOSURE closure;
+         rapidjson::Document d;
+         std::string flan;
+         size_t dpos=f.rfind("."); 
+         if(f.compare(0,8,"strings/")||dpos<0)continue;
+         flan=f.substr(dpos-lan.length(),lan.length());
+         if(flan!=lan)continue;
+         closure.size=(size_t)pak->getPAKEntrySize(f);
+         closure.data=(unsigned char*)pak->getPAKEntryData(f);
+
+         NGLOG_DEBUG("%s data=%p size=%d %s",f.c_str(),closure.data,closure.size);
+         NGLOG_ERROR_IF(closure.size==0||closure.data==NULL,"resource file %s not found",f.c_str());
+         rapidjson::MemoryStream ims((char*)closure.data,closure.size);
+         d.ParseStream(ims);
+         if(d.HasParseError())
+             continue;
+         NGLOG_DEBUG_IF(d.HasParseError(),"Error %s at %d",GetParseError_En(d.GetParseError()),d.GetErrorOffset());
+
+         for (rapidjson::Value::MemberIterator m = d.MemberBegin(); m != d.MemberEnd(); ++m){
+             strings[m->name.GetString()]=m->value.GetString();
+             NGLOG_VERBOSE("%s:%s",m->name.GetString(),m->value.GetString());
+         }
+
+     }
+}
+RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resid,bool cache){
+     std::string resname="drawable/"+resid;
      std::map<const std::string, RefPtr<ImageSurface> >::iterator it = images.end();
      it=std::find_if(images.begin(),images.end(),map_value_finder(resname));
      if(it!=images.end()){
@@ -64,8 +94,8 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      size_t pos=resname.rfind('.');
      std::string ext=resname.substr(pos+1);
      PAKCLOSURE closure;
+     closure.size=(size_t)pak->getPAKEntrySize(resname);
      closure.data=(unsigned char*)pak->getPAKEntryData(resname);
-     closure.size=(size_t)pak->getPAKEntrySize(resname); 
      closure.pos=0;
      NGLOG_DEBUG_IF(1||nullptr==closure.data,"name:%s data=%p size=%d  ext=%s",resname.c_str(),closure.data,closure.size,ext.c_str());
      RefPtr<ImageSurface>img;
@@ -96,31 +126,14 @@ RefPtr<ImageSurface>ResourceManager::loadImage(const std::string&resname,bool ca
      }
      if(cache)
          images.insert(std::map<const std::string,RefPtr<ImageSurface> >::value_type(resname,img));
+     FilePAK::freeEntryData(closure.data);
      NGLOG_VERBOSE("image size=%dx%d",img->get_width(),img->get_height());
      return img;
 }
 
 const std::string ResourceManager::getString(const std::string& id,const std::string&lan){
      if((!lan.empty())&&(osdlanguage!=lan)){
-         rapidjson::Document d;
-         std::string resname="strings-";
-         resname.append(lan);
-         resname.append(".json");
-         osdlanguage=lan;
-
-         PAKCLOSURE closure;
-         closure.data=(unsigned char*)pak->getPAKEntryData(resname);
-         closure.size=(size_t)pak->getPAKEntrySize(resname);
-
-         NGLOG_DEBUG("data=%p size=%d",closure.data,closure.size);
-         NGLOG_ERROR_IF(closure.size==0||closure.data==NULL,"resource file %s not found",resname.c_str());
-         rapidjson::MemoryStream ims((char*)closure.data,closure.size);
-         d.ParseStream(ims);
-
-         for (rapidjson::Value::MemberIterator m = d.MemberBegin(); m != d.MemberEnd(); ++m){
-             strings[m->name.GetString()]=m->value.GetString();
-             NGLOG_VERBOSE("%s:%s",m->name.GetString(),m->value.GetString());
-         }
+         loadStrings(lan);
      }
      auto itr=strings.find(id);
      if(itr!=strings.end()&&!itr->second.empty()){

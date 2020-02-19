@@ -89,16 +89,13 @@ public:
      //Get a file data stored in the PAK file
      //name - name of the file stored in the PAK file (don't include the folder/path)
      //Returns a pointer to the file data in memory
-     char* getPAKEntryData(const std::string& name);
-
+     void*getPAKEntryData(const std::string& name);
+     static void freeEntryData(void*buffer);
+     size_t getPAKEntrySize(const std::string& name);
      //Get a file stored in the PAK file
      //name - name of the file stored in the PAK file (don't include the folder/path)
      //Returns a pointer to the PAKfileEntry
      PAKFileEntry *getPAKEntry(const std::string& name);
-
-     //name - name of the file stored in the PAK file (don't include the folder/path)
-     //Returns size of a file in the PAK file
-     int getPAKEntrySize(const std::string& name);
 
      //Returns names of all PAK entries within the
      vector<string> getAllPAKEntries();

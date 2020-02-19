@@ -59,24 +59,24 @@ bool FilePAK::createPAK(const std::string& name, const std::string& entryPath, c
     srand((unsigned) time(NULL)); //seedin'
     ogzstream outpak;
     ifstream fileIn;
-    int numberFiles = 0;
-
+    std::string path=entryPath;
+    if(path[path.length()-1]!='/')
+       path.append("/");
     memcpy(header.fileID, "DBPAK\0", 6); //Using memcpy because lol char array
     memcpy(header.version, "1.0\0", 4);
 
     vector<std::string> correctTypes = filetypes(types);
-    numberFiles=readDirectory(entryPath,correctTypes,entryPath);
-    
-    header.numberFiles = numberFiles;
+    header.numberFiles=readDirectory(path,correctTypes,path);
 
-    int offset = sizeof(PAKHeader) + (numberFiles * ENTRY_SIZE);
+    int offset = sizeof(PAKHeader) + (header.numberFiles * ENTRY_SIZE);
     //there's always 1 header, and there's a PAKfileEntry for every file so find the sum of
     for(unsigned int i = 0; i < entries.size(); i++){//their sizes to find the offset for the first file
         entries[i].offset = offset; //calculate all the offsets for each file
         offset += entries[i].size;
+        printf("%d:%d %s\r\n",entries[i].size,entries[i].offset,entries[i].name); 
     }
-    printf("package %d resource to %s\r\n",numberFiles,name.c_str());
-    if(numberFiles){ //if any files were found at all
+    printf("package dir %s (%d resource) to %s\r\n",path.c_str(),header.numberFiles,name.c_str());
+    if(header.numberFiles){ //if any files were found at all
          outpak.open(name.c_str());//ofstream::binary | ofstream::trunc
          outpak.write((char *) &header, sizeof(header)); //write the header
  	 char *buffer=new char[512];
@@ -99,7 +99,7 @@ bool FilePAK::createPAK(const std::string& name, const std::string& entryPath, c
          delete []buffer;
          outpak.close();
     }
-    if(numberFiles < 1) return false; //no files found :(
+    if(header.numberFiles < 1) return false; //no files found :(
 
     return true;
 }
@@ -109,10 +109,13 @@ bool FilePAK::createEntry(const std::string& path, const std::string& name)
     ifstream fileIn;
     PAKFileEntry fentry; //creates a new table of contents entry
 
-    string entryName; //Sets up the path/name strings
-    entryName += path;
+    string entryName=path; //Sets up the path/name strings
+    if(path[path.length()-1]!='/')
+       entryName+="/";
     entryName += name;
-    memcpy(fentry.name, name.c_str(), 50); //only the file name
+    size_t pos=entryName.rfind("/");
+    pos=entryName.rfind("/",pos-1);
+    strncpy(fentry.name, entryName.c_str()+pos+1, 50); //only the file name
     memcpy(fentry.fullname, entryName.c_str(), 150); //file name + folders
 
     fileIn.open(entryName, ifstream::binary | ifstream::ate);
@@ -254,50 +257,48 @@ bool FilePAK::appendFile(const std::string& name)
     return true;
 }
 
-char* FilePAK::getPAKEntryData(const std::string& name)
-{
-    if( PAKFileEntry *entry = getPAKEntry( name ) )	{
-        char *buffer = NULL;
+void* FilePAK::getPAKEntryData(const std::string& name){
 
+    if( PAKFileEntry *entry = getPAKEntry( name ) ){
         igzstream PAKread;
         PAKread.open(pakname.c_str());//, ios::binary);
-	//if(PAKread.is_open())
-	{
-            buffer = new char[entry->size];
+	if(PAKread.good()){//PAKread.is_open())
+            void*buffer=malloc(entry->size);
             PAKread.seekg(entry->offset);//, ifstream::beg); //seek to the offset of the file in the .pak file
-            PAKread.read(buffer, entry->size); //read everything into the buffer
-            return buffer; //return it all
-	}
-	/*else
-	{
+            PAKread.read((char*)buffer, entry->size); //read everything into the buffer
+            return buffer;
+	}else{
 	    cout << "Critical error: getPAKEntryData() could not open stream\n";
-	    return buffer; //NULL
-	}*/
-    }
-    return NULL; //PAK file isn't loaded, or entry isn't found
-}
-
-FilePAK::PAKFileEntry *FilePAK::getPAKEntry(const std::string& name){
-    if(pakloaded){
-        for(int i = 0; i < header.numberFiles; i++){
-            if(strcmp(entries[i].name, name.c_str()) == 0){
-                return &entries[i];
-	    }
+	    return nullptr;
 	}
     }
-    return NULL; //PAK file isn't loaded, or entry isn't found
+    return nullptr; //PAK file isn't loaded, or entry isn't found
 }
 
-int FilePAK::getPAKEntrySize(const std::string& name){
+void FilePAK::freeEntryData(void*buffer){
+    free(buffer);
+}
+size_t FilePAK::getPAKEntrySize(const std::string& name){
     if(pakloaded){
         for(int i = 0; i < header.numberFiles; i++){
             if(strcmp(entries[i].name, name.c_str()) == 0){
                 return entries[i].size;
             }
         }
-	return -1; // This shouldn't happen. Treat as a critical error.
+       return -1; // This shouldn't happen. Treat as a critical error.
     }
     return -2; //PAK file isn't loaded
+}
+
+FilePAK::PAKFileEntry *FilePAK::getPAKEntry(const std::string& name){
+    if(pakloaded){
+        for(int i = 0; i < header.numberFiles; i++){
+            if(name.compare(entries[i].name) == 0){
+                return &entries[i];
+	    }
+	}
+    }
+    return NULL; //PAK file isn't loaded, or entry isn't found
 }
 
 vector<string> FilePAK::getAllPAKEntries(){
@@ -314,11 +315,11 @@ bool FilePAK::unPAKEntry(const std::string& name, const std::string& path){
     ofstream output;
     output.open(path, ofstream::binary | ofstream::trunc);
     if(output.is_open()){
-        char *buffer = getPAKEntryData(name);
-        int size = getPAKEntrySize(name);
+        void*buffer=getPAKEntryData(name);
+        int size =getPAKEntrySize(name);
         if(buffer == NULL || size <= 0) return false;
-        output.write(buffer, size);
-        delete [] buffer;
+        output.write((const char*)buffer, size);
+        freeEntryData(buffer);
     }else{
         return false;
     }
