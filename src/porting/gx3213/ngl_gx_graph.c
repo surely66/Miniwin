@@ -20,16 +20,23 @@ typedef struct{
 }NGLSURFACE;
 
 DWORD nglGraphInit(){
+    GxAvRect vp;
+    vp.x=vp.y=0;
+    vp.width=1280;
+    vp.height=720;
     if(0==device_handle){
         device_handle = GxAVCreateDevice(0); 
         vpu_handle = GxAVOpenModule(device_handle, GXAV_MOD_VPU, 0);
+        GxAvdev_SetLayerViewport(device_handle, vpu_handle, GX_LAYER_OSD,&vp);
     }
     return NGL_OK;
 }
 
 DWORD nglGetScreenSize(UINT*width,UINT*height){
-    *width=1280;//dispCfg.width;
-    *height=720;//dispCfg.height;
+    GxAvRect vp;
+    GxAvdev_GetLayerViewport(device_handle, vpu_handle, GX_LAYER_OSD,&vp);
+    *width=vp.width;//1280;//dispCfg.width;
+    *height=vp.height;//720;//dispCfg.height;
     return NGL_OK;
 }
 
@@ -139,6 +146,8 @@ DWORD nglCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
      fb->buffer=ap.usr_p;
      fb->format=GPF_ARGB; 
      fb->hw_surface=CreateSurface.surface;
+     if(hwsurface)
+        GxAvdev_SetLayerMainSurface(device_handle, vpu_handle, GX_LAYER_OSD,fb->hw_surface);
      NGLOG_DEBUG("surface=%x ",surface);
 
      return NGL_OK;
