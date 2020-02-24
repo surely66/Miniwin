@@ -26,13 +26,13 @@ include_directories(inc
 	${CMAKE_BINARY_DIR}/src/3rdparty/libvncserver
 	${CMAKE_SOURCE_DIR}/src/3rdparty/libvncserver)
 
-add_library(tvhal SHARED ${SRCS_COMMON})
-add_library(tvhal_static STATIC ${SRCS_COMMON})
+add_library(tvhal_objects OBJECT ${SRCS_COMMON})
+add_library(tvhal SHARED $<TARGET_OBJECTS:tvhal_objects>)
+add_library(tvhal_static STATIC $<TARGET_OBJECTS:tvhal_objects>)
 
-#set_property(TARGET tvhal PROPERTY POSITION_INDEPENDENT_CODE)
-
-target_link_libraries(tvhal ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
+target_link_libraries(tvhal ${NGL_CHIPSET} ${HAL_EXTRA_LIBS} tvhal_static )
 target_link_libraries(tvhal_static ${NGL_CHIPSET} ${HAL_EXTRA_LIBS})
+set_target_properties(tvhal_static PROPERTIES OUTPUT_NAME "tvhal")
 
 add_subdirectory(${NGL_CHIPSET})
 add_subdirectory(tests)

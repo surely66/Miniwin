@@ -48,7 +48,6 @@ option(RAPIDJSON_ENABLE_INSTRUMENTATION_OPT "Build rapidjson with -march or -mcp
 
 option(RAPIDJSON_HAS_STDSTRING "" ON)
 if(RAPIDJSON_HAS_STDSTRING)
-    message("========================has stdstring===============")
     add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 endif()
 

@@ -16,7 +16,7 @@ if (NGL_CA STREQUAL "acs")
     add_subdirectory(acs)
     link_directories(acs)
 endif()
-add_executable(ntvplus ${SRCS_NTV_PLUS} ntvplus.pak)
+add_executable(ntvplus ${SRCS_NTV_PLUS} )
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
 target_link_libraries(ntvplus jsoncpp_lib gui dvbepg )
 else()
@@ -25,7 +25,7 @@ endif()
 
 message("CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 
-add_custom_command (TARGET ntvplus POST_BUILD
+add_custom_command (TARGET ntvplus PRE_BUILD
   COMMAND ${CMAKE_SOURCE_DIR}/respack assets ${CMAKE_CURRENT_BINARY_DIR}/ntvplus.pak
   BYPRODUCTS ntvplus
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}

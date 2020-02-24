@@ -16,7 +16,7 @@ add_executable(simplewin simplewin.cc)
 add_executable(multiwin multiwindow.cc)
 add_executable(2048 game2048.cc)
 
-target_link_libraries(helloworld tvhal gui)
+target_link_libraries(helloworld  ${NGL_CHIPSET} ${HAL_EXTRA_LIBS} tvhal_static gui_static ${GUI_DEP_LIBS})
 target_link_libraries(simplewin gui)
 target_link_libraries(multiwin gui)
 target_link_libraries(2048 gui)
