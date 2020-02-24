@@ -23,6 +23,8 @@ set(SRCS_GX3213
 
 include(platform.cmake)
 
+add_definitions(-DLINUX_OS)
+
 if ( NOT RFB_GRAPH )
    set(SRC_GRAPH ngl_gx_graph.c)
 endif()

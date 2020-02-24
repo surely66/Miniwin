@@ -1,12 +1,13 @@
 #include<ngl_graph.h>
 #include<ngl_os.h>
 #include <gtest/gtest.h>
-#include <pixman.h>
+/*#include <pixman.h>
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <canvas.h>
-#include <sys/time.h>
 #include <fontmanager.h>
+*/
+#include <sys/time.h>
 
 class GRAPH:public testing::Test{
    public :
@@ -59,6 +60,7 @@ typedef struct {
    int format;
    unsigned int rgb[4];
 }TSTPIXEL;
+
 TEST_F(GRAPH,Format){
     //this case show four color block ,RED,GREEN,BLUE,WHITE.
     HANDLE surface;
@@ -140,7 +142,7 @@ TEST_F(GRAPH,Blit){
    nglDestroySurface(hwsurface);
    sleep(20);
 }
-
+#if 0
 TEST_F(GRAPH,Pixman){
     HANDLE surface;
     UINT width,height;
@@ -244,4 +246,4 @@ TEST_F(GRAPH,canvas){
 
     nglDestroySurface(surface);
 }
-
+#endif

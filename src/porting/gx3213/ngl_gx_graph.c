@@ -20,9 +20,10 @@ typedef struct{
 }NGLSURFACE;
 
 DWORD nglGraphInit(){
-    gxavdev_init();
-    device_handle = GxAVCreateDevice(0); 
-    vpu_handle = GxAVOpenModule(device_handle, GXAV_MOD_VPU, 0);
+    if(0==device_handle){
+        device_handle = GxAVCreateDevice(0); 
+        vpu_handle = GxAVOpenModule(device_handle, GXAV_MOD_VPU, 0);
+    }
     return NGL_OK;
 }
 
@@ -53,6 +54,12 @@ DWORD nglUnlockSurface(HANDLE surface){
 }
 
 DWORD nglSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+    GxVpuProperty_Alpha Alpha;
+    NGLSURFACE*fb=(NGLSURFACE*)surface;
+    Alpha.surface = fb->hw_surface;
+    Alpha.alpha.type = GX_ALPHA_PIXEL;
+    Alpha.alpha.value =alpha;
+    GxAVSetProperty(device_handle, vpu_handle, GxVpuPropertyID_Alpha, &Alpha, sizeof(GxVpuProperty_Alpha));
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
@@ -84,7 +91,7 @@ DWORD nglFillRect(HANDLE surface,const NGLRect*rect,UINT color){
                         GxVpuPropertyID_FillRect,
                         &FillRect, sizeof(GxVpuProperty_FillRect));
 
-    NGLOG_DEBUF_IF(ret,"[GUI]Filled Rectangle failed!\n");
+    NGLOG_DEBUG_IF(ret,"[GUI]Filled Rectangle failed!\n");
 
     ret = GxAVSetProperty(device_handle,vpu_handle, GxVpuPropertyID_EndUpdate,
                                 &end, sizeof(GxVpuProperty_EndUpdate));

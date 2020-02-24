@@ -2,7 +2,11 @@
 set(GX_ROOT $ENV{HOME}/gx3213/irdeto_cca/dvt/platform/library/arm-linux)
 if ( TRUE )
 	set(HAL_EXTRA_LIBS
+           ${GX_ROOT}/lib/libgxbuscore.a
            ${GX_ROOT}/lib/libgxcore.a
+           ${GX_ROOT}/lib/libgxdvb.a
+           ${GX_ROOT}/lib/libcyassl.a
+           ${GX_ROOT}/lib/libui.a
            CACHE INTERNAL "platform dependence libs")
 	set(HAL_EXTRA_INCDIRS 
            ${GX_ROOT}/include/
