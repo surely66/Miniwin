@@ -10,8 +10,12 @@
 #include <windowmanager.h>
 #include <mutex>
 
+#ifdef HAS_ACS_CA
 extern void StartACS();
+#endif
+
 NGL_MODULE(DVBAPP)
+
 namespace nglui{
 
 DVBApp::DVBApp(int argc,const char**argv)
@@ -30,9 +34,9 @@ DVBApp::DVBApp(int argc,const char**argv)
     NGLOG_DEBUG("DVBApp::DVBApp resolution=%d",res);
     setOpacity(200);//getArgAsInt("alpha",255));    
     nglDispSetResolution(res);
-    //StartACS();    
-    //google_breakpad::MinidumpDescriptor descriptor("/tmp");
-    //eh=new google_breakpad::ExceptionHandler(descriptor, NULL, DumpCallback,NULL, true, -1);
+#ifdef HAS_ACS_CA
+    StartACS();
+#endif    
 }
 
 }//namespace

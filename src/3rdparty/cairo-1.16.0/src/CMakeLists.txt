@@ -654,6 +654,7 @@ add_library(cairo-objects OBJECT ${SOURCES})
 add_library(cairo SHARED $<TARGET_OBJECTS:cairo-objects>) #${SOURCES})
 add_library(cairo_static STATIC $<TARGET_OBJECTS:cairo-objects> ${STATIC_SOURCES})#${SOURCES} ${STATIC_SOURCES})
 set_target_properties(cairo-objects PROPERTIES POSITION_INDEPENDENT_CODE 1)
+set_target_properties(cairo_static PROPERTIES OUTPUT_NAME "cairo")
 target_link_libraries(cairo ${CAIRO_LIBS})
 target_link_libraries(cairo_static tvhal_static ${CAIRO_LIBS})
 

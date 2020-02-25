@@ -16,10 +16,10 @@ add_executable(simplewin simplewin.cc)
 add_executable(multiwin multiwindow.cc)
 add_executable(2048 game2048.cc)
 
-target_link_libraries(helloworld  tvhal_static gui_static)
+target_link_libraries(helloworld gui_static)
 
-target_link_libraries(simplewin gui)
-target_link_libraries(multiwin gui)
+target_link_libraries(simplewin gui_static)
+target_link_libraries(multiwin gui_static)
 target_link_libraries(2048 gui)
 
 install (TARGETS helloworld  DESTINATION bin)

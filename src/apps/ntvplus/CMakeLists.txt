@@ -15,13 +15,10 @@ include_directories(
 if (NGL_CA STREQUAL "acs")
     add_subdirectory(acs)
     link_directories(acs)
+    add_definitions(-DHAS_ACS_CA)
 endif()
 add_executable(ntvplus ${SRCS_NTV_PLUS} )
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i686|amd|AMD" )
-target_link_libraries(ntvplus jsoncpp_lib gui dvbepg )
-else()
-target_link_libraries(ntvplus jsoncpp_lib gui dvbepg acs)
-endif()
+target_link_libraries(ntvplus jsoncpp_lib gui_static dvbepg ${NGL_CA})
 
 message("CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 
