@@ -12,8 +12,8 @@ aux_source_directory(looper SRCS_LOOP)
 message("UI Lua script bindings is ${LUA_BINDINGS} guistatic=${GUI_STATIC}")
 
 if ( LUA_BINDINGS )
-aux_source_directory(luabinding SRCS_LUABIND)
-list(APPEND EXT_LIBS lua)
+    aux_source_directory(luabinding SRCS_LUABIND)
+    list(APPEND EXT_LIBS lua)
 endif ()
 
 if ( GUI_STATIC )
