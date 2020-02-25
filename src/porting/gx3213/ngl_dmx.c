@@ -13,7 +13,7 @@
 #define MASK_LEN 16 
 #define MAX_CHANNEL 64
 #define MAX_FILTER  128 
-#define UNUSED_PID -1
+#define UNUSED_PID 0xFFFF
 #include <ngl_log.h>
 #include <ngl_os.h>
 
@@ -45,15 +45,17 @@ typedef struct{
   BYTE*tsBuffer;
   int filt_id;
 }NGLDMXFILTER;
-static NGLMutex mtx_dmx=0;
+static int mtx_dmx=0;
 static GXDMX sDMX[2];
 static DMXCHANNEL Channels[MAX_CHANNEL];
 static NGLDMXFILTER  Filters[MAX_FILTER];
+#define LOCK_DMX(x)   GxCore_MutexLock(x)
+#define UNLOCK_DMX(x) GxCore_MutexUnlock(x)
 static DMXCHANNEL*GetChannel(int pid){
    int i;
    for(i=0;i<MAX_CHANNEL;i++){
        DMXCHANNEL*ch=Channels+i;
-       if((ch->pid==pid)||(pid>=0x1FFF&&ch->pid>=0x1FFF)){
+       if((ch->pid==pid)||(pid>=0x1FFF&&ch->pid>=UNUSED_PID)){
             return Channels+i;
        }
    }
@@ -71,12 +73,39 @@ static NGLDMXFILTER*GetFilter(DMXCHANNEL*ch){
 }
 #define CHECKFILTER(flt) {if((flt<Filters)||(flt>=&Filters[MAX_FILTER]))return NGL_INVALID_PARA;}
 
+static void DMXReadProc(void*p){
+    int i=0,rc=0;
+#define BUFFER_SIZE (128*1024)
+    char *buffer=malloc(BUFFER_SIZE);
+    while(1){
+        int read_bytes=0;
+        for(i=0;i<MAX_FILTER;i++){
+            LOCK_DMX(mtx_dmx);
+            NGLDMXFILTER*flt=Filters+i;
+            GxDemuxProperty_FilterRead filt_read;
+            filt_read.filter_id =flt->filt_id;
+            filt_read.buffer = buffer;
+            filt_read.max_size = BUFFER_SIZE;
+            if(!flt->started)goto unlock;
+            rc=GxAVGetProperty(sDMX[flt->ch->dmxid].dev,sDMX[flt->ch->dmxid].hdl, GxDemuxPropertyID_FilterRead,
+                             (void*)&filt_read, sizeof(GxDemuxProperty_FilterRead));
+            if(rc<0||filt_read.read_size<=0)goto unlock;
+            read_bytes+=filt_read.read_size;
+            if(flt->CallBack)
+               flt->CallBack(flt,buffer,filt_read.read_size,flt->userdata);
+            unlock:
+            UNLOCK_DMX(mtx_dmx);
+        }
+        if(read_bytes==0)GxCore_ThreadDelay(40);
+    }
+}
+
 DWORD nglDmxInit(){
     int i,dev;
-    DWORD thid;
+    HANDLE thid;
     if(mtx_dmx)return 0;
     NGLOG_DEBUG("nglDmxInit\r\n");
-    nglCreateMutex(&mtx_dmx);
+    GxCore_MutexCreate(&mtx_dmx);
     dev=GxAvdev_CreateDevice(0);
     for(i=0;i<2;i++){
         GxDemuxProperty_ConfigDemux cfg;
@@ -97,7 +126,8 @@ DWORD nglDmxInit(){
         Channels[i].pid=UNUSED_PID;
         Channels[i].num_filt=0;
     }
-   return 0;
+    nglCreateThread(&thid,0,0,DMXReadProc,NULL);
+    return 0;
 }
 
 static int GetProps(const NGLDMXFILTER*flt,GxDemuxProperty_Slot*sp,GxDemuxProperty_Filter*fp){
@@ -123,11 +153,11 @@ HANDLE nglAllocateSectionFilter(INT id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*
     GxDemuxProperty_Filter filt_prop;
     DMXCHANNEL*ch=GetChannel(wPid);
     NGLDMXFILTER*flt=GetFilter(ch);
-    nglLockMutex(mtx_dmx);
+    LOCK_DMX(mtx_dmx);
     memset(&slot_prop, 0, sizeof(GxDemuxProperty_Slot));
     memset(&filt_prop, 0, sizeof(GxDemuxProperty_Filter));
     if(NULL==ch){
-        ch=GetChannel(0xFFFF);//alloc new channel
+        ch=GetChannel(UNUSED_PID);//alloc new channel
         slot_prop.type = DEMUX_SLOT_PSI;
         slot_prop.pid = wPid;
         rc=GxAVGetProperty(sDMX[id].dev,sDMX[id].hdl,GxDemuxPropertyID_SlotAlloc,(void*)&slot_prop, sizeof(GxDemuxProperty_Slot));
@@ -146,12 +176,14 @@ HANDLE nglAllocateSectionFilter(INT id,WORD  wPid,NGL_DMX_FilterNotify cbk,void*
     }
     if(rc<0){
         GxAVSetProperty(sDMX[id].dev,sDMX[id].hdl, GxDemuxPropertyID_SlotFree,(void*)&slot_prop, sizeof(GxDemuxProperty_Slot));
-        nglUnlockMutex(mtx_dmx);
+        UNLOCK_DMX(mtx_dmx);
         return NULL;
     }
     flt->ch=ch;
+    flt->CallBack=cbk;
+    flt->userdata=userdata;
     flt->filt_id=filt_prop.filter_id;
-    nglUnlockMutex(mtx_dmx);
+    UNLOCK_DMX(mtx_dmx);
     return flt; 
 }
 
@@ -165,7 +197,7 @@ INT nglFreeSectionFilter( HANDLE dwStbFilterHandle )
     GxDemuxProperty_Filter filt_prop;
     GxDemuxProperty_Slot slot_prop;
     NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
-    nglLockMutex(mtx_dmx);
+    LOCK_DMX(mtx_dmx);
     if(flt->ch){
         GetProps(flt,&slot_prop,&filt_prop);
         GxAVSetProperty(sDMX[flt->ch->dmxid].dev, sDMX[flt->ch->dmxid].hdl, GxDemuxPropertyID_FilterFree,
@@ -174,11 +206,11 @@ INT nglFreeSectionFilter( HANDLE dwStbFilterHandle )
         if(flt->ch->num_filt==0){
             GxAVSetProperty(sDMX[flt->ch->dmxid].dev,sDMX[flt->ch->dmxid].hdl,GxDemuxPropertyID_SlotFree,
                     (void*)&slot_prop, sizeof(GxDemuxProperty_Slot));
-            flt->ch->pid=0xFFFF;
+            flt->ch->pid=UNUSED_PID;
         }
         flt->ch=NULL;
     }
-    nglUnlockMutex(mtx_dmx);
+    UNLOCK_DMX(mtx_dmx);
     return NGL_OK;
 }
 
@@ -208,7 +240,7 @@ INT nglStartSectionFilter(HANDLE  dwStbFilterHandle)
     NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
     CHECKFILTER(flt);
     GetProps(flt,&slot_prop,&filt_prop);
-    nglLockMutex(mtx_dmx);
+    LOCK_DMX(mtx_dmx);
     if(flt->started==0 && flt->ch->num_started==0){
         GxAVSetProperty(sDMX[flt->ch->dmxid].dev, sDMX[flt->ch->dmxid].hdl, GxDemuxPropertyID_SlotEnable,
               (void*)&slot_prop,sizeof(GxDemuxProperty_Slot));
@@ -219,7 +251,7 @@ INT nglStartSectionFilter(HANDLE  dwStbFilterHandle)
         flt->started=1;
         flt->ch->num_started++;
     }
-    nglUnlockMutex(mtx_dmx);
+    UNLOCK_DMX(mtx_dmx);
     return NGL_OK;
 }
 
@@ -232,7 +264,7 @@ INT nglStopSectionFilter(HANDLE dwStbFilterHandle)
     NGLDMXFILTER*flt=(NGLDMXFILTER*)dwStbFilterHandle;
     CHECKFILTER(flt);
     GetProps(flt,&slot_prop,&filt_prop);
-    nglLockMutex(mtx_dmx);
+    LOCK_DMX(mtx_dmx);
     if(flt->started){
         GxAVSetProperty(sDMX[flt->ch->dmxid].dev,sDMX[flt->ch->dmxid].hdl, GxDemuxPropertyID_FilterDisable,
                             (void*)&filt_prop, sizeof(GxDemuxProperty_Filter));
