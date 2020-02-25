@@ -43,8 +43,7 @@ GraphDevice::GraphDevice(int format){
     nglCreateSurface(&primarySurface,width,height,0,1);
     NGLOG_DEBUG("primarySurface=%p size=%dx%d ",primarySurface,width,height);
 
-    cairo_surface_t*surface=cairo_ngl_surface_create(primarySurface);
-    primaryContext=new GraphContext(mInst,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
+    primaryContext=new GraphContext(mInst,NGLSurface::create(primarySurface));
     std::vector<std::string>families;
     FontManager::getInstance().getFamilies(families);
     for(int i=0;i<families.size();i++){
@@ -88,17 +87,12 @@ GraphContext*GraphDevice::getPrimaryContext(){
 }
 
 GraphContext*GraphDevice::createContext(int width,int height){
-    unsigned char*data;
-    UINT pitch;
     HANDLE nglsurface;
     nglCreateSurface(&nglsurface,width,height,0,0);
-    cairo_surface_t*surface=cairo_ngl_surface_create(nglsurface);
-    GraphContext*graph_ctx=new GraphContext(this,RefPtr<NGLSurface>(new NGLSurface(surface,true)));
-    NGLOG_VERBOSE("nglsurface=%p cairo_surface=%p size=%dx%d content=%x operatopr=%d",nglsurface,surface,width,height,cairo_surface_get_content(surface),
-        graph_ctx->get_operator());     
+    GraphContext*graph_ctx=new GraphContext(this,NGLSurface::create(nglsurface));
+    NGLOG_VERBOSE("nglsurface=%p  size=%dx%d",nglsurface,width,height);     
     gSurfaces.push_back(graph_ctx);
     graph_ctx->dev=this;
-    //graph_ctx->set_operator(OPERATOR_SOURCE);
     graph_ctx->set_font_face(getFont());
     graph_ctx->set_antialias(ANTIALIAS_GRAY);//ANTIALIAS_SUBPIXEL);
     return graph_ctx;

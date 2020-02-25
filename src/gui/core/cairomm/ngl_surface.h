@@ -23,8 +23,6 @@
 #include <cairomm/enums.h>
 #include <cairo-features.h>
 
-#ifdef CAIRO_HAS_NGL_SURFACE
-#include <cairo-ngl.h>
 // This header is not included by cairomm.h because it requires Windows headers that 
 // tend to pollute the namespace with non-prefixed #defines and typedefs.
 // You may include it directly if you need to use this API.
@@ -41,6 +39,9 @@ namespace Cairo
  */
 class NGLSurface : public Surface
 {
+private:
+   void*surface;
+   NGLSurface(void*s,bool has_reference = false);
 public:
 
   /** Create a C++ wrapper for the C instance. This C++ instance should then be
@@ -91,6 +92,5 @@ public:
 
 } // namespace Cairo
 
-#endif // CAIRO_HAS_NGL_SURFACE
 #endif //__CAIROMM_NGL_SURFACE_H
 // vim: ts=2 sw=2 et

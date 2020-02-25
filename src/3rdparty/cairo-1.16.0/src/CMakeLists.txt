@@ -650,13 +650,15 @@ endif()
 
 set(SOURCES ${enabled_cairo_sources})
 
-add_library(cairo SHARED ${SOURCES})
+add_library(cairo-objects OBJECT ${SOURCES})
+add_library(cairo SHARED $<TARGET_OBJECTS:cairo-objects>) #${SOURCES})
+add_library(cairo_static STATIC $<TARGET_OBJECTS:cairo-objects> ${STATIC_SOURCES})#${SOURCES} ${STATIC_SOURCES})
+set_target_properties(cairo-objects PROPERTIES POSITION_INDEPENDENT_CODE 1)
 target_link_libraries(cairo ${CAIRO_LIBS})
-add_library(cairo-static STATIC ${SOURCES} ${STATIC_SOURCES})
-target_link_libraries(cairo-static ${CAIRO_LIBS})
+target_link_libraries(cairo_static tvhal_static ${CAIRO_LIBS})
 
 install(TARGETS cairo RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-install(TARGETS cairo-static RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+install(TARGETS cairo_static RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 
 install(FILES ${enabled_cairo_headers} DESTINATION include/cairo)
 install(FILES ../cairo-version.h DESTINATION include/cairo)
