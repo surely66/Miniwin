@@ -31,7 +31,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/3rdparty/libunibreak/src
     ${CMAKE_SOURCE_DIR}/src/modules
 )
-set(GUI_DEP_LIBS pthread pixman-1 png jpeg turbojpeg freetype cairo_static unibreak usbmanager CACHE INTERNAL "GUI dependency libraries ,static gui lib will need those libraries")
+
 add_library(gui_objs OBJECT ${SRCS_GUICORE} ${SRCS_CAIROMM} ${SRCS_LUABIND} ${SRCS_LOOP} ${SRCS_SVG})
 add_library(gui_static STATIC $<TARGET_OBJECTS:gui_objs>)
 add_library(gui SHARED $<TARGET_OBJECTS:gui_objs>)
